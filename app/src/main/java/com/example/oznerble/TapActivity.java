@@ -108,9 +108,7 @@ public class TapActivity extends Activity implements View.OnClickListener {
 			OznerDevice device=service.getDeviceManager().getDevice(Address);
 			if (device!=null)
 				dbg.i("广播:%s Name:%s",Address,device.getName());
-			
-			
-				
+
 			if (!Address.equals(mTap.Address()))
 				return;
 			

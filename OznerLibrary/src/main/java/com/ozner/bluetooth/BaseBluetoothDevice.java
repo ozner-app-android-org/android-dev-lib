@@ -238,7 +238,8 @@ public abstract class BaseBluetoothDevice extends BluetoothGattCallback {
 		mHandler.post(new Runnable() {
 			@Override
 			public void run() {
-				if (mStatus!=STATE_DISCONNECTED) return;	
+				if (mStatus!=STATE_DISCONNECTED) return;
+				mStatus=STATE_CONNECTING;
 				dbg.i("开始连接");
 				
 				mGatt = mDevice.connectGatt(mContext, false, BaseBluetoothDevice.this);

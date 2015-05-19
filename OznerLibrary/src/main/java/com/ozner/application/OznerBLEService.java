@@ -139,45 +139,38 @@ public class OznerBLEService extends Service implements ActivityLifecycleCallbac
 	public void onActivityResumed(Activity activity) {
 		if (!activitys.contains(activity))
 			activitys.add(activity);
-		dbg.i("onActivityResumed:%d",activitys.size());
 		checkBackMode();
 		
 	}
 
 	@Override
 	public void onActivityPaused(Activity activity) {
-		dbg.i("onActivityPaused:%d",activitys.size());
 	}
 
 	@Override
 	public void onActivityStopped(Activity activity) {
 		if (activitys.contains(activity))
 			activitys.remove(activity);
-		dbg.i("onActivityStopped:%d",activitys.size());	
 		lastTime=new Date();
 		
 	}
 
 	@Override
 	public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
-		dbg.i("onActivitySaveInstanceState:%d",activitys.size());
 		
 	}
 	@Override
 	public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
-		dbg.i("onActivityCreated:%d",activitys.size());
 		
 	}
 
 	@Override
 	public void onActivityStarted(Activity activity) {
-		dbg.i("onActivityStarted:%d",activitys.size());
 	}
 	@Override
 	public void onActivityDestroyed(Activity activity) {
 		if (activitys.contains(activity))
 			activitys.remove(activity);
-		dbg.i("onActivityDestroyed:%d",activitys.size());
 	}
 
 }

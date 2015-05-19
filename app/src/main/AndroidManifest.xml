@@ -33,7 +33,6 @@
         <activity android:name="com.example.oznerble.TapSetupActivity"/>
         <activity android:name="com.example.oznerble.CupActivity"/>
         <activity android:name="com.example.oznerble.CupSetupActivity"/>
-
         <service android:name="com.ozner.application.OznerBLEService" />
     </application>
 
