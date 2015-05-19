@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="6dp"
+        android:orientation="vertical" >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/Device_Name"
+            android:text="Ozner Cup"
+            android:textColor="@android:color/black"
+            
+            android:textAppearance="@android:style/TextAppearance.Large" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/Device_Address"
+            android:text="11:22:33:44:55:66"
+            android:textColor="@android:color/black"
+            
+            android:textAppearance="@android:style/TextAppearance.Medium" />
+        
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/Device_Message"
+            android:textColor="@android:color/black"
+            
+            android:text="TDS:11 Wigth:22 Temp:20 Battry=3300"
+            android:textAppearance="@android:style/TextAppearance.Medium" />
+        
+    </LinearLayout>
+
+</RelativeLayout>
