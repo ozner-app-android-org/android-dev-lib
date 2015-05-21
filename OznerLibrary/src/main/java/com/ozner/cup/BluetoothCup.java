@@ -33,6 +33,7 @@ public class BluetoothCup extends OznerBluetoothDevice {
 	 * 水杯连接成功
 	 */
 	public final static String ACTION_BLUETOOTHCUP_CONNECTED = "com.ozner.cup.bluetooth.connected";
+
 	/**
 	 * 水杯连接断开
 	 */

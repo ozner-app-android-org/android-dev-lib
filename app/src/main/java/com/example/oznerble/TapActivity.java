@@ -11,10 +11,12 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.RadioButton;
+import android.widget.TabHost;
 import android.widget.TextView;
 
 import com.example.oznerble.R.id;
@@ -37,6 +39,12 @@ public class TapActivity extends Activity implements View.OnClickListener {
 	RadioButton record_now;
 	RadioButton record_hour;
 	RadioButton record_day;
+	private void WriteMessage(String message)
+	{
+		SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss");
+		TextView tv=(TextView)this.findViewById(id.messageList);
+		tv.append(sdf.format(new Date())+" "+message+"\n");
+	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -54,7 +62,8 @@ public class TapActivity extends Activity implements View.OnClickListener {
 		filter.addAction(OznerBluetoothDevice.ACTION_BLUETOOTH_READLY);
 		filter.addAction(OznerBluetoothDevice.ACTION_BLUETOOTH_DISCONNECTED);
 		filter.addAction(OznerBluetoothDevice.ACTION_BLUETOOTH_CONNECTED);
-		
+		filter.addAction(OznerBluetoothDevice.ACTION_BLUETOOTH_ERROR);
+
 		this.registerReceiver(mMonitor, filter);
 		adapter = new ArrayAdapter<String>(this,
 				android.R.layout.simple_list_item_1);
@@ -64,16 +73,26 @@ public class TapActivity extends Activity implements View.OnClickListener {
 		findViewById(id.Device_Remove).setOnClickListener(this);
 		findViewById(id.Device_Setup).setOnClickListener(this);
 		findViewById(id.Device_Sensor).setOnClickListener(this);
+		findViewById(id.Device_Close).setOnClickListener(this);
+
 		record_list=(ListView)findViewById(id.record_list);
 		record_list.setAdapter(adapter);
 		load();
+
+		TabHost tab=(TabHost)findViewById(R.id.tabHost);
+
+		tab.setup();
+		tab.addTab(tab.newTabSpec("tab01").setIndicator("数据").setContent(R.id.tab1));
+		tab.addTab(tab.newTabSpec("tab02").setIndicator("日志").setContent(R.id.tab2));
 		super.onCreate(savedInstanceState);
+
+		((TextView)this.findViewById(id.messageList)).setMovementMethod(new ScrollingMovementMethod());
 	}
 
 	private void load() {
 
-		((TextView) findViewById(id.Device_Name)).setText(mTap.getName()+
-				(mTap.connected()?"(已连接)":"(未连接)"));
+		((TextView) findViewById(id.Device_Name)).setText(mTap.getName() +
+				(mTap.connected() ? "(已连接)" : "(未连接)"));
 		
 		if (mTap.Bluetooth() != null) {
 			((TextView) findViewById(id.Device_Model)).setText(mTap.Bluetooth()
@@ -85,6 +104,10 @@ public class TapActivity extends Activity implements View.OnClickListener {
 					.format(new Date(mTap.Bluetooth().getFirmware())));
 			((TextView) findViewById(id.Device_Message)).setText(mTap
 					.GetBluetooth().getSensor().toString());
+		}else
+
+		{
+			((TextView) findViewById(id.Device_Message)).setText("");
 		}
 		adapter.clear();
 		
@@ -99,7 +122,9 @@ public class TapActivity extends Activity implements View.OnClickListener {
 		this.unregisterReceiver(mMonitor);
 		super.onDestroy();
 	}
-
+	int ConnectCount=0;
+	int ErrorCount=0;
+	Date closeTime=new Date();
 	class Monitr extends BroadcastReceiver {
 		@Override
 		public void onReceive(Context context, Intent intent) {
@@ -119,12 +144,31 @@ public class TapActivity extends Activity implements View.OnClickListener {
 			}
 			if (action.equals(BluetoothCup.ACTION_BLUETOOTH_READLY))
 			{
-				((TextView) findViewById(id.Device_Name)).setText(mTap.getName()+"(设备已连接)");
+				((TextView) findViewById(id.Device_Name)).setText(mTap.getName() + "(设备已连接)");
+				Date now=new Date();
+				long time=now.getTime()-closeTime.getTime();
+				WriteMessage(String.format("设备就绪 距离上次关闭时间%f秒",time/1000f));
+				ConnectCount++;
+				WriteMessage(String.format("成功:%d 失败:%d", ConnectCount, ErrorCount));
 			}
 			if (action.equals(BluetoothCup.ACTION_BLUETOOTH_DISCONNECTED))
 			{
 				((TextView) findViewById(id.Device_Name)).setText(mTap.getName()+"(设备未连接)");
+				WriteMessage("设备连接断开");
 			}
+
+			if (action.equals(BluetoothCup.ACTION_BLUETOOTH_CONNECTED))
+			{
+				WriteMessage("设备连接成功");
+
+			}
+			if (action.equals(BluetoothCup.ACTION_BLUETOOTH_ERROR))
+			{
+				WriteMessage("设备连接失败 "+intent.getStringExtra("Message"));
+				ErrorCount++;
+				WriteMessage(String.format("成功:%d 失败:%d", ConnectCount, ErrorCount));
+			}
+
 			if (action.equals(Tap.ACTION_BLUETOOTHTAP_RECORD_COMPLETE)) {
 				load();
 				return;
@@ -135,17 +179,32 @@ public class TapActivity extends Activity implements View.OnClickListener {
 	@Override
 	public void onClick(View v) {
 		switch (v.getId()) {
-		case id.Device_Remove:
-			new AlertDialog.Builder(this).setTitle("提示ʾ").setMessage("是否要删除设备")
-			.setPositiveButton("是", new AlertDialog.OnClickListener() {
+			case id.Device_Remove:
+				new AlertDialog.Builder(this).setTitle("删除").setMessage("是否要删除设备")
+						.setPositiveButton("是", new AlertDialog.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+								service.getDeviceManager().remove(mTap);
+								finish();
+							}
+						})
+						.setNegativeButton("否", new AlertDialog.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+								dialog.cancel();
+							}
+						}).show();
+				break;
+			case id.Device_Close:
+				if (mTap.GetBluetooth()!=null)
+				{
 
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-					service.getDeviceManager().remove(mTap);
-					finish();
+					mTap.GetBluetooth().close();
+					closeTime=new Date();
+					load();
+					WriteMessage("关闭");
 				}
-			}).show();
-			break;
+				break;
 		case id.Device_Setup: {
 			Intent intent = new Intent(this, TapSetupActivity.class);
 			intent.putExtra("Address", mTap.Address());

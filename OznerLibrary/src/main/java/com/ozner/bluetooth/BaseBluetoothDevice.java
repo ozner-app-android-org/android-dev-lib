@@ -59,6 +59,8 @@ public abstract class BaseBluetoothDevice extends BluetoothGattCallback {
 	 * 设备连接成功广播
 	 */
 	public final static String ACTION_BLUETOOTH_CONNECTED = "com.ozner.bluetooth.connected";
+	public final static String ACTION_BLUETOOTH_ERROR = "com.ozner.bluetooth.error";
+
 	/**
 	 * 设备就绪广播
 	 */
@@ -494,6 +496,7 @@ public abstract class BaseBluetoothDevice extends BluetoothGattCallback {
 			dbg.i("start discoverServices");
 			if (!mGatt.discoverServices())
 			{
+				sendroadcastError("discoverServices error");
 				dbg.e("discoverServices error");
 			}
 		}
@@ -505,7 +508,10 @@ public abstract class BaseBluetoothDevice extends BluetoothGattCallback {
 		
 		if (status==BluetoothGatt.GATT_FAILURE)
 		{
-			dbg.e("%s onConnectionStateFailure:%d",getAddress(), newState);
+			dbg.e("%s onConnectionStateFailure:%d", getAddress(), newState);
+			sendroadcastError(String.format("onConnectionStateFailure:%d", newState));
+
+			return;
 		}
 		
 		super.onConnectionStateChange(gatt, status, newState);
@@ -539,6 +545,14 @@ public abstract class BaseBluetoothDevice extends BluetoothGattCallback {
 		}
 		
 	}
+	protected void sendroadcastError(String Message) {
+		Intent intent = new Intent();
+		intent.setAction(ACTION_BLUETOOTH_ERROR);
+		intent.putExtra("Address", mDevice.getAddress());
+		intent.putExtra("Message", Message);
+
+		mContext.sendBroadcast(intent);
+	}
 
 	protected void sendroadcastDisconnected() {
 		Intent intent = new Intent();
@@ -556,13 +570,13 @@ public abstract class BaseBluetoothDevice extends BluetoothGattCallback {
 
 	@Override
 	public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-		dbg.i("onServicesDiscovered");
 		super.onServicesDiscovered(gatt, status);
 		if (status == BluetoothGatt.GATT_SUCCESS)
 			mHandler.sendEmptyMessage(Msg_InitService);
 		else
 		{
-			dbg.e("onServicesDiscovered Error:%x",status);
+
+			sendroadcastError(String.format("onServicesDiscovered:%d", status));
 			close();
 		}
 	}
@@ -571,9 +585,9 @@ public abstract class BaseBluetoothDevice extends BluetoothGattCallback {
 	public void onCharacteristicRead(BluetoothGatt gatt,
 			BluetoothGattCharacteristic characteristic, int status) {
 		super.onCharacteristicRead(gatt, characteristic, status);
-		if (status == BluetoothGatt.GATT_SUCCESS) {
-			dbg.i("onCharacteristicRead:%d status",
-					characteristic.getValue().length, status);
+		if (status!=BluetoothGatt.GATT_SUCCESS)
+		{
+			sendroadcastError(String.format("onCharacteristicRead:%d", status));
 		}
 	}
 
@@ -581,19 +595,26 @@ public abstract class BaseBluetoothDevice extends BluetoothGattCallback {
 	public void onCharacteristicWrite(BluetoothGatt gatt,
 			BluetoothGattCharacteristic characteristic, int status) {
 		super.onCharacteristicWrite(gatt, characteristic, status);
-		dbg.d("onCharacteristicWrite:" + status);
+		if (status!=BluetoothGatt.GATT_SUCCESS)
+		{
+			sendroadcastError(String.format("onCharacteristicWrite:%d",status));
+			close();
+		}
 	}
 	
 	@Override
 	public void onDescriptorWrite(BluetoothGatt gatt,
 			BluetoothGattDescriptor descriptor, int status) {
 		super.onDescriptorWrite(gatt, descriptor, status);
-		dbg.d("onDescriptorWrite:" + status);
+
 		if (status == BluetoothGatt.GATT_SUCCESS) {
 			mReadly=true;
 			mHandler.sendEmptyMessage(Msg_Readly);
 		} else
 		{
+
+			sendroadcastError(String.format("onDescriptorWrite:%d", status));
+
 			close();
 		}
 			
@@ -619,11 +640,9 @@ public abstract class BaseBluetoothDevice extends BluetoothGattCallback {
 				mHandler.postDelayed(new Runnable() {
 					@Override
 					public void run() {
-						if (!mReadly)
-						{
-							if (misBackground)
-								close(); 
-						}
+						if (misBackground)
+							close();
+
 					}
 				}, 40000);
 			}else

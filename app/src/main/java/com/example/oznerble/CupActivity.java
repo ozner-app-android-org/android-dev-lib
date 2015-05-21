@@ -214,6 +214,7 @@ public class CupActivity extends Activity implements OnClickListener {
 		case id.record_now:
 			load();
 			break;
+
 		case id.Device_Remove:
 			new AlertDialog.Builder(this).setTitle("删除").setMessage("是否要删除设备")
 					.setPositiveButton("是", new AlertDialog.OnClickListener() {
