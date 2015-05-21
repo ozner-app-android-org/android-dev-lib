@@ -211,6 +211,7 @@ public abstract class BaseBluetoothDevice extends BluetoothGattCallback {
 					onData(opCode, data);
 				}catch(Exception e)
 				{
+					dbg.e("Data is Null");
 					dbg.e(e.toString());
 				}
 				break;
@@ -284,6 +285,7 @@ public abstract class BaseBluetoothDevice extends BluetoothGattCallback {
 					mGatt.disconnect();
 					mGatt.close();
 					mGatt = null;
+					dbg.i("set mGatt=null");
 				}
 			}
 		});
@@ -463,7 +465,10 @@ public abstract class BaseBluetoothDevice extends BluetoothGattCallback {
 	}
 	private void initService() {
 		dbg.i("initService");
-		if (mGatt==null) return;
+		if (mGatt==null)
+		{
+			dbg.i("mGatt is Null");
+		}
 		mService = mGatt.getService(GetUUID(ServiceId));
 		if (mService != null) {
 			mInput = mService.getCharacteristic(Characteristic_Input);
@@ -477,6 +482,7 @@ public abstract class BaseBluetoothDevice extends BluetoothGattCallback {
 					desc.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
 					mGatt.setCharacteristicNotification(mOutput, true);
 					mGatt.writeDescriptor(desc);
+					dbg.i("writeDescriptor");
 				} else {
 					close();
 				}

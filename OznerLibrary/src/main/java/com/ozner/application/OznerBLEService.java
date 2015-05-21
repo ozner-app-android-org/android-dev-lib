@@ -27,7 +27,6 @@ public class OznerBLEService extends Service implements ActivityLifecycleCallbac
 	static CupManager mCups;
 	static BluetoothScan mScaner;
 	static TapManager mTaps;
-	boolean isBackground = false;
 	OznerBLEBinder binder = new OznerBLEBinder();
 
 	public class OznerBLEBinder extends Binder {
@@ -131,6 +130,7 @@ public class OznerBLEService extends Service implements ActivityLifecycleCallbac
 		if (mManager.isBackground()!=back)
 		{
 			mManager.setBackgroundMode(back);
+			mScaner.setBackgroundMode(back);
 			dbg.i("setBackgroundMode:%s",back?"yes":"no");
 		}
 	}

@@ -1,5 +1,6 @@
 package com.ozner.bluetooth;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -25,7 +26,7 @@ import com.ozner.cup.BluetoothCup;
 import com.ozner.util.dbg;
 
 @SuppressLint("NewApi")
-public class BluetoothScan implements LeScanCallback {
+public class BluetoothScan implements LeScanCallback,Runnable {
 	Context mContext;
 	BluetoothAdapter mAdapter;
 	Timer mScanTimer;
@@ -110,25 +111,85 @@ public class BluetoothScan implements LeScanCallback {
 	}
 
 	HashMap<String, Date> mDevices = new HashMap<String, Date>();
-	Handler mScanHandler = new Handler(Looper.getMainLooper());
-	boolean mRuning = false;
+	//Handler mScanHandler = new Handler(Looper.getMainLooper());
+	boolean isScanning=false;
+	final static int FrontWaitPeriod=0;
+	final static int BackgroundWaitPeriod=4000;
+	int scanPeriod=5000;
+	int waitPeriod=FrontWaitPeriod;
+	private Thread scanThread;
+	private boolean isBackground=false;
+	public void run() {
+		try {
+			isScanning = true;
+			do {
+				synchronized (this) {
+					mAdapter.startLeScan(this);
+				}
 
+				if (scanPeriod > 0)
+					Thread.sleep(scanPeriod);
+
+				synchronized (this) {
+					mAdapter.stopLeScan(this);
+				}
+				Thread.sleep(waitPeriod);
+			} while (isScanning && scanPeriod > 0);
+		} catch (InterruptedException ignore) {
+		} finally {
+			synchronized (this) {
+				mAdapter.stopLeScan(this);
+			}
+		}
+	}
+
+
+	public boolean isRuning() {
+		return scanThread != null && scanThread.isAlive();
+	}
+	private void StartScan()
+	{
+		if (isRuning())
+			return;
+
+		if (scanThread != null) {
+			scanThread.interrupt();
+		}
+		scanThread = new Thread(this);
+		scanThread.setName(this.getClass().getName());
+		scanThread.start();
+	}
+	private void StopScan()
+	{
+		isScanning = false;
+		if (scanThread != null) {
+			scanThread.interrupt();
+			scanThread = null;
+		}
+		mAdapter.stopLeScan(this);
+	}
+	public void setBackgroundMode(boolean isBackground)
+	{
+		this.isBackground=isBackground;
+		waitPeriod=isBackground?BackgroundWaitPeriod:FrontWaitPeriod;
+	}
+
+	/*
 	private void scan() {
 		if (mAdapter.startLeScan(this)) {
 			mScanHandler.postDelayed(new Runnable() {
 				@Override
 				public void run() {
-					
+
 					UUID[] services=new UUID[]{UUID.fromString(String.format(
                             "%08x-0000-1000-8000-00805f9b34fb", 0xfff0))};
-					
+
 					mAdapter.startLeScan(services, BluetoothScan.this);
 					//mAdapter.stopLeScan(BluetoothScan.this,);
 				}
 			}, 2000);
 		}
 	}
-
 	private void StartScan() {
 		if (mScanTimer != null)
 			return;
@@ -170,14 +231,16 @@ public class BluetoothScan implements LeScanCallback {
 
 		}
 	}
-
 	public boolean isRuning() {
 		return mRuning;
 	}
+	*/
+
+
 
 	@SuppressWarnings("deprecation")
 	public void Start() {
-		if (mRuning)
+		if (isRuning())
 			return;
 		IntentFilter filter = new IntentFilter(
 				BluetoothAdapter.ACTION_STATE_CHANGED);
@@ -186,11 +249,13 @@ public class BluetoothScan implements LeScanCallback {
 			mAdapter.enable();
 		} else
 			StartScan();
+		StartCheckTimer();
 	}
 
 	public void Stop() {
 		mContext.unregisterReceiver(mMonitor);
 		StopScan();
+		StopCheckTimer();
 	}
 
 	Timer mDeviceCheckTimer = null;

@@ -51,7 +51,8 @@ public abstract class OznerBluetoothDevice extends AutoRefashDevice {
 	protected void setBindMode(boolean mode) {
 		misBindMode=mode;
 		Intent intent = new Intent(ACTION_OZNER_BLUETOOTH_BIND_MODE);
-		dbg.d("设备进入配对模式:%s", this.getAddress());
+		if (isBindMode())
+			dbg.d("设备进入配对模式:%s", this.getAddress());
 		intent.putExtra("Address", getAddress());
 		intent.putExtra("bind", isBindMode());
 		getContext().sendBroadcast(intent);
