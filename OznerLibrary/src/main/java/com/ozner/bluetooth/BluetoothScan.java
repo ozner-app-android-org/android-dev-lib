@@ -6,15 +6,20 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
+import java.util.concurrent.locks.ReadWriteLock;
 
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothAdapter.LeScanCallback;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanResult;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -29,7 +34,7 @@ import com.ozner.util.dbg;
 public class BluetoothScan implements LeScanCallback,Runnable {
 	Context mContext;
 	BluetoothAdapter mAdapter;
-	Timer mScanTimer;
+	//Timer mScanTimer;
 	public final static int AD_CustomType_BindStatus = 0x10;
 
 	public static final String Extra_Address = "Address";
@@ -60,12 +65,12 @@ public class BluetoothScan implements LeScanCallback,Runnable {
 	 */
 	public final static String ACTION_SCANNER_STOP = "com.ozner.bluetooth.sanner.stop";
 	BluetoothMonitor mMonitor = new BluetoothMonitor();
-
+	BluetoothManager mBluetoothManager;
 	public BluetoothScan(Context context) {
 		mContext = context;
-		BluetoothManager bluetoothManager = (BluetoothManager) context
+		mBluetoothManager = (BluetoothManager) context
 				.getSystemService(Context.BLUETOOTH_SERVICE);
-		mAdapter = bluetoothManager.getAdapter();
+		mAdapter = mBluetoothManager.getAdapter();
 	}
 
 	/**
@@ -111,29 +116,46 @@ public class BluetoothScan implements LeScanCallback,Runnable {
 	}
 
 	HashMap<String, Date> mDevices = new HashMap<String, Date>();
-	//Handler mScanHandler = new Handler(Looper.getMainLooper());
+	Handler mScanHandler = new Handler(Looper.getMainLooper());
 	boolean isScanning=false;
-	final static int FrontWaitPeriod=0;
-	final static int BackgroundWaitPeriod=4000;
-	int scanPeriod=5000;
-	int waitPeriod=FrontWaitPeriod;
+	final static int FrontPeriod=500;
+	final static int BackgroundPeriod=5000;
+	int scanPeriod=FrontPeriod;
+	//int waitPeriod=FrontWaitPeriod;
 	private Thread scanThread;
 	private boolean isBackground=false;
 	public void run() {
 		try {
 			isScanning = true;
 			do {
+				if (BaseBluetoothDevice.hashConnecting())
+					continue;
+
 				synchronized (this) {
+					mFoundDevice.clear();
+					dbg.i("StartScan");
 					mAdapter.startLeScan(this);
 				}
-
 				if (scanPeriod > 0)
 					Thread.sleep(scanPeriod);
 
 				synchronized (this) {
 					mAdapter.stopLeScan(this);
 				}
-				Thread.sleep(waitPeriod);
+
+				synchronized (this)
+				{
+					ArrayList<FoundDevice> devices=new ArrayList<>(mFoundDevice.values());
+					for (FoundDevice found : devices)
+					{
+						onFound(found.device, found.rssi, found.scanRecord);
+						mFoundDevice.remove(found.device.getAddress());
+						Thread.sleep(500);
+						if (BaseBluetoothDevice.hashConnecting())
+							continue;
+					}
+				}
+				//Thread.sleep(waitPeriod);
 			} while (isScanning && scanPeriod > 0);
 		} catch (InterruptedException ignore) {
 		} finally {
@@ -171,7 +193,7 @@ public class BluetoothScan implements LeScanCallback,Runnable {
 	public void setBackgroundMode(boolean isBackground)
 	{
 		this.isBackground=isBackground;
-		waitPeriod=isBackground?BackgroundWaitPeriod:FrontWaitPeriod;
+		scanPeriod=isBackground?BackgroundPeriod:FrontPeriod;
 	}
 
 	/*
@@ -295,9 +317,16 @@ public class BluetoothScan implements LeScanCallback,Runnable {
 
 	final static byte GAP_ADTYPE_MANUFACTURER_SPECIFIC = (byte) 0xff;
 	final static byte GAP_ADTYPE_SERVICE_DATA = 0x16;
+	class FoundDevice
+	{
+		public BluetoothDevice device;
+		public byte[] scanRecord;
+		public int rssi;
+	}
 
-	@Override
-	public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
+	HashMap<String,FoundDevice> mFoundDevice=new HashMap<>();
+	private void onFound(BluetoothDevice device,int rssi,byte[] scanRecord)
+	{
 		String address = device.getAddress();
 		// dbg.d("device:%s",device.getAddress());
 		// 是否发送广播标记
@@ -380,6 +409,22 @@ public class BluetoothScan implements LeScanCallback,Runnable {
 			intent.putExtra(Extra_DataAvailable, Available);
 			mContext.sendBroadcast(intent);
 		}
+	}
+
+	@Override
+	public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
+		synchronized (this) {
+			if (mFoundDevice.containsKey(device.getAddress())) {
+				mFoundDevice.remove(device.getAddress());
+			}
+
+			FoundDevice found = new FoundDevice();
+			found.device = device;
+			found.rssi=rssi;
+			found.scanRecord = scanRecord;
+			mFoundDevice.put(device.getAddress(), found);
+		}
+
 
 	}
 

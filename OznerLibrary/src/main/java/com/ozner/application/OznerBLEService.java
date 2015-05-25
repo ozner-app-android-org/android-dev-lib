@@ -15,6 +15,7 @@ import android.os.Handler;
 import android.os.IBinder;
 
 import com.ozner.bluetooth.BluetoothScan;
+import com.ozner.bluetooth.BluetoothWorkThread;
 import com.ozner.cup.CupManager;
 import com.ozner.device.OznerContext;
 import com.ozner.device.OznerDeviceManager;
@@ -109,6 +110,7 @@ public class OznerBLEService extends Service implements ActivityLifecycleCallbac
 			mManager.Start();
 			mScaner.Start();
 		}
+		//BluetoothWorkThread work=new BluetoothWorkThread(getApplicationContext());
 		return binder;
 	}
 

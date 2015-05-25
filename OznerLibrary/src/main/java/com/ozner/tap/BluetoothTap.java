@@ -153,7 +153,7 @@ public class BluetoothTap extends OznerBluetoothDevice {
 		if (isBusy())
 			return false;
 		mRequestSensorFlag = true;
-		dbg.i(getAddress() + " 请求传感器记录", getContext());
+//		dbg.i(getAddress() + " 请求传感器记录", getContext());
 		return sendOpCode(opCode_ReadSensor);
 	}
 	
@@ -166,7 +166,7 @@ public class BluetoothTap extends OznerBluetoothDevice {
 			return false;
 		mRequestRecordFlag = new Date().getTime();
 		mRecords.clear();
-		dbg.i(getAddress() + " 请求TDS监测记录", getContext());
+//		dbg.i(getAddress() + " 请求TDS监测记录", getContext());
 		return sendOpCode(opCode_ReadTDSRecord);
 	}
 
@@ -224,7 +224,7 @@ public class BluetoothTap extends OznerBluetoothDevice {
 			data[11] =0;
 		}
 
-		dbg.i(getAddress() + " 写入监测设置", getContext());
+//		dbg.i(getAddress() + " 写入监测设置", getContext());
 		return send(opCode_SetDetectTime, data);
 	}
 
@@ -266,11 +266,11 @@ public class BluetoothTap extends OznerBluetoothDevice {
 					mSensor.FromBytes(Data);
 				}
 
-				dbg.i(String
-						.format("收到数据: BatteryFix:%d TemperatureFix:%d WeigthFix:%d TDSFix:%d",
-								mSensor.BatteryFix, mSensor.TemperatureFix,
-								mSensor.WeigthFix, mSensor.TDSFix),
-						getContext());
+//				dbg.i(String
+//						.format("收到数据: BatteryFix:%d TemperatureFix:%d WeigthFix:%d TDSFix:%d",
+//								mSensor.BatteryFix, mSensor.TemperatureFix,
+//								mSensor.WeigthFix, mSensor.TDSFix),
+//						getContext());
 
 				Intent intent = new Intent(ACTION_BLUETOOTHTAP_SENSOR);
 				intent.putExtra("Address", getAddress());
@@ -302,13 +302,13 @@ public class BluetoothTap extends OznerBluetoothDevice {
 				}
 				mlastRecord=record;
 				if (record.TDS > 0) {
-					dbg.i("收到监测数据 TDS:%s", record.toString());
+					//dbg.i("收到监测数据 TDS:%s", record.toString());
 					synchronized (this) {
 						mRecords.add(record);
 					}
 				}
-				dbg.i(String.format("%s 收到监测数据%d\\%d", getAddress(),
-						record.Index, record.Count), getContext());
+				//dbg.i(String.format("%s 收到监测数据%d\\%d", getAddress(),
+				//		record.Index, record.Count), getContext());
 				Intent intent = new Intent(ACTION_BLUETOOTHTAP_RECORD);
 				intent.putExtra("Address", getAddress());
 				intent.putExtra("Record", Data);
