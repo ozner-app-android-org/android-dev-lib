@@ -272,8 +272,8 @@ public class BluetoothCup extends OznerBluetoothDevice {
 	HashSet<String> dataHash=new HashSet<String> ();
 	@SuppressLint("DefaultLocale")
 	@Override
-	protected void onData(byte opCode, byte[] Data) {
-		super.onData(opCode, Data);
+	protected void ProcData(byte opCode, byte[] Data) {
+		super.ProcData(opCode, Data);
 		switch (opCode) {
 
 		case opCode_ReadSensorRet: {
@@ -393,17 +393,4 @@ public class BluetoothCup extends OznerBluetoothDevice {
 	public Object getSensor() {
 		return mSensor;
 	}
-
-	@Override
-	protected void onReadly() {
-		super.onReadly();
-		sendOpCode(opCode_ReadSensor);
-		sleep();
-		sendOpCode(opCode_ReadRecord);
-		//sleep();
-		//requestSensor();
-		//sleep();
-		//requestRecord();
-	}
-
 }

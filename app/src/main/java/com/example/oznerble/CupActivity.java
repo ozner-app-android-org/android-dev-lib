@@ -28,6 +28,7 @@ import android.widget.Toast;
 import com.example.oznerble.R.id;
 import com.example.oznerble.R.layout;
 import com.ozner.application.OznerBLEService.OznerBLEBinder;
+import com.ozner.bluetooth.BaseBluetoothDevice;
 import com.ozner.cup.BluetoothCup;
 import com.ozner.cup.Cup;
 import com.ozner.cup.CupRecord;
@@ -189,13 +190,44 @@ public class CupActivity extends Activity implements OnClickListener {
 			{
 				Uri uri = data.getData();
 				String[] proj = { MediaStore.Images.Media.DATA };
-				Cursor actualimagecursor = managedQuery(uri,proj,null,null,null);
+				Cursor actualimagecursor = managedQuery(uri, proj, null, null, null);
 				int actual_image_column_index = actualimagecursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
 				actualimagecursor.moveToFirst();
 				String path = actualimagecursor.getString(actual_image_column_index);
-            	Toast.makeText(this, path, Toast.LENGTH_LONG).show();
+				if (mCup.GetBluetooth()!=null)
+
+
+				try {
+					mCup.GetBluetooth().udateFirmware(path, new BaseBluetoothDevice.FirmwareUpateInterface() {
+						@Override
+						public void onFirmwareUpdateStart(String Address, int size) {
+
+						}
+
+						@Override
+						public void onFirmwarePosition(String Address, int Position, int Size) {
+							dbg.d(String.format("%d/%d",Position,Size));
+						}
+
+						@Override
+						public void onFirmwareComplete(String Address) {
+
+						}
+
+						@Override
+						public void onFirmwareFail(String Address) {
+
+						}
+					});
+				} catch (IOException e) {
+					e.printStackTrace();
+				} catch (FirmwareExcpetion firmwareExcpetion) {
+					firmwareExcpetion.printStackTrace();
+				}
+
+				Toast.makeText(this, path, Toast.LENGTH_LONG).show();
             	try {
-					FirmwareTools tools=new FirmwareTools(path);
+					FirmwareTools tools=new FirmwareTools(path,mCup.Address());
 					tools.toString();
 				} catch (Exception e) {
 					Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show();

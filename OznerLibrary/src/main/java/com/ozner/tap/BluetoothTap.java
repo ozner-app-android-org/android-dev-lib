@@ -255,9 +255,9 @@ public class BluetoothTap extends OznerBluetoothDevice {
 	}
 	HashSet<String> dataHash=new HashSet<String> ();
 	@Override
-	protected void onData(byte opCode, byte[] Data) {
+	protected void ProcData(byte opCode, byte[] Data) {
 		// TODO Auto-generated method stub
-		super.onData(opCode, Data);
+		super.ProcData(opCode, Data);
 		switch (opCode) {
 		case opCode_ReadSensorRet: {
 			if (Data != null) {

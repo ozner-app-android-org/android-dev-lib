@@ -15,6 +15,8 @@ public abstract class AutoRefashDevice extends BaseBluetoothDevice {
 	
 	protected abstract void onAutoUpdate();
 	@Override
+
+
 	protected void onReadly() {
 		synchronized (this) {
 			if (mUdateTimer!=null) return;
@@ -34,10 +36,11 @@ public abstract class AutoRefashDevice extends BaseBluetoothDevice {
 						}
 					}*/
 				}
-			}, 1000,5000);
+			}, 0,5000);
 		}
 		super.onReadly();
 	}
+
 	@Override
 	public void close() {
 		onPause();

@@ -15,7 +15,6 @@ import android.os.Handler;
 import android.os.IBinder;
 
 import com.ozner.bluetooth.BluetoothScan;
-import com.ozner.bluetooth.BluetoothWorkThread;
 import com.ozner.cup.CupManager;
 import com.ozner.device.OznerContext;
 import com.ozner.device.OznerDeviceManager;

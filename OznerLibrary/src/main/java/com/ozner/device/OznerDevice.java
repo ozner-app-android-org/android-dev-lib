@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.IntentFilter;
 
 import com.ozner.bluetooth.BaseBluetoothDevice;
+import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.cup.BluetoothCup;
 import com.ozner.cup.CupSetting;
 import com.ozner.cup.CupVolume;
@@ -79,7 +80,7 @@ public abstract class OznerDevice {
 	 */
 	public boolean connected() {
 		if (mBluetooth != null) {
-			return mBluetooth.getStatus()==BluetoothCup.STATE_CONNECTED;
+			return mBluetooth.getStatus()== BluetoothIO.STATE_CONNECTED;
 		} else
 			return false;
 	}

@@ -11,7 +11,7 @@
 
     <RelativeLayout
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" >
+        android:layout_height="wrap_content">
 
         <LinearLayout
             android:id="@+id/linearLayout1"
@@ -50,6 +50,11 @@
                     android:layout_marginLeft="6dp"
                     android:text="平台:"
                     android:textAppearance="@android:style/TextAppearance.Small" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/FirmwareText"
+                    />
             </LinearLayout>
 
             <TextView

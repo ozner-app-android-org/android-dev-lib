@@ -23,5 +23,10 @@ public class ByteUtil {
 				| ((bb[index + 2] & 0xff) << 16)
 				| ((bb[index + 1] & 0xff) << 8) | ((bb[index] & 0xff) << 0)));
 	}
+	public static long getUInt(byte[] bb, int index) {
+		return ((((bb[index + 3] & 0xff) << 24)
+				| ((bb[index + 2] & 0xff) << 16)
+				| ((bb[index + 1] & 0xff) << 8) | (bb[index] & 0xff)));
 
+	}
 }
