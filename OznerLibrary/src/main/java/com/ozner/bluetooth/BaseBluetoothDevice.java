@@ -5,12 +5,8 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Locale;
 import java.util.UUID;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import com.ozner.device.FirmwareTools;
 import com.ozner.util.ByteUtil;
@@ -26,6 +22,7 @@ import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.Intent;
+import android.os.DeadObjectException;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -33,35 +30,6 @@ import android.text.format.Time;
 
 @SuppressLint({"NewApi", "HandlerLeak"})
 public abstract class BaseBluetoothDevice extends BluetoothGattCallback {
-
-    static ReadWriteLock mBluetoothLocker=new ReentrantReadWriteLock();
-    public static void lock()
-    {
-        mBluetoothLocker.writeLock().lock();
-    }
-    public static void unlock()
-    {
-        mBluetoothLocker.writeLock().unlock();
-    }
-
-    static HashSet<String> mConnectingDevices = new HashSet<>();
-
-    public static boolean hashConnecting() {
-
-        synchronized (mConnectingDevices) {
-            return mConnectingDevices.size() > 0;
-        }
-    }
-
-    private static void removeConnecting(String Address) {
-        synchronized (mConnectingDevices) {
-            if (mConnectingDevices.contains(Address)) {
-                mConnectingDevices.remove(Address);
-            }
-        }
-    }
-
-
     BluetoothDevice mDevice = null;
     BluetoothGatt mGatt = null;
     Context mContext;
@@ -227,13 +195,9 @@ public abstract class BaseBluetoothDevice extends BluetoothGattCallback {
         public RunHandler() {
             super(Looper.getMainLooper());
         }
-
         @Override
         public void dispatchMessage(Message msg) {
             switch (msg.what) {
-                case Msg_Connect: {
-
-                }
                 case Msg_Readly:
                     onReadly();
                     break;
@@ -276,15 +240,12 @@ public abstract class BaseBluetoothDevice extends BluetoothGattCallback {
      * 连接蓝牙设备
      */
     public void connect() {
-        if (hashConnecting()) return;
+        if (BluetoothStatusChecker.hashBluetoothBusy()) return;
         if (mStatus != STATE_DISCONNECTED) return;
-
         dbg.d("device:%s connect", getAddress());
-        synchronized (mConnectingDevices) {
-            if (!mConnectingDevices.contains(getAddress())) {
-                mConnectingDevices.add(mDevice.getAddress());
-            }
-        }
+
+        BluetoothStatusChecker.Busy(getAddress());
+
         synchronized (this) {
             mStatus = STATE_CONNECTING;
             mGatt = mDevice.connectGatt(mContext, false, BaseBluetoothDevice.this);
@@ -316,12 +277,24 @@ public abstract class BaseBluetoothDevice extends BluetoothGattCallback {
 
     }
 
+    public void updateBluetooth(BluetoothDevice device)
+    {
+        synchronized (this) {
+            if (device != mDevice) {
+                if (mGatt!=null)
+                {
+                    mGatt.close();
+                    mGatt=null;
+                }
+                mDevice=device;
+            }
+        }
+    }
 
     /**
      * 关闭连接
      */
     public void close() {
-
         if (mStatus == STATE_DISCONNECTED) return;
         dbg.d("Close");
         synchronized (this) {
@@ -329,20 +302,18 @@ public abstract class BaseBluetoothDevice extends BluetoothGattCallback {
                 mCloseCallback.OnOznerBluetoothClose(BaseBluetoothDevice.this);
             }
             if (mGatt != null) {
-                mGatt.disconnect();
-                mGatt.close();
+                try {
+                    mGatt.disconnect();
+                    mGatt.close();
+                }catch (Exception e)
+                {
+
+                }
                 mGatt = null;
                 dbg.i("set mGatt=null");
             }
         }
-        removeConnecting(getAddress());
-        //mHandler.post(new Runnable() {
-        //	@Override
-        //	public void run() {
-
-
-        //	}
-        //});
+        BluetoothStatusChecker.Idle(getAddress());
     }
 
     private boolean sendTime() {
@@ -381,7 +352,7 @@ public abstract class BaseBluetoothDevice extends BluetoothGattCallback {
     static final byte opCode_ReadSensor = 0x12;
 
     protected void onReadly() {
-        removeConnecting(getAddress());
+        BluetoothStatusChecker.Idle(getAddress());
         dbg.i(String.format("设备连接就绪:%s",getAddress()));
         sendTime();
         sleep();
@@ -408,32 +379,46 @@ public abstract class BaseBluetoothDevice extends BluetoothGattCallback {
     }
 
     protected boolean send(byte opCode, byte[] data) {
-        if (mGatt == null) return false;
-        //dbg.i("send:%x len:%d", opCode, data.length);
-        if (mInput != null) {
-            ByteArrayOutputStream out = new ByteArrayOutputStream(20);
-            try {
+        synchronized (this) {
+            if (mGatt == null) return false;
+            if (mInput != null) {
+                ByteArrayOutputStream out = new ByteArrayOutputStream(20);
                 try {
-                    out.write(opCode);
-                    if (data != null)
-                        out.write(data);
-                    mInput.setValue(out.toByteArray());
-                } finally {
-                    out.close();
+                    try {
+                        out.write(opCode);
+                        if (data != null)
+                            out.write(data);
+                        mInput.setValue(out.toByteArray());
+                    } finally {
+                        out.close();
+                    }
+                } catch (IOException e) {
+                    return false;
                 }
-            } catch (IOException e) {
-                return false;
+                try {
+                    return mGatt.writeCharacteristic(mInput);
+                }catch (Exception e)
+                {
+                    close();
+
+                }
             }
-            return mGatt.writeCharacteristic(mInput);
+            return false;
         }
-        return false;
     }
 
     protected boolean sendOpCode(int opCode) {
-        if (mGatt == null) return false;
-        //dbg.i("sendOpCode:%x", opCode);
-        mInput.setValue(opCode, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
-        return mGatt.writeCharacteristic(mInput);
+        synchronized (this) {
+            if (mGatt == null) return false;
+            mInput.setValue(opCode, BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+            try {
+                return mGatt.writeCharacteristic(mInput);
+            }catch (Exception e)
+            {
+                close();
+            }
+            return false;
+        }
     }
 
 
@@ -487,6 +472,8 @@ public abstract class BaseBluetoothDevice extends BluetoothGattCallback {
     @Override
     public void onCharacteristicChanged(BluetoothGatt gatt,
                                         BluetoothGattCharacteristic characteristic) {
+        synchronized (this)
+        {
         dbg.d("onCharacteristicChanged:%d", characteristic.getValue().length);
         if (characteristic.getUuid().equals(Characteristic_Output)) {
             Message msg = new Message();
@@ -494,8 +481,9 @@ public abstract class BaseBluetoothDevice extends BluetoothGattCallback {
             msg.obj = characteristic.getValue();
             ;
             mHandler.sendMessage(msg);
-        }
+        }}
         super.onCharacteristicChanged(gatt, characteristic);
+
     }
 
     /**
@@ -586,7 +574,6 @@ public abstract class BaseBluetoothDevice extends BluetoothGattCallback {
             /*if (mService == null) {
 				gatt.discoverServices();
 			} else
-				
 				initService();*/
                 break;
             }
@@ -606,11 +593,10 @@ public abstract class BaseBluetoothDevice extends BluetoothGattCallback {
                         mGatt.close();
 
                 }
-                removeConnecting(getAddress());
+                BluetoothStatusChecker.Idle(getAddress());
                 break;
             }
         }
-
     }
 
     protected void sendroadcastError(String Message) {
@@ -796,7 +782,6 @@ public abstract class BaseBluetoothDevice extends BluetoothGattCallback {
             public void run() {
                 callback.onFirmwareUpdateStart(getAddress());
                 eraseRom();
-
                 callback.onFirmwareComplete(getAddress());
 
             }

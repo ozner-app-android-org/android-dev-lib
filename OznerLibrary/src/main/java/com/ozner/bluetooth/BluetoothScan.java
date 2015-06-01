@@ -1,25 +1,18 @@
 package com.ozner.bluetooth;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.UUID;
-import java.util.concurrent.locks.ReadWriteLock;
 
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothAdapter.LeScanCallback;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothManager;
-import android.bluetooth.le.ScanCallback;
-import android.bluetooth.le.ScanResult;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -128,39 +121,40 @@ public class BluetoothScan implements LeScanCallback,Runnable {
 		try {
 			isScanning = true;
 			do {
-				if (BaseBluetoothDevice.hashConnecting())
-					continue;
-
-				synchronized (this) {
-					mFoundDevice.clear();
-					dbg.i("StartScan");
-					mAdapter.startLeScan(this);
-				}
-				if (scanPeriod > 0)
-					Thread.sleep(scanPeriod);
-
-				synchronized (this) {
-					mAdapter.stopLeScan(this);
-				}
-
-				synchronized (this)
-				{
-					ArrayList<FoundDevice> devices=new ArrayList<>(mFoundDevice.values());
-					for (FoundDevice found : devices)
-					{
-						onFound(found.device, found.rssi, found.scanRecord);
-						mFoundDevice.remove(found.device.getAddress());
-						Thread.sleep(500);
-						if (BaseBluetoothDevice.hashConnecting())
-							continue;
+				if (!BluetoothStatusChecker.hashBluetoothBusy()) {
+					synchronized (this) {
+						mFoundDevice.clear();
+						dbg.i("StartScan");
+						mAdapter.startLeScan(this);
 					}
-				}
+					if (scanPeriod > 0)
+						Thread.sleep(scanPeriod);
+
+					synchronized (this) {
+						mAdapter.stopLeScan(this);
+						ArrayList<FoundDevice> devices=new ArrayList<>(mFoundDevice.values());
+						for (FoundDevice found : devices)
+						{
+							onFound(found.device, found.rssi, found.scanRecord);
+							mFoundDevice.remove(found.device.getAddress());
+							Thread.sleep(500);
+							if (BluetoothStatusChecker.hashBluetoothBusy())
+								break;
+						}
+					}
+				}else
+					Thread.sleep(500);
 				//Thread.sleep(waitPeriod);
 			} while (isScanning && scanPeriod > 0);
 		} catch (InterruptedException ignore) {
 		} finally {
 			synchronized (this) {
-				mAdapter.stopLeScan(this);
+				try {
+					mAdapter.stopLeScan(this);
+				}catch(Exception e)
+				{
+
+				}
 			}
 		}
 	}
@@ -188,7 +182,12 @@ public class BluetoothScan implements LeScanCallback,Runnable {
 			scanThread.interrupt();
 			scanThread = null;
 		}
-		mAdapter.stopLeScan(this);
+		try {
+			mAdapter.stopLeScan(this);
+		}catch (Exception e)
+		{
+
+		}
 	}
 	public void setBackgroundMode(boolean isBackground)
 	{
@@ -365,8 +364,14 @@ public class BluetoothScan implements LeScanCallback,Runnable {
 								//dbg.d("send GAP_ADTYPE_MANUFACTURER_SPECIFIC:%s",
 								//		device.getAddress());
 								// 老固件水杯兼容
-								byte[] data = Arrays.copyOfRange(scanRecord,
-										pos + 1, pos + len);
+								byte[] data=null;
+								try {
+									data = Arrays.copyOfRange(scanRecord,
+											pos + 1, pos + len);
+								}catch (Exception e)
+								{
+									dbg.e(e.toString());
+								}
 								if (device.getName().equals("Ozner Cup")) {
 									CustomType = BluetoothCup.AD_CustomType_Gravity;
 									Model = "CP001";

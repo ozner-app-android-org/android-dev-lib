@@ -30,10 +30,10 @@ public class TapDatas {
 	 * @param Address 设备地址
 	 * @param Records 设备记录列表
 	 */
-	public void LoadRecords(String Address,TapRecord[] Records)
+	public void LoadRecords(String Address,Record[] Records)
 	{
 		db.execSQLNonQuery("delete from DayTable where sn=?", new String[] { Address });
-		for (TapRecord record : Records) {
+		for (Record record : Records) {
 			db.execSQLNonQuery(
 					"insert into DayTable (sn,time,json,updateflag) values (?,?,?,0);",
 					new Object[] { Address,

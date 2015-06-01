@@ -106,14 +106,14 @@ public class OznerDeviceManager implements BluetoothCloseCallback {
 	}
 
 	protected void CloseAll() {
-		synchronized (this) {
+		/*synchronized (this) {
 			ArrayList<BaseBluetoothDevice> list = new ArrayList<BaseBluetoothDevice>(
 					mBluetooths.values());
 			for (BaseBluetoothDevice device : list) {
 				device.close();
 			}
 			mBluetooths.clear();
-		}
+		}*/
 	}
 
 	private void LoadDevices() {
@@ -265,7 +265,7 @@ public class OznerDeviceManager implements BluetoothCloseCallback {
 					: ACTION_OZNER_MANAGER_DEVICE_CHANGE);
 			getContext().sendBroadcast(intent);
 
-			if (device.Bluetooth() != null) {
+			/*if (device.Bluetooth() != null) {
 				device.Bluetooth().setBackgroundMode(_isBackground);
 				if (_isBackground) {
 					if (device.Bluetooth().isDataAvailable()) {
@@ -276,7 +276,7 @@ public class OznerDeviceManager implements BluetoothCloseCallback {
 					device.Bluetooth().connect();
 					device.Bluetooth().updateSetting();
 				}
-			}
+			}*/
 
 			ArrayList<DeviceManager> list = getManagers();
 			if (isNew) {
@@ -456,6 +456,7 @@ public class OznerDeviceManager implements BluetoothCloseCallback {
 	protected OznerBluetoothDevice foundDevice(BluetoothDevice device,
 			String Paltform, String Model, long Firewarm) {
 		if (mBluetooths.containsKey(device.getAddress())) {
+			mBluetooths.get(device.getAddress()).updateBluetooth(device);
 			return mBluetooths.get(device.getAddress());
 		}
 		ArrayList<DeviceManager> list = getManagers();
