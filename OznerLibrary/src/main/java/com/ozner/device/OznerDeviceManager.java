@@ -265,18 +265,9 @@ public class OznerDeviceManager implements BluetoothCloseCallback {
 					: ACTION_OZNER_MANAGER_DEVICE_CHANGE);
 			getContext().sendBroadcast(intent);
 
-			/*if (device.Bluetooth() != null) {
-				device.Bluetooth().setBackgroundMode(_isBackground);
-				if (_isBackground) {
-					if (device.Bluetooth().isDataAvailable()) {
-						device.Bluetooth().connect();
-						device.Bluetooth().updateSetting();
-					}
-				} else {
-					device.Bluetooth().connect();
-					device.Bluetooth().updateSetting();
-				}
-			}*/
+			if (device.Bluetooth() != null) {
+				device.Bluetooth().updateSetting();
+			}
 
 			ArrayList<DeviceManager> list = getManagers();
 			if (isNew) {

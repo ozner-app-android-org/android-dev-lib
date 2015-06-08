@@ -34,6 +34,8 @@ public class BluetoothScan implements LeScanCallback,Runnable {
 	public static final String Extra_Model = "Model";
 	public static final String Extra_Firmware = "Firmware";
 	public static final String Extra_Platform = "Platform";
+	public static final String Extra_ScanData = "scanData";
+
 
 	public static final String Extra_CustomType = "CustomType";
 	public static final String Extra_CustomData = "CustomData";
@@ -344,7 +346,7 @@ public class BluetoothScan implements LeScanCallback,Runnable {
 				mDevices.put(address, now);
 			}
 		}
-
+		byte[] repData=null;
 		if (send) {
 			String Model = "";
 			Date Firmware = null;
@@ -385,6 +387,7 @@ public class BluetoothScan implements LeScanCallback,Runnable {
 										pos + 1, pos + len);
 								BluetoothScanRep rep = new BluetoothScanRep();
 								rep.FromBytes(data);
+								repData=data;
 								Model = rep.Model;
 								Platform = rep.Platform;
 								Firmware = rep.Firmware;
@@ -412,6 +415,8 @@ public class BluetoothScan implements LeScanCallback,Runnable {
 			intent.putExtra(Extra_CustomType, CustomType);
 			intent.putExtra(Extra_CustomData, CustomData);
 			intent.putExtra(Extra_DataAvailable, Available);
+			intent.putExtra(Extra_ScanData, repData);
+
 			mContext.sendBroadcast(intent);
 		}
 	}
