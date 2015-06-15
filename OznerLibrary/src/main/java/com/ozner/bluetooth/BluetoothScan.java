@@ -259,8 +259,6 @@ public class BluetoothScan implements LeScanCallback,Runnable {
 	}
 	*/
 
-
-
 	@SuppressWarnings("deprecation")
 	public void Start() {
 		if (isRuning())
@@ -427,7 +425,6 @@ public class BluetoothScan implements LeScanCallback,Runnable {
 			if (mFoundDevice.containsKey(device.getAddress())) {
 				mFoundDevice.remove(device.getAddress());
 			}
-
 			FoundDevice found = new FoundDevice();
 			found.device = device;
 			found.rssi=rssi;
