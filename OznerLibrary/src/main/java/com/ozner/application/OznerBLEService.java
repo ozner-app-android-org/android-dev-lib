@@ -1,26 +1,24 @@
 package com.ozner.application;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Timer;
-import java.util.TimerTask;
-
 import android.app.Activity;
 import android.app.Application.ActivityLifecycleCallbacks;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
 
 import com.ozner.bluetooth.BluetoothScan;
-import com.ozner.bluetooth.BluetoothWorkThread;
 import com.ozner.cup.CupManager;
 import com.ozner.device.OznerContext;
 import com.ozner.device.OznerDeviceManager;
 import com.ozner.tap.TapManager;
 import com.ozner.util.dbg;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class OznerBLEService extends Service implements ActivityLifecycleCallbacks {
 	static OznerContext mContext;
@@ -108,7 +106,7 @@ public class OznerBLEService extends Service implements ActivityLifecycleCallbac
 		if (!mScaner.isRuning())
 		{
 			mManager.Start();
-			mScaner.Start();
+			mScaner.StartScan();
 		}
 		//BluetoothWorkThread work=new BluetoothWorkThread(getApplicationContext());
 		return binder;

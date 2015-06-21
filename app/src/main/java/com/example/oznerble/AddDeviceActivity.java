@@ -49,7 +49,7 @@ public class AddDeviceActivity extends Activity {
 		
 		IntentFilter filter=new IntentFilter();
 		filter.addAction(BluetoothScan.ACTION_SCANNER_FOUND);
-		filter.addAction(BluetoothScan.ACTION_SCANNER_LOST);
+
 		filter.addAction(OznerBluetoothDevice.ACTION_OZNER_BLUETOOTH_BIND_MODE);
 		this.registerReceiver(mMonitor, filter);
 		setTitle("设备配对");

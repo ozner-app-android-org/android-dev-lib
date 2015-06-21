@@ -198,7 +198,6 @@ public class TapActivity extends Activity implements View.OnClickListener {
 			case id.Device_Close:
 				if (mTap.GetBluetooth()!=null)
 				{
-
 					mTap.GetBluetooth().close();
 					closeTime=new Date();
 					load();
@@ -214,10 +213,7 @@ public class TapActivity extends Activity implements View.OnClickListener {
 			
 		case id.Device_Sensor:
 		{
-			if (mTap.GetBluetooth()!=null)
-			{
-				mTap.GetBluetooth().requestSensor();
-			}
+
 		}
 		break;
 		}

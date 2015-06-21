@@ -1,12 +1,7 @@
 package com.ozner.device;
 
 import android.content.Context;
-import android.content.IntentFilter;
-
-import com.ozner.bluetooth.BaseBluetoothDevice;
 import com.ozner.cup.BluetoothCup;
-import com.ozner.cup.CupSetting;
-import com.ozner.cup.CupVolume;
 import com.ozner.util.SQLiteDB;
 /**
  * @category Device

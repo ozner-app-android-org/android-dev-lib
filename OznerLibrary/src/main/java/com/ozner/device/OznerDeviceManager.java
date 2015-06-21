@@ -13,16 +13,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 
+import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.bluetooth.BluetoothScan;
-import com.ozner.bluetooth.BaseBluetoothDevice;
-import com.ozner.bluetooth.BaseBluetoothDevice.BluetoothCloseCallback;
-import com.ozner.cup.BluetoothCup;
-import com.ozner.cup.Cup;
 import com.ozner.util.SQLiteDB;
 import com.ozner.util.dbg;
 
 @SuppressLint("NewApi")
-public class OznerDeviceManager implements BluetoothCloseCallback {
+public class OznerDeviceManager implements BluetoothIO.BluetoothCloseCallback {
 	/**
 	 * 新增一个配对设备广播
 	 */
@@ -106,14 +103,14 @@ public class OznerDeviceManager implements BluetoothCloseCallback {
 	}
 
 	protected void CloseAll() {
-		/*synchronized (this) {
-			ArrayList<BaseBluetoothDevice> list = new ArrayList<BaseBluetoothDevice>(
+		synchronized (this) {
+			ArrayList<BluetoothIO> list = new ArrayList<BluetoothIO>(
 					mBluetooths.values());
-			for (BaseBluetoothDevice device : list) {
+			for (BluetoothIO device : list) {
 				device.close();
 			}
 			mBluetooths.clear();
-		}*/
+		}
 	}
 
 	private void LoadDevices() {
@@ -266,7 +263,7 @@ public class OznerDeviceManager implements BluetoothCloseCallback {
 			getContext().sendBroadcast(intent);
 
 			if (device.Bluetooth() != null) {
-				device.Bluetooth().updateSetting();
+				device.Bluetooth().SetChanged();
 			}
 
 			ArrayList<DeviceManager> list = getManagers();
@@ -338,14 +335,15 @@ public class OznerDeviceManager implements BluetoothCloseCallback {
 										BluetoothScan.Extra_CustomType, 0),
 								intent.getByteArrayExtra(BluetoothScan.Extra_CustomData));
 
-						device.updateInfo(
+						/*device.updateInfo(
 								intent.getStringExtra(BluetoothScan.Extra_Model),
 								intent.getStringExtra(BluetoothScan.Extra_Platform),
-								intent.getLongExtra(
-										BluetoothScan.Extra_Firmware,
-										Long.MAX_VALUE));
-						device.setDataAvailable(intent.getBooleanExtra(
-								BluetoothScan.Extra_DataAvailable, false));
+								intent.getLongExtra(BluetoothScan.Extra_Firmware,
+										Long.MAX_VALUE));*/
+
+						boolean dataAvailable=intent.getBooleanExtra(
+								BluetoothScan.Extra_DataAvailable, false);
+
 						
 						// 如果是配对的设备，直接连接操作
 						synchronized (this) {
@@ -353,14 +351,19 @@ public class OznerDeviceManager implements BluetoothCloseCallback {
 								device.setBackgroundMode(_isBackground);
 								OznerDevice d = mDevices.get(address);
 								d.Bind(device);
-								if (_isBackground) {
-									// 如果有数据可用，连接设备
-									if (device.isDataAvailable()) {
-										device.connect();
+								try {
+									if (_isBackground) {
+										// 如果有数据可用，连接设备
+										if (dataAvailable) {
+											device.start();
+										}
+									} else {
+										// 如果是已配对设备，并且在前台，直接连接操作
+										device.start();
 									}
-								} else {
-									// 如果是已配对设备，并且在前台，直接连接操作
-									device.connect();
+								}catch (BluetoothIO.BlueDeviceNotReadlyException e)
+								{
+									return;
 								}
 							}
 						}
@@ -370,7 +373,7 @@ public class OznerDeviceManager implements BluetoothCloseCallback {
 				return;
 			}
 
-			if (BluetoothScan.ACTION_SCANNER_LOST.equals(Action)) {
+			/*if (BluetoothScan.ACTION_SCANNER_LOST.equals(Action)) {
 				{
 					lostDevice(intent
 							.getStringExtra(BluetoothScan.Extra_Address));
@@ -378,7 +381,8 @@ public class OznerDeviceManager implements BluetoothCloseCallback {
 				dbg.i("Bluetooth Lost Address:"
 						+ intent.getStringExtra("Address"));
 				return;
-			}
+			}*/
+
 			if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(Action)) {
 				BluetoothManager bluetoothManager = (BluetoothManager) context
 						.getSystemService(Context.BLUETOOTH_SERVICE);
@@ -395,7 +399,6 @@ public class OznerDeviceManager implements BluetoothCloseCallback {
 	public void Start() {
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(BluetoothScan.ACTION_SCANNER_FOUND);
-		filter.addAction(BluetoothScan.ACTION_SCANNER_LOST);
 		filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
 		getContext().registerReceiver(mMonitor, filter);
 	}
@@ -435,7 +438,7 @@ public class OznerDeviceManager implements BluetoothCloseCallback {
 	}
 
 	@Override
-	public void OnOznerBluetoothClose(BaseBluetoothDevice device) {
+	public void OnOznerBluetoothClose(BluetoothIO device) {
 		synchronized (this) {
 			mBluetooths.remove(device.getAddress());
 			if (mDevices.containsKey(device.getAddress())) {
@@ -447,8 +450,8 @@ public class OznerDeviceManager implements BluetoothCloseCallback {
 	protected OznerBluetoothDevice foundDevice(BluetoothDevice device,
 			String Paltform, String Model, long Firewarm) {
 		if (mBluetooths.containsKey(device.getAddress())) {
-			mBluetooths.get(device.getAddress()).updateBluetooth(device);
-			return mBluetooths.get(device.getAddress());
+			mBluetooths.get(device.getAddress()).close();
+			mBluetooths.remove(device.getAddress());
 		}
 		ArrayList<DeviceManager> list = getManagers();
 		for (DeviceManager mgr : list) {
@@ -480,17 +483,17 @@ public class OznerDeviceManager implements BluetoothCloseCallback {
 	public void setBackgroundMode(boolean isBackground) {
 		if (isBackground==_isBackground) return;
 		this._isBackground = isBackground;
-			// 如果设置到前台模式
-		synchronized (this) {
-				for (OznerDevice d : mDevices.values()) {
-					if (d.Bluetooth() != null) {
-						d.Bluetooth().setBackgroundMode(isBackground);
-						if ((!d.connected()) && (!isBackground)) {
-							d.Bluetooth().connect();
-						}
-					}
-				}
-			}
+//			// 如果设置到前台模式
+//		synchronized (this) {
+//				for (OznerDevice d : mDevices.values()) {
+//					if (d.Bluetooth() != null) {
+//						d.Bluetooth().setBackgroundMode(isBackground);
+//						if ((!d.connected()) && (!isBackground)) {
+//							d.Bluetooth().start();
+//						}
+//					}
+//				}
+//			}
 		
 	}
 }
