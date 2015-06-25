@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothGatt;
 import android.content.Context;
 import android.content.Intent;
 
+import com.ozner.device.FirmwareTools;
 import com.ozner.device.OznerBluetoothDevice;
 import com.ozner.util.ByteUtil;
 import com.ozner.util.dbg;
@@ -68,8 +69,7 @@ public class BluetoothCup extends OznerBluetoothDevice {
     CupGravity mGravity = new CupGravity();
     CupRecord lastCupRecord = null;
 
-    public BluetoothCup(Context context, BluetoothCloseCallback callback, BluetoothDevice device, String Platform, String Model, long Firmware)
-    {
+    public BluetoothCup(Context context, BluetoothCloseCallback callback, BluetoothDevice device, String Platform, String Model, long Firmware) {
         super(context, callback, device, Platform, Model, Firmware);
     }
 
@@ -78,24 +78,28 @@ public class BluetoothCup extends OznerBluetoothDevice {
     protected void onRequest(BluetoothGatt gatt) throws InterruptedException {
 
         if (!getSensor(gatt)) {
-            dbg.e("获取传感器失败:%s",getAddress());
+            dbg.e("获取传感器失败:%s", getAddress());
         }
         if (!getRecord(gatt)) {
-            dbg.e("获取饮水记录失败:%s",getAddress());
+            dbg.e("获取饮水记录失败:%s", getAddress());
         }
-
+        if (getIsBackgroundMode()) //如果是后台状态,等待30秒,直到水杯自动休眠断开
+        {
+            Thread.sleep(30000);
+        }
     }
 
     private boolean getSensor(BluetoothGatt gatt) throws InterruptedException {
         if (sendOpCode(gatt, opCode_ReadSensor)) {
             waitNotfify(500);
             byte[] buff = popRecvPacket();
+            if (buff == null) return false;
             if (buff.length > 0) {
                 byte opCode = buff[0];
-                byte[] data = Arrays.copyOfRange(buff, 1, buff.length - 1);
+                byte[] data = Arrays.copyOfRange(buff, 1, buff.length);
                 if (opCode == opCode_ReadSensorRet) {
                     synchronized (this) {
-                        mSensor.FromBytes(data, 1);
+                        mSensor.FromBytes(data, 0);
                     }
                     Intent intent = new Intent(ACTION_BLUETOOTHCUP_SENSOR);
                     intent.putExtra("Address", getAddress());
@@ -109,36 +113,38 @@ public class BluetoothCup extends OznerBluetoothDevice {
         } else
             return false;
     }
+
     HashSet<String> dataHash = new HashSet<String>();
+
     private boolean getRecord(BluetoothGatt gatt) throws InterruptedException {
         if (sendOpCode(gatt, opCode_ReadRecord)) {
             waitNotfify(200);
-            int lastCount=getRecvPacketCount();
+            int lastCount = getRecvPacketCount();
             //循环接收数据,直到1秒内没数据接收
-            while (true)
-            {
+            while (true) {
                 Thread.sleep(100);
-                if (lastCount==getRecvPacketCount())
+                int count = getRecvPacketCount();
+                if (lastCount == count)
                     break;
+                else
+                    lastCount = count;
             }
-            ArrayList<CupRecord> records=new ArrayList<>();
+            ArrayList<CupRecord> records = new ArrayList<>();
             byte[] buff = popRecvPacket();
-            while(buff!=null)
-            {
+            while (buff != null) {
                 byte opCode = buff[0];
-                byte[] data = Arrays.copyOfRange(buff, 1, buff.length - 1);
+                byte[] data = Arrays.copyOfRange(buff, 1, buff.length);
                 if (opCode == opCode_ReadRecordRet) {
                     CupRecord record = new CupRecord();
                     record.FromBytes(data);
 
-                    if (record.Vol>0) {
+                    if (record.Vol > 0) {
                         String hashKey = String.valueOf(record.time.getTime()) + "_" + String.valueOf(record.Vol);
                         if (dataHash.contains(hashKey)) {
                             dbg.e("收到水杯重复数据");
                             break;
                         } else
                             dataHash.add(hashKey);
-
                         records.add(0, record);
                         Intent intent = new Intent(ACTION_BLUETOOTHCUP_RECORD);
                         intent.putExtra("Address", getAddress());
@@ -146,30 +152,25 @@ public class BluetoothCup extends OznerBluetoothDevice {
                         getContext().sendBroadcast(intent);
                     }
                 }
-                buff=popRecvPacket();
+                buff = popRecvPacket();
             }
 
             if (records.size() > 0) {
-
                 synchronized (mRecords) {
                     mRecords.clear();
-                    for (int i = records.size() - 1; i >= 0; i--) {
-                        mRecords.add(records.get(i));
-                    }
+                    mRecords.addAll(records);
                     lastCupRecord = mRecords.get(mRecords.size() - 1);
                     Intent comp_intent = new Intent(
                             ACTION_BLUETOOTHCUP_RECORD_RECV_COMPLETE);
                     comp_intent.putExtra("Address", getAddress());
-                    lastCupRecord=records.get(records.size()-1);
+                    lastCupRecord = records.get(records.size() - 1);
                     getContext().sendBroadcast(comp_intent);
                 }
-
-
                 return true;
-            }else
+            } else
                 return true;
 
-        }else
+        } else
             return false;
     }
 
@@ -270,7 +271,6 @@ public class BluetoothCup extends OznerBluetoothDevice {
     }
 
 
-
     @Override
     public float getPowerPer() {
         if (mSensor == null) return -1;
@@ -285,7 +285,7 @@ public class BluetoothCup extends OznerBluetoothDevice {
         return (battery - 3200) / (4100 - 3200f);
     }
 
-
+    @Deprecated
     public void sensorZero() {
         //sendOpCode((byte)0x8c);
     }
@@ -295,5 +295,80 @@ public class BluetoothCup extends OznerBluetoothDevice {
         return mSensor;
     }
 
+    private boolean eraseMCU(BluetoothGatt gatt) throws InterruptedException {
+        if (send(gatt, (byte) 0x0c, new byte[]{0})) {
+            Thread.sleep(1000);
+            if (send(gatt, (byte) 0x0c, new byte[]{1})) {
+                Thread.sleep(1000);
+                return true;
+            } else
+                return false;
+        } else
+            return false;
+    }
+
+    @Override
+    protected boolean startFirmwareUpdate(BluetoothGatt gatt) throws InterruptedException {
+        try {
+            onFirmwareUpdateStart();
+
+            FirmwareTools firmware = new FirmwareTools(firmwareFile, this.getAddress());
+            if (!(firmware.Platform.equals("C01") || firmware.Platform.equals("C02") || (firmware.Platform.equals("C03")))) {
+                onFirmwareFail();
+                return false;
+            }
+//            if (!getPlatform().equals(firmware.Platform))
+//            {
+//                onFirmwareFail();
+//                return false;
+//            }
+
+            if (firmware.Firmware == this.getFirmware()) {
+                onFirmwareFail();
+                return false;
+            }
+
+            if (eraseMCU(gatt)) {
+                byte[] data = new byte[20];
+                data[0] = (byte) 0xc1;
+                for (int i = 0; i < firmware.Size; i += 16) {
+                    short p = (short) (i / 16);
+                    ByteUtil.putShort(data, p, 1);
+                    System.arraycopy(firmware.bytes, i, data, 3, 16);
+                    if (!send(gatt, data)) {
+                        onFirmwareFail();
+                        return false;
+                    } else {
+                        onFirmwarePosition(i, firmware.Size);
+                    }
+                }
+            }
+            Thread.sleep(1000);
+            byte[] data = new byte[19];
+            ByteUtil.putInt(data, firmware.Size, 0);
+            data[4] = 'S';
+            data[5] = 'U';
+            data[6] = 'M';
+            ByteUtil.putInt(data, firmware.Cheksum, 7);
+            if (send(gatt, (byte) 0xc3, data)) {
+                onFirmwareComplete();
+                Thread.sleep(5000);
+                return true;
+            } else {
+                onFirmwareFail();
+                return false;
+            }
+
+        } catch (Exception e) {
+            onFirmwareFail();
+            return false;
+        }
+    }
+
+
+    @Override
+    protected boolean checkFirmwareUpdate() {
+        return isUpdateFirmware;
+    }
 
 }

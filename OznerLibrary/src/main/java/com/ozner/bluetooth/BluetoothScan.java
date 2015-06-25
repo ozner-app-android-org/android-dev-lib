@@ -1,13 +1,5 @@
 package com.ozner.bluetooth;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Timer;
-import java.util.TimerTask;
-
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothAdapter.LeScanCallback;
@@ -17,11 +9,13 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Handler;
-import android.os.Looper;
 
 import com.ozner.cup.BluetoothCup;
 import com.ozner.util.dbg;
+
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
 
 @SuppressLint("NewApi")
 public class BluetoothScan implements LeScanCallback, Runnable {
@@ -34,7 +28,7 @@ public class BluetoothScan implements LeScanCallback, Runnable {
     public static final String Extra_ScanData = "scanData";
     public static final String Extra_CustomType = "CustomType";
     public static final String Extra_CustomData = "CustomData";
-    public static final String Extra_Rssi = "Rssi";
+    public static final String Extra_RSSI = "RSSI";
     public static final String Extra_DataAvailable = "DataAvailable";
 
     /**
@@ -56,9 +50,12 @@ public class BluetoothScan implements LeScanCallback, Runnable {
     final static byte GAP_ADTYPE_MANUFACTURER_SPECIFIC = (byte) 0xff;
     final static byte GAP_ADTYPE_SERVICE_DATA = 0x16;
     Context mContext;
-
+    BluetoothMonitor mMonitor;
     public BluetoothScan(Context context) {
         mContext = context;
+        mMonitor = new BluetoothMonitor();
+        IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+        mContext.registerReceiver(mMonitor, filter);
     }
 
     /**
@@ -96,24 +93,24 @@ public class BluetoothScan implements LeScanCallback, Runnable {
         BluetoothAdapter adapter = bluetoothManager.getAdapter();
         if (adapter == null) return;
         try {
-            while (!isScanning) {
+            while (isScanning) {
                 synchronized (BluetoothSynchronizedObject.getLockObject()) {
                     synchronized (mFoundDevice) {
                         mFoundDevice.clear();
                     }
-                    dbg.i("扫描开始");
+                    //dbg.i("扫描开始");
 
                     adapter.startLeScan(this);
                     Thread.sleep(scanPeriod);
                     adapter.stopLeScan(this);
-                    dbg.i("扫描结束");
+                    //dbg.i("扫描结束");
 
                 }
                 synchronized (mFoundDevice) {
                     if (mFoundDevice.size() > 0) {
                         for (FoundDevice found : mFoundDevice.values()) {
-                            if (BluetoothSynchronizedObject.hashBluetoothBusy())
-                                break;
+                            //if (BluetoothSynchronizedObject.hashBluetoothBusy())
+                            //    break;
                             onFound(found.device, found.rssi, found.scanRecord);
                         }
                     }
@@ -146,6 +143,7 @@ public class BluetoothScan implements LeScanCallback, Runnable {
             scanThread.interrupt();
             scanThread = null;
         }
+
     }
 
 
@@ -226,7 +224,7 @@ public class BluetoothScan implements LeScanCallback, Runnable {
         intent.putExtra(Extra_Address, address);
         intent.putExtra(Extra_Model, Model);
         intent.putExtra(Extra_Platform, Platform);
-        intent.putExtra(Extra_Rssi, rssi);
+        intent.putExtra(Extra_RSSI, rssi);
         if (Firmware != null)
             intent.putExtra(Extra_Firmware, Firmware.getTime());
         intent.putExtra(Extra_CustomType, CustomType);
@@ -245,7 +243,7 @@ public class BluetoothScan implements LeScanCallback, Runnable {
 
     @Override
     public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-        synchronized (this) {
+        synchronized (mFoundDevice) {
             if (mFoundDevice.containsKey(device.getAddress())) {
                 mFoundDevice.remove(device.getAddress());
             }

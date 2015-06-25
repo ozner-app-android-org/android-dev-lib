@@ -8,6 +8,8 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
+import android.os.Message;
 import android.text.format.Time;
 
 import com.ozner.util.dbg;
@@ -46,16 +48,17 @@ public abstract class BluetoothIO extends BluetoothGattCallback implements Runna
     String Model = "";
     String Platform = "";
     long Firmware = 0;
-    BluetoothCloseCallback closeCallback=null;
+    BluetoothCloseCallback closeCallback = null;
+
     /**
      * 蓝牙设备关闭回调
      *
      * @author xzy
-     *
      */
     public interface BluetoothCloseCallback {
         void OnOznerBluetoothClose(BluetoothIO device);
     }
+
     /**
      * 连接中
      */
@@ -102,7 +105,6 @@ public abstract class BluetoothIO extends BluetoothGattCallback implements Runna
     static final byte opCode_DeviceInfo = (byte) 0x15;
     static final byte opCode_DeviceInfoRet = (byte) 0xA5;
     static final byte opCode_SetName = (byte) 0x80;
-    static final byte opCode_SetBackgroundMode = (byte) 0x21;
     static final byte opCode_GetFirmware = (byte) 0x82;
     static final byte opCode_GetFirmwareRet = (byte) -126;
 
@@ -155,28 +157,27 @@ public abstract class BluetoothIO extends BluetoothGattCallback implements Runna
         }
     }
 
-    public class BlueDeviceNotReadlyException extends Exception
-    {
+    public class BlueDeviceNotReadlyException extends Exception {
 
     }
-    public String getName()
-    {
+
+    public String getName() {
         return device.getName();
     }
 
     public void start() throws BlueDeviceNotReadlyException {
-        if (BluetoothSynchronizedObject.hashBluetoothBusy()) throw new BlueDeviceNotReadlyException();
-        if (isRuning())
-        {
+        if (BluetoothSynchronizedObject.hashBluetoothBusy(device.getAddress()))
+            throw new BlueDeviceNotReadlyException();
+        if (isRuning()) {
             throw new BlueDeviceNotReadlyException();
         }
         thread = new Thread(this);
         thread.start();
     }
 
-    public BluetoothIO(Context context,BluetoothCloseCallback callback,
+    public BluetoothIO(Context context, BluetoothCloseCallback callback,
                        BluetoothDevice device, String Platform, String Model, long Firmware) {
-        this.closeCallback=callback;
+        this.closeCallback = callback;
         this.Model = Model;
         this.Platform = Platform;
         this.Firmware = Firmware;
@@ -188,7 +189,11 @@ public abstract class BluetoothIO extends BluetoothGattCallback implements Runna
         return thread != null && thread.isAlive();
     }
 
+    //public class BluetoothFirmwareUpdatingException extends Exception{}
     public void close() {
+        if (isFirmwareUpdating) {
+            return;
+        }
         if (isRuning()) {
             isQuit = true;
             thread.interrupt();
@@ -232,6 +237,8 @@ public abstract class BluetoothIO extends BluetoothGattCallback implements Runna
         if (mService != null) {
             mInput = mService.getCharacteristic(Characteristic_Input);
             mOutput = mService.getCharacteristic(Characteristic_Output);
+            mInput.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+
         }
         set();
     }
@@ -262,6 +269,39 @@ public abstract class BluetoothIO extends BluetoothGattCallback implements Runna
         super.onCharacteristicChanged(gatt, characteristic);
     }
 
+    protected boolean sendAsync(BluetoothGatt gatt, byte opCode, byte[] data) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream(20);
+        try {
+            try {
+                out.write(opCode);
+                if (data != null)
+                    out.write(data);
+                mInput.setValue(out.toByteArray());
+                synchronized (BluetoothSynchronizedObject.getLockObject()) {
+                    if (!gatt.writeCharacteristic(mInput)) {
+                        return false;
+                    }
+                }
+                return true;
+            } finally {
+                out.close();
+            }
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    protected boolean send(BluetoothGatt gatt, byte[] data) throws InterruptedException {
+        mInput.setValue(data);
+        synchronized (BluetoothSynchronizedObject.getLockObject()) {
+            if (!gatt.writeCharacteristic(mInput)) {
+                return false;
+            }
+        }
+        wait(10000);
+        return checkStatus();
+    }
+
     protected boolean send(BluetoothGatt gatt, byte opCode, byte[] data) throws InterruptedException {
         ByteArrayOutputStream out = new ByteArrayOutputStream(20);
         try {
@@ -269,6 +309,7 @@ public abstract class BluetoothIO extends BluetoothGattCallback implements Runna
                 out.write(opCode);
                 if (data != null)
                     out.write(data);
+                out.flush();
                 mInput.setValue(out.toByteArray());
                 synchronized (BluetoothSynchronizedObject.getLockObject()) {
                     if (!gatt.writeCharacteristic(mInput)) {
@@ -326,6 +367,7 @@ public abstract class BluetoothIO extends BluetoothGattCallback implements Runna
 
     @Override
     public void run() {
+        if (BluetoothSynchronizedObject.hashBluetoothBusy(device.getAddress())) return;
         BluetoothGatt gatt = device.connectGatt(context, false, this);
         try {
             BluetoothSynchronizedObject.Busy(device.getAddress());
@@ -375,26 +417,40 @@ public abstract class BluetoothIO extends BluetoothGattCallback implements Runna
                 Thread.sleep(100);
                 OnReadly();
             }
+            //BluetoothSynchronizedObject.Idle(device.getAddress());
             sendBroadcastReadly();
             dbg.i("初始化成功:%s", device.getAddress());
             getFirmware(gatt);
             onRequest(gatt);
-            Date lastRequestTime=new Date();
+            Date lastRequestTime = new Date();
             while (!Background) {
-                if (connectionState!=BluetoothGatt.STATE_CONNECTED) break;
-                if (setChanged)
-                {
+                if (connectionState != BluetoothGatt.STATE_CONNECTED) break;
+                if (setChanged) {
                     sendSetting(gatt);
                 }
-                thread.sleep(500);
-                Date dt=new Date();
-                if ((dt.getTime()-lastRequestTime.getTime())>5000) {
-                    lastRequestTime = new Date();
+                if (checkFirmwareUpdate()) {
+                    //重置升级标记
+                    isUpdateFirmware = false;
+                    synchronized (BluetoothSynchronizedObject.getLockObject()) {
+                        isFirmwareUpdating = true;
+                        try {
+                            if (startFirmwareUpdate(gatt)) {
+                                return;
+                            }
+                        } finally {
+                            isFirmwareUpdating = false;
+                        }
+                    }
                 }
-                onRequest(gatt);
-
+                Thread.sleep(500);
+                Date dt = new Date();
+                if ((dt.getTime() - lastRequestTime.getTime()) > 5000) {
+                    lastRequestTime = new Date();
+                    onRequest(gatt);
+                }
             }
         } catch (InterruptedException ignore) {
+            ignore.printStackTrace();
             return;
         } finally {
             if (closeCallback != null) {
@@ -542,7 +598,11 @@ public abstract class BluetoothIO extends BluetoothGattCallback implements Runna
     public String getModel() {
         return this.Model;
     }
-    public String getPlatform() {return this.Platform;}
+
+    public String getPlatform() {
+        return this.Platform;
+    }
+
     public long getFirmware() {
         return this.Firmware;
     }
@@ -550,13 +610,93 @@ public abstract class BluetoothIO extends BluetoothGattCallback implements Runna
     public void SetChanged() {
         setChanged = true;
     }
-    public int getStatus(){return connectionState;}
-    protected boolean sendSetting(BluetoothGatt gatt) throws InterruptedException
-    {
-        setChanged=false;
+
+    public int getStatus() {
+        return connectionState;
+    }
+
+    protected boolean sendSetting(BluetoothGatt gatt) throws InterruptedException {
+        setChanged = false;
         return true;
     }
 
+    public boolean getIsBackgroundMode() {
+        return Background;
+    }
 
+    protected abstract boolean checkFirmwareUpdate();
+
+    protected abstract boolean startFirmwareUpdate(BluetoothGatt gatt) throws InterruptedException;
+
+
+    public interface FirmwareUpateInterface {
+        void onFirmwareUpdateStart(String Address);
+
+        void onFirmwarePosition(String Address, int Position, int size);
+
+        void onFirmwareComplete(String Address);
+
+        void onFirmwareFail(String Address);
+    }
+
+    protected String firmwareFile = "";
+    protected FirmwareUpateInterface firmwareUpateInterface = null;
+    protected boolean isUpdateFirmware = false;
+    private boolean isFirmwareUpdating = false;
+
+
+    protected void onFirmwareUpdateStart() {
+        updateHandler.sendEmptyMessage(1);
+    }
+
+    protected void onFirmwarePosition(int postion, int size) {
+        Message m = new Message();
+        m.what = 2;
+        m.arg1 = postion;
+        m.arg2 = size;
+        updateHandler.sendMessage(m);
+    }
+
+    protected void onFirmwareFail() {
+        updateHandler.sendEmptyMessage(3);
+    }
+
+    protected void onFirmwareComplete() {
+        updateHandler.sendEmptyMessage(4);
+    }
+
+    UpdateHandler updateHandler = new UpdateHandler();
+
+    class UpdateHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            if (firmwareUpateInterface == null) return;
+            switch (msg.what) {
+                case 1:
+                    firmwareUpateInterface.onFirmwareUpdateStart(getAddress());
+                    break;
+                case 2:
+                    firmwareUpateInterface.onFirmwarePosition(getAddress(), msg.arg1, msg.arg2);
+                    break;
+                case 3:
+                    firmwareUpateInterface.onFirmwareFail(getAddress());
+                    break;
+                case 4:
+                    firmwareUpateInterface.onFirmwareComplete(getAddress());
+                    break;
+
+            }
+            super.handleMessage(msg);
+        }
+    }
+
+    public void setFirmwareUpateInterface(FirmwareUpateInterface firmwareUpateInterface) {
+        this.firmwareUpateInterface = firmwareUpateInterface;
+    }
+
+    public void udateFirmware(String file) {
+        firmwareFile = file;
+        isUpdateFirmware = true;
+    }
 
 }

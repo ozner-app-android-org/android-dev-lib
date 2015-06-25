@@ -1,7 +1,5 @@
 package com.ozner.cup;
 
-import java.util.ArrayList;
-
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
@@ -13,7 +11,8 @@ import com.ozner.device.OznerBluetoothDevice;
 import com.ozner.device.OznerContext;
 import com.ozner.device.OznerDevice;
 import com.ozner.device.OznerDeviceManager;
-import com.ozner.util.dbg;
+
+import java.util.ArrayList;
 
 @SuppressLint("NewApi")
 /**
@@ -149,11 +148,8 @@ public class CupManager extends DeviceManager {
 
 	protected boolean IsCup(BluetoothDevice device, String Model) {
 		if (Model==null) return false;
-		
-		if (Model.trim().equals("CP001")) {
-			return true;
-		} else
-			return false;
+
+		return Model.trim().equals("CP001");
 	}
 
 	@Override
@@ -161,7 +157,6 @@ public class CupManager extends DeviceManager {
 			BluetoothIO.BluetoothCloseCallback bluetoothCallback, String Paltform,
 			String Model, long Firewarm){
 		if (IsCup(device, Model)) {
-			dbg.d("FoundCup:" + device.getAddress());
 			return new BluetoothCup(getApplication(),bluetoothCallback,device,Paltform,Model,Firewarm);
 		} else
 			return null;

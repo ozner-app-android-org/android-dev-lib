@@ -1,9 +1,5 @@
 package com.ozner.device;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -15,8 +11,13 @@ import android.content.IntentFilter;
 
 import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.bluetooth.BluetoothScan;
+import com.ozner.bluetooth.BluetoothSynchronizedObject;
 import com.ozner.util.SQLiteDB;
 import com.ozner.util.dbg;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 @SuppressLint("NewApi")
 public class OznerDeviceManager implements BluetoothIO.BluetoothCloseCallback {
@@ -107,6 +108,7 @@ public class OznerDeviceManager implements BluetoothIO.BluetoothCloseCallback {
 			ArrayList<BluetoothIO> list = new ArrayList<BluetoothIO>(
 					mBluetooths.values());
 			for (BluetoothIO device : list) {
+
 				device.close();
 			}
 			mBluetooths.clear();
@@ -449,10 +451,17 @@ public class OznerDeviceManager implements BluetoothIO.BluetoothCloseCallback {
 
 	protected OznerBluetoothDevice foundDevice(BluetoothDevice device,
 			String Paltform, String Model, long Firewarm) {
-		if (mBluetooths.containsKey(device.getAddress())) {
-			mBluetooths.get(device.getAddress()).close();
-			mBluetooths.remove(device.getAddress());
+
+		String Address = device.getAddress();
+		if (mBluetooths.containsKey(Address)) {
+			if (BluetoothSynchronizedObject.hashBluetoothBusy(Address))
+				return mBluetooths.get(Address);
+			else {
+				mBluetooths.get(Address).close();
+				mBluetooths.remove(Address);
+			}
 		}
+
 		ArrayList<DeviceManager> list = getManagers();
 		for (DeviceManager mgr : list) {
 			OznerBluetoothDevice ret = mgr.getBluetoothDevice(device, this,
@@ -483,6 +492,9 @@ public class OznerDeviceManager implements BluetoothIO.BluetoothCloseCallback {
 	public void setBackgroundMode(boolean isBackground) {
 		if (isBackground==_isBackground) return;
 		this._isBackground = isBackground;
+		for (BluetoothIO bluetoothIO : mBluetooths.values()) {
+			bluetoothIO.setBackgroundMode(isBackground);
+		}
 //			// 如果设置到前台模式
 //		synchronized (this) {
 //				for (OznerDevice d : mDevices.values()) {

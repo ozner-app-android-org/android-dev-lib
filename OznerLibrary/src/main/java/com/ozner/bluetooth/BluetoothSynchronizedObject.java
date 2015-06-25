@@ -18,12 +18,17 @@ public final class BluetoothSynchronizedObject {
 
     static HashSet<String> mConnectingDevices = new HashSet<>();
 
-    public static boolean hashBluetoothBusy() {
+    /*public static boolean hashBluetoothBusy() {
         synchronized (mConnectingDevices) {
             return mConnectingDevices.size() > 0;
         }
-    }
+    }*/
 
+    public static boolean hashBluetoothBusy(String address) {
+        synchronized (mConnectingDevices) {
+            return mConnectingDevices.contains(address);
+        }
+    }
     public static void Busy(String Address)
     {
         synchronized (mConnectingDevices)

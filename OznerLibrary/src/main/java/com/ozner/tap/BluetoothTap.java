@@ -4,9 +4,11 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.content.Context;
 import android.content.Intent;
+
 import com.ozner.cup.CupSensor;
 import com.ozner.device.OznerBluetoothDevice;
 import com.ozner.util.dbg;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -127,12 +129,13 @@ public class BluetoothTap extends OznerBluetoothDevice {
         if (sendOpCode(gatt, opCode_ReadSensor)) {
             waitNotfify(500);
             byte[] buff = popRecvPacket();
+            if (buff == null) return false;
             if (buff.length > 0) {
                 byte opCode = buff[0];
-                byte[] data = Arrays.copyOfRange(buff, 1, buff.length - 1);
+                byte[] data = Arrays.copyOfRange(buff, 1, buff.length);
                 if (opCode == opCode_ReadSensorRet) {
                     synchronized (this) {
-                        mSensor.FromBytes(data, 1);
+                        mSensor.FromBytes(data, 0);
                     }
                     Intent intent = new Intent(ACTION_BLUETOOTHTAP_SENSOR);
                     intent.putExtra("Address", getAddress());
@@ -161,9 +164,10 @@ public class BluetoothTap extends OznerBluetoothDevice {
             }
             ArrayList<TapRecord> records = new ArrayList<>();
             byte[] buff = popRecvPacket();
+
             while (buff != null) {
                 byte opCode = buff[0];
-                byte[] data = Arrays.copyOfRange(buff, 1, buff.length - 1);
+                byte[] data = Arrays.copyOfRange(buff, 1, buff.length);
                 if (opCode == opCode_ReadTDSRecordRet) {
                     TapRecord record = new TapRecord();
                     record.FromBytes(data);
@@ -190,9 +194,7 @@ public class BluetoothTap extends OznerBluetoothDevice {
 
                 synchronized (mRecords) {
                     mRecords.clear();
-                    for (int i = records.size() - 1; i >= 0; i--) {
-                        mRecords.add(records.get(i));
-                    }
+                    mRecords.addAll(records);
                     Intent comp_intent = new Intent(
                             ACTION_BLUETOOTHTAP_RECORD_RECV_COMPLETE);
                     comp_intent.putExtra("Address", getAddress());
@@ -265,6 +267,16 @@ public class BluetoothTap extends OznerBluetoothDevice {
             return super.sendSetting(gatt);
         } else
             return false;
+    }
+
+    @Override
+    protected boolean checkFirmwareUpdate() {
+        return false;
+    }
+
+    @Override
+    protected boolean startFirmwareUpdate(BluetoothGatt gatt) throws InterruptedException {
+        return false;
     }
 
 

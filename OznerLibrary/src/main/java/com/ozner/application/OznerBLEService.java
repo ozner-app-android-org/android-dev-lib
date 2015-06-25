@@ -3,6 +3,9 @@ package com.ozner.application;
 import android.app.Activity;
 import android.app.Application.ActivityLifecycleCallbacks;
 import android.app.Service;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothManager;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.Bundle;
@@ -74,7 +77,7 @@ public class OznerBLEService extends Service implements ActivityLifecycleCallbac
 	public void onCreate() {
 		super.onCreate();
 		if (mScaner == null) {
-			
+
 			checkTimer.schedule(new TimerTask() {
 				@Override
 				public void run() {
@@ -103,6 +106,12 @@ public class OznerBLEService extends Service implements ActivityLifecycleCallbac
 	@Override
 	public IBinder onBind(Intent intent) {
 		this.getApplication().registerActivityLifecycleCallbacks(this);
+		BluetoothManager bluetoothManager = (BluetoothManager) this
+				.getSystemService(Context.BLUETOOTH_SERVICE);
+		BluetoothAdapter adapter = bluetoothManager.getAdapter();
+		if (adapter.getState() == BluetoothAdapter.STATE_OFF) {
+			adapter.enable();
+		}
 		if (!mScaner.isRuning())
 		{
 			mManager.Start();
@@ -123,10 +132,7 @@ public class OznerBLEService extends Service implements ActivityLifecycleCallbac
 	private void checkBackMode()
 	{
 		boolean back=mManager.isBackground();
-		if (activitys.size()>0)
-			back=false;
-		else
-			back=true;
+		back = activitys.size() <= 0;
 		if (mManager.isBackground()!=back)
 		{
 			mManager.setBackgroundMode(back);
