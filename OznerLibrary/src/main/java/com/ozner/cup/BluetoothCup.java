@@ -5,7 +5,7 @@ import android.bluetooth.BluetoothGatt;
 import android.content.Context;
 import android.content.Intent;
 
-import com.ozner.device.FirmwareTools;
+import com.ozner.device.CupFirmwareTools;
 import com.ozner.device.OznerBluetoothDevice;
 import com.ozner.util.ByteUtil;
 import com.ozner.util.dbg;
@@ -206,6 +206,7 @@ public class BluetoothCup extends OznerBluetoothDevice {
     public void updateCustomData(int CustomType, byte[] data) {
         if (CustomType == AD_CustomType_Gravity) {
             mGravity.FromBytes(data, 0);
+            setBindMode(mGravity.IsHandstand());
         }
     }
 
@@ -312,7 +313,7 @@ public class BluetoothCup extends OznerBluetoothDevice {
         try {
             onFirmwareUpdateStart();
 
-            FirmwareTools firmware = new FirmwareTools(firmwareFile, this.getAddress());
+            CupFirmwareTools firmware = new CupFirmwareTools(firmwareFile, this.getAddress());
             if (!(firmware.Platform.equals("C01") || firmware.Platform.equals("C02") || (firmware.Platform.equals("C03")))) {
                 onFirmwareFail();
                 return false;
@@ -366,9 +367,5 @@ public class BluetoothCup extends OznerBluetoothDevice {
     }
 
 
-    @Override
-    protected boolean checkFirmwareUpdate() {
-        return isUpdateFirmware;
-    }
 
 }

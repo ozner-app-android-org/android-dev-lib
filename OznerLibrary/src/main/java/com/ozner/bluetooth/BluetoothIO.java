@@ -406,7 +406,7 @@ public abstract class BluetoothIO extends BluetoothGattCallback implements Runna
                     return;
                 }
                 Thread.sleep(100);
-                if (Background) {
+                if (!Background) {
                     if (sendOpCode(gatt, opCode_FrontMode)) {
                         dbg.i("前台设置成功:%s", device.getAddress());
                     } else {
@@ -450,12 +450,14 @@ public abstract class BluetoothIO extends BluetoothGattCallback implements Runna
                 }
             }
         } catch (InterruptedException ignore) {
+            dbg.i("线程关闭:" + getAddress());
             ignore.printStackTrace();
             return;
         } finally {
             if (closeCallback != null) {
                 closeCallback.OnOznerBluetoothClose(this);
             }
+            dbg.i("连接关闭:" + getAddress());
             BluetoothSynchronizedObject.Idle(device.getAddress());
             //gatt.disconnect();
             gatt.close();
@@ -624,7 +626,6 @@ public abstract class BluetoothIO extends BluetoothGattCallback implements Runna
         return Background;
     }
 
-    protected abstract boolean checkFirmwareUpdate();
 
     protected abstract boolean startFirmwareUpdate(BluetoothGatt gatt) throws InterruptedException;
 
@@ -688,6 +689,11 @@ public abstract class BluetoothIO extends BluetoothGattCallback implements Runna
             }
             super.handleMessage(msg);
         }
+    }
+
+    protected boolean checkFirmwareUpdate() {
+
+        return isUpdateFirmware;
     }
 
     public void setFirmwareUpateInterface(FirmwareUpateInterface firmwareUpateInterface) {

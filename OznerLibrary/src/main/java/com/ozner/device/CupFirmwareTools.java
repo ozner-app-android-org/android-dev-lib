@@ -11,7 +11,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public class FirmwareTools {
+public class CupFirmwareTools {
 	public class FirmwareExcpetion extends Exception {
 
 		/**
@@ -30,7 +30,7 @@ public class FirmwareTools {
 	public byte[] bytes;
 	public int Cheksum;
 
-	public FirmwareTools(String path, String Address) throws FirmwareExcpetion, IOException {
+	public CupFirmwareTools(String path, String Address) throws FirmwareExcpetion, IOException {
 		File file = new File(path);
 		byte[] key = {0x23, 0x23, 0x24, 0x24, 0x40, 0x40, 0x2a, 0x2a, 0x43, 0x75, 0x70, 0x00};
 		Size = (int) file.length();

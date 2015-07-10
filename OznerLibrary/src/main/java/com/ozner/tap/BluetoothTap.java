@@ -7,6 +7,8 @@ import android.content.Intent;
 
 import com.ozner.cup.CupSensor;
 import com.ozner.device.OznerBluetoothDevice;
+import com.ozner.device.TapFirmwareTools;
+import com.ozner.util.ByteUtil;
 import com.ozner.util.dbg;
 
 import java.util.ArrayList;
@@ -49,6 +51,8 @@ public class BluetoothTap extends OznerBluetoothDevice {
 
     static final byte opCode_ReadTDSRecord = 0x17;
     static final byte opCode_ReadTDSRecordRet = (byte) 0xA7;
+    static final byte opCode_GetFirmwareSum = (byte) 0xc5;
+    static final byte opCode_GetFirmwareSumRet = (byte) 0xc5;
 
     static final byte opCode_SetDetectTime = 0x10;
 
@@ -269,14 +273,87 @@ public class BluetoothTap extends OznerBluetoothDevice {
             return false;
     }
 
-    @Override
-    protected boolean checkFirmwareUpdate() {
-        return false;
-    }
 
     @Override
     protected boolean startFirmwareUpdate(BluetoothGatt gatt) throws InterruptedException {
-        return false;
+        try {
+            onFirmwareUpdateStart();
+
+            TapFirmwareTools firmware = new TapFirmwareTools(firmwareFile, this.getAddress());
+            if (firmware.bytes.length > 31 * 1024) {
+                onFirmwareFail();
+                return false;
+            }
+            if (!(firmware.Platform.equals("T01") || firmware.Platform.equals("T02") || (firmware.Platform.equals("T03")))) {
+                onFirmwareFail();
+                return false;
+            }
+//            if (!getPlatform().equals(firmware.Platform))
+//            {
+//                onFirmwareFail();
+//                return false;
+//            }
+
+            if (firmware.Firmware == this.getFirmware()) {
+                onFirmwareFail();
+                return false;
+            }
+
+
+            byte[] data = new byte[20];
+            data[0] = (byte) 0x89;
+
+            for (int i = 0; i < firmware.Size; i += 8) {
+                int p = i + 0x17c00;
+                ByteUtil.putInt(data, p, 1);
+                System.arraycopy(firmware.bytes, i, data, 5, 8);
+                if (!send(gatt, data)) {
+                    onFirmwareFail();
+                    return false;
+                } else {
+                    onFirmwarePosition(i, firmware.Size);
+                }
+            }
+
+            Thread.sleep(1000);
+            byte[] checkSum = new byte[5];
+            checkSum[0] = opCode_GetFirmwareSum;
+            ByteUtil.putInt(checkSum, firmware.Size, 1);
+            if (send(gatt, checkSum)) {
+                Thread.sleep(200);
+                checkSum = popRecvPacket();
+                if (checkSum[0] == opCode_GetFirmwareSumRet) {
+                    long sum = ByteUtil.getUInt(checkSum, 1);
+                    if (sum == firmware.Cheksum) {
+                        byte[] update = new byte[5];
+                        ByteUtil.putInt(data, firmware.Size, 0);
+                        if (send(gatt, (byte) 0xc3, update)) {
+                            onFirmwareComplete();
+                            Thread.sleep(5000);
+                            return true;
+                        } else {
+                            onFirmwareFail();
+                            return false;
+                        }
+                    } else {
+                        onFirmwareFail();
+                        return false;
+                    }
+
+                } else {
+                    onFirmwareFail();
+                    return false;
+                }
+            } else {
+                onFirmwareFail();
+                return false;
+            }
+
+
+        } catch (Exception e) {
+            onFirmwareFail();
+            return false;
+        }
     }
 
 
