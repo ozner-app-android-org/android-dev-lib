@@ -90,6 +90,7 @@ public class BluetoothCup extends OznerBluetoothDevice {
     }
 
     private boolean getSensor(BluetoothGatt gatt) throws InterruptedException {
+        dbg.i("读传感器");
         if (sendOpCode(gatt, opCode_ReadSensor)) {
             waitNotfify(500);
             byte[] buff = popRecvPacket();
@@ -98,6 +99,7 @@ public class BluetoothCup extends OznerBluetoothDevice {
                 byte opCode = buff[0];
                 byte[] data = Arrays.copyOfRange(buff, 1, buff.length);
                 if (opCode == opCode_ReadSensorRet) {
+                    dbg.i("读传感器完成");
                     synchronized (this) {
                         mSensor.FromBytes(data, 0);
                     }
@@ -330,9 +332,10 @@ public class BluetoothCup extends OznerBluetoothDevice {
             }
 
             if (eraseMCU(gatt)) {
-                byte[] data = new byte[20];
-                data[0] = (byte) 0xc1;
+
                 for (int i = 0; i < firmware.Size; i += 16) {
+                    byte[] data = new byte[20];
+                    data[0] = (byte) 0xc1;
                     short p = (short) (i / 16);
                     ByteUtil.putShort(data, p, 1);
                     System.arraycopy(firmware.bytes, i, data, 3, 16);

@@ -162,7 +162,7 @@ public class BluetoothTap extends OznerBluetoothDevice {
             int lastCount = getRecvPacketCount();
             //循环接收数据,直到1秒内没数据接收
             while (true) {
-                Thread.sleep(100);
+                Thread.sleep(1000);
                 if (lastCount == getRecvPacketCount())
                     break;
             }

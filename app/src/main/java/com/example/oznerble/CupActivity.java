@@ -138,7 +138,6 @@ public class CupActivity extends Activity implements OnClickListener, BluetoothI
 	public void onFirmwarePosition(String Address, int Position, int size) {
 		TextView tv = (TextView) findViewById(id.Update_Message);
 		tv.setText(String.format("进度:%d/%d", Position, size));
-		tv.invalidate();
 	}
 
 	@Override
@@ -195,7 +194,7 @@ public class CupActivity extends Activity implements OnClickListener, BluetoothI
 
 	private void updateFirmware() {
 		Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-		intent.setType("*.bin/Firmware");
+		intent.setType("*/*");
 		intent.addCategory(Intent.CATEGORY_OPENABLE);
 
 		try {

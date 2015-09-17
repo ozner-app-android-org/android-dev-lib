@@ -34,11 +34,12 @@ public class CupFirmwareTools {
 		File file = new File(path);
 		byte[] key = {0x23, 0x23, 0x24, 0x24, 0x40, 0x40, 0x2a, 0x2a, 0x43, 0x75, 0x70, 0x00};
 		Size = (int) file.length();
+		if (Size > 127 * 1024) throw new FirmwareExcpetion("文件太大");
+
 		if ((Size % 256) != 0) {
 			Size = (Size / 256) * 256 + 256;
 		}
 
-		if (Size > 127 * 1024) throw new FirmwareExcpetion("文件太大");
 
 		FileInputStream fs = new FileInputStream(path);
 		try {

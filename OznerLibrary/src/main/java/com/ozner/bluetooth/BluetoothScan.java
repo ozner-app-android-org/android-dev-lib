@@ -98,19 +98,13 @@ public class BluetoothScan implements LeScanCallback, Runnable {
                     synchronized (mFoundDevice) {
                         mFoundDevice.clear();
                     }
-                    //dbg.i("扫描开始");
-                    Thread.sleep(scanPeriod);
 
                     adapter.startLeScan(this);
                     Thread.sleep(scanPeriod);
-
                     adapter.stopLeScan(this);
-                    Thread.sleep(scanPeriod);
-
-
                     //dbg.i("扫描结束");
-
                 }
+                Thread.sleep(scanPeriod);
                 synchronized (mFoundDevice) {
                     if (mFoundDevice.size() > 0) {
                         for (FoundDevice found : mFoundDevice.values()) {
