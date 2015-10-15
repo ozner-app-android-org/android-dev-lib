@@ -1,26 +1,34 @@
 package com.ozner.bluetooth;
 
 import java.util.HashSet;
-import java.util.Objects;
 
 /**
- * Created by zhiyongxu on 15/5/25.
+ * Created by zhiyongxu on 15/6/11.
  */
-public class BluetoothStatusChecker {
-    private static Object mLockObject=new Object();
-
+public final class BluetoothSynchronizedObject {
+    private static Object lockObject=new Object();
     public static Object getLockObject()
     {
-        return mLockObject;
+        return lockObject;
+    }
+    private BluetoothSynchronizedObject()
+    {
+
     }
 
     static HashSet<String> mConnectingDevices = new HashSet<>();
-    public static boolean hashBluetoothBusy() {
+
+    /*public static boolean hashBluetoothBusy() {
         synchronized (mConnectingDevices) {
             return mConnectingDevices.size() > 0;
         }
-    }
+    }*/
 
+    public static boolean hashBluetoothBusy(String address) {
+        synchronized (mConnectingDevices) {
+            return mConnectingDevices.contains(address);
+        }
+    }
     public static void Busy(String Address)
     {
         synchronized (mConnectingDevices)

@@ -52,6 +52,6 @@ public class BluetoothScanRep {
 		CustomDataType=data[17];
 		CustomDataLength=data[18];
 		CustomData=Arrays.copyOfRange(data, 19, 19+CustomDataLength);
-		Available=data[28]!=0;
+		Available=data[27]!=0;
 	}
 }

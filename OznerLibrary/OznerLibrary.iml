@@ -87,5 +87,8 @@
     </content>
     <orderEntry type="jdk" jdkName="Android API 21 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" exported="" name="jetty-8.1.15" level="project" />
+    <orderEntry type="library" exported="" name="easylink_ftc_out" level="project" />
+    <orderEntry type="library" exported="" name="dd-plist" level="project" />
   </component>
 </module>

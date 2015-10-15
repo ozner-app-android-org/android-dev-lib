@@ -1,8 +1,5 @@
 package com.example.oznerble;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -24,11 +21,15 @@ import com.ozner.application.OznerBLEService.OznerBLEBinder;
 import com.ozner.cup.Cup;
 import com.ozner.cup.CupSetting;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 @SuppressLint("SimpleDateFormat")
 public class CupSetupActivity extends Activity implements View.OnClickListener {
 	OznerBLEBinder service=null;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+
 		setContentView(layout.activity_cup_setup);
 		super.onCreate(savedInstanceState);
 		

@@ -1,10 +1,5 @@
 package com.example.oznerble;
 
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -28,18 +23,20 @@ import android.widget.Toast;
 import com.example.oznerble.R.id;
 import com.example.oznerble.R.layout;
 import com.ozner.application.OznerBLEService.OznerBLEBinder;
-import com.ozner.bluetooth.BaseBluetoothDevice;
+import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.cup.BluetoothCup;
 import com.ozner.cup.Cup;
 import com.ozner.cup.CupRecord;
 import com.ozner.cup.Record;
-import com.ozner.device.FirmwareTools;
-import com.ozner.device.FirmwareTools.FirmwareExcpetion;
 import com.ozner.device.OznerBluetoothDevice;
 import com.ozner.util.dbg;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+
 @SuppressLint("SimpleDateFormat")
-public class CupActivity extends Activity implements OnClickListener {
+public class CupActivity extends Activity implements OnClickListener, BluetoothIO.FirmwareUpateInterface {
 	Cup mCup;
 	OznerBLEBinder service = null;
 	Monitr mMonitor = new Monitr();
@@ -82,6 +79,7 @@ public class CupActivity extends Activity implements OnClickListener {
 		
 		record_list = (ListView) findViewById(id.record_list);
 		record_list.setAdapter(adapter);
+
 		load();
 		super.onCreate(savedInstanceState);
 	}
@@ -119,13 +117,37 @@ public class CupActivity extends Activity implements OnClickListener {
 				adapter.add(r.toString());
 			}
 		}
-
+		if (mCup.Bluetooth() != null) {
+			mCup.Bluetooth().setFirmwareUpateInterface(this);
+		}
 	}
 
 	@Override
 	protected void onDestroy() {
 		this.unregisterReceiver(mMonitor);
 		super.onDestroy();
+	}
+
+	@Override
+	public void onFirmwareUpdateStart(String Address) {
+		((TextView) findViewById(id.Update_Message)).setText("开始升级....");
+
+	}
+
+	@Override
+	public void onFirmwarePosition(String Address, int Position, int size) {
+		TextView tv = (TextView) findViewById(id.Update_Message);
+		tv.setText(String.format("进度:%d/%d", Position, size));
+	}
+
+	@Override
+	public void onFirmwareComplete(String Address) {
+		((TextView) findViewById(id.Update_Message)).setText("升级完成");
+	}
+
+	@Override
+	public void onFirmwareFail(String Address) {
+		((TextView) findViewById(id.Update_Message)).setText("升级失败");
 	}
 
 	class Monitr extends BroadcastReceiver {
@@ -145,6 +167,9 @@ public class CupActivity extends Activity implements OnClickListener {
 			if (action.equals(BluetoothCup.ACTION_BLUETOOTH_READLY)) {
 				((TextView) findViewById(id.Device_Name)).setText(mCup
 						.getName() + "(设备已连接)");
+				if (mCup.Bluetooth() != null) {
+					mCup.Bluetooth().setFirmwareUpateInterface(CupActivity.this);
+				}
 			}
 			if (action.equals(BluetoothCup.ACTION_BLUETOOTH_DISCONNECTED)) {
 				((TextView) findViewById(id.Device_Name)).setText(mCup
@@ -169,7 +194,7 @@ public class CupActivity extends Activity implements OnClickListener {
 
 	private void updateFirmware() {
 		Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-		intent.setType("*.bin/Firmware");
+		intent.setType("*/*");
 		intent.addCategory(Intent.CATEGORY_OPENABLE);
 
 		try {
@@ -194,46 +219,10 @@ public class CupActivity extends Activity implements OnClickListener {
 				int actual_image_column_index = actualimagecursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
 				actualimagecursor.moveToFirst();
 				String path = actualimagecursor.getString(actual_image_column_index);
-				if (mCup.GetBluetooth()!=null)
-
-
-				try {
-					mCup.GetBluetooth().udateFirmware(path, new BaseBluetoothDevice.FirmwareUpateInterface() {
-						@Override
-						public void onFirmwareUpdateStart(String Address, int size) {
-
-						}
-
-						@Override
-						public void onFirmwarePosition(String Address, int Position, int Size) {
-							dbg.d(String.format("%d/%d",Position,Size));
-						}
-
-						@Override
-						public void onFirmwareComplete(String Address) {
-
-						}
-
-						@Override
-						public void onFirmwareFail(String Address) {
-
-						}
-					});
-				} catch (IOException e) {
-					e.printStackTrace();
-				} catch (FirmwareExcpetion firmwareExcpetion) {
-					firmwareExcpetion.printStackTrace();
+            	Toast.makeText(this, path, Toast.LENGTH_LONG).show();
+				if (mCup.Bluetooth() != null) {
+					mCup.Bluetooth().udateFirmware(path);
 				}
-
-				Toast.makeText(this, path, Toast.LENGTH_LONG).show();
-            	try {
-					FirmwareTools tools=new FirmwareTools(path,mCup.Address());
-					tools.toString();
-				} catch (Exception e) {
-					Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show();
-					e.printStackTrace();
-				}
-            	
 			}
 		}
 		super.onActivityResult(requestCode, resultCode, data);

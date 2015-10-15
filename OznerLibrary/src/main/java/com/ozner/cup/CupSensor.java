@@ -51,15 +51,15 @@ public class CupSensor {
 		return String.format("Battery:%d/%d Temp:%d/%d Weigth:%d/%d TDS:%d/%d", Battery, BatteryFix, Temperature, TemperatureFix,
 				Weigth,WeigthFix,TDS,TDSFix);
 	}
-	public void FromBytes(byte[] data) {
-		Battery = ByteUtil.getShort(data, 0);
-		BatteryFix = ByteUtil.getShort(data, 2);
-		Temperature = ByteUtil.getShort(data, 4);
-		TemperatureFix = ByteUtil.getShort(data, 6);
-		Weigth = ByteUtil.getShort(data, 8);
-		WeigthFix = ByteUtil.getShort(data, 10);
-		TDS = ByteUtil.getShort(data, 12);
-		TDSFix = ByteUtil.getShort(data, 14);
+	public void FromBytes(byte[] data,int startIndex) {
+		Battery = ByteUtil.getShort(data, startIndex+0);
+		BatteryFix = ByteUtil.getShort(data, startIndex+2);
+		Temperature = ByteUtil.getShort(data, startIndex+4);
+		TemperatureFix = ByteUtil.getShort(data, startIndex+6);
+		Weigth = ByteUtil.getShort(data, startIndex+8);
+		WeigthFix = ByteUtil.getShort(data, startIndex+10);
+		TDS = ByteUtil.getShort(data, startIndex+12);
+		TDSFix = ByteUtil.getShort(data, startIndex+14);
 
 	}
 }

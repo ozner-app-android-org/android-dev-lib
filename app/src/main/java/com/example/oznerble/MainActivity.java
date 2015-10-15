@@ -1,24 +1,19 @@
 package com.example.oznerble;
 
 import android.app.Activity;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.Message;
-import android.support.v7.app.ActionBarActivity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-
+import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.text.method.ScrollingMovementMethod;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TabHost;
@@ -39,7 +34,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -99,6 +93,19 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 	}
 
 	protected void onCreate(Bundle savedInstanceState) {
+//		CupFirmwareTools tools= null;
+//		try {
+//			tools = new CupFirmwareTools("/storage/emulated/0/#Cup#C03-Mar-27-2015-121118.bin","37:16:12:24:03:65");
+//			if (tools.Cheksum!=29578524)
+//			{
+//				return;
+//			}
+//		} catch (CupFirmwareTools.FirmwareExcpetion firmwareExcpetion) {
+//			firmwareExcpetion.printStackTrace();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+
 		setContentView(R.layout.activity_main);
 		mDbgText=(TextView)findViewById(R.id.messageList);
 		mDbgText.setMovementMethod(new ScrollingMovementMethod());
@@ -120,12 +127,11 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 		filter.addAction(OznerBluetoothDevice.ACTION_BLUETOOTH_CONNECTED);
 		this.registerReceiver(mMonitor, filter);
 		adpater=new ListAdpater();
-		list=(ListView)findViewById(R.id.devcieList);
+		list = (ListView) findViewById(R.id.deviceList);
 		list.setAdapter(adpater);
 		list.setOnItemClickListener(this);
 		super.onCreate(savedInstanceState);
 		findViewById(R.id.Device_Bind).setOnClickListener(this);
-
 		LoadServiceStatus();
 	}
 	

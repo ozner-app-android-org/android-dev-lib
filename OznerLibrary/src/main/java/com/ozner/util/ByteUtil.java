@@ -3,8 +3,8 @@ package com.ozner.util;
 public class ByteUtil {
 
 	public static void putShort(byte b[], short s, int index) {
-		b[index] = (byte) (s >> 8);
-		b[index + 1] = (byte) (s & 0xFF);
+		b[index + 1] = (byte) (s >> 8);
+		b[index] = (byte) (s & 0xFF);
 	}
 
 	public static short getShort(byte[] b, int index) {
@@ -19,10 +19,11 @@ public class ByteUtil {
 	}
 
 	public static int getInt(byte[] bb, int index) {
-		return (int) ((((bb[index + 3] & 0xff) << 24)
+		return (((bb[index + 3] & 0xff) << 24)
 				| ((bb[index + 2] & 0xff) << 16)
-				| ((bb[index + 1] & 0xff) << 8) | ((bb[index] & 0xff) << 0)));
+				| ((bb[index + 1] & 0xff) << 8) | ((bb[index] & 0xff) << 0));
 	}
+
 	public static long getUInt(byte[] bb, int index) {
 		return ((((bb[index + 3] & 0xff) << 24)
 				| ((bb[index + 2] & 0xff) << 16)

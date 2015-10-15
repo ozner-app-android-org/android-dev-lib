@@ -68,4 +68,12 @@ public class dbg {
 			mMessageListener.OnMessage(m);
 		}
 	}
+	public static void w(String msg) {
+		Log.w("ozner", msg);
+	}
+
+	public static void w(String msg, Object... args) {
+		Log.w("ozner", String.format(msg, args));
+	}
+
 }

@@ -1,19 +1,18 @@
 package com.ozner.cup;
 
-import java.util.ArrayList;
-
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 
-import com.ozner.bluetooth.BaseBluetoothDevice.BluetoothCloseCallback;
+import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.device.DeviceManager;
 import com.ozner.device.NotSupportDevcieException;
 import com.ozner.device.OznerBluetoothDevice;
 import com.ozner.device.OznerContext;
 import com.ozner.device.OznerDevice;
 import com.ozner.device.OznerDeviceManager;
-import com.ozner.util.dbg;
+
+import java.util.ArrayList;
 
 @SuppressLint("NewApi")
 /**
@@ -149,21 +148,16 @@ public class CupManager extends DeviceManager {
 
 	protected boolean IsCup(BluetoothDevice device, String Model) {
 		if (Model==null) return false;
-		
-		if (Model.trim().equals("CP001")) {
-			return true;
-		} else
-			return false;
+
+		return Model.trim().equals("CP001");
 	}
 
 	@Override
 	protected OznerBluetoothDevice getBluetoothDevice(BluetoothDevice device,
-			BluetoothCloseCallback bluetoothCallback, String Paltform,
-			String Model, long Firewarm) {
+			BluetoothIO.BluetoothCloseCallback bluetoothCallback, String Paltform,
+			String Model, long Firewarm){
 		if (IsCup(device, Model)) {
-			String addres = device.getAddress();
-			dbg.d("FoundCup:" + device.getAddress());
-			return new BluetoothCup(getApplication(), device, bluetoothCallback);
+			return new BluetoothCup(getApplication(),bluetoothCallback,device,Paltform,Model,Firewarm);
 		} else
 			return null;
 	}

@@ -3,8 +3,7 @@ package com.ozner.device;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 
-import com.ozner.bluetooth.BaseBluetoothDevice;
-import com.ozner.bluetooth.BaseBluetoothDevice.BluetoothCloseCallback;
+import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.util.SQLiteDB;
 /**
  * 设备管理基类
@@ -33,10 +32,11 @@ public abstract class DeviceManager {
 	protected OznerDeviceManager getBluetoothManager() {
 		return mBluetoothManager;
 	}
+
 	protected abstract OznerBluetoothDevice getBluetoothDevice(BluetoothDevice device,
-			BluetoothCloseCallback bluetoothCallback,
+			BluetoothIO.BluetoothCloseCallback bluetoothCallback,
 			String Paltform, String Model, long Firewarm);
-	
+
 	protected abstract OznerDevice getDevice(OznerBluetoothDevice bluetooth);
 	protected abstract OznerDevice loadDevice(String address,String Serial,String Model,String Setting);
 	

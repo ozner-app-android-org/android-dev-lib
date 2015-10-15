@@ -35,7 +35,7 @@
                     android:layout_height="match_parent"
                     android:orientation="vertical">
                     <ListView
-                        android:id="@+id/devcieList"
+                        android:id="@+id/deviceList"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_alignParentLeft="true"
