@@ -9,33 +9,62 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.WebView;
 import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.example.oznerble.R.id;
 import com.example.oznerble.R.layout;
+import com.mxchip.easylink.EasyLinkAPI;
 import com.ozner.application.OznerBLEService.OznerBLEBinder;
 import com.ozner.bluetooth.BluetoothScan;
 import com.ozner.device.NotSupportDevcieException;
 import com.ozner.device.OznerBluetoothDevice;
 import com.ozner.device.OznerDevice;
+import com.mxchip.wifiman.EasyLinkWifiManager;
 
 public class AddDeviceActivity extends Activity {
+
+	EasyLinkAPI elapi;
+	EasyLinkWifiManager mWifiManager;
 	ListView list;
-	ListAdpater adpater;
+	ListAdapter adapter;
+	EditText wifi_ssid;
+	EditText wifi_passwd;
+	Button wifi_bind;
 	Monitor mMonitor=new Monitor();
+
+	private void loadWifi() {
+		WifiManager wifi_service = (WifiManager) getSystemService(WIFI_SERVICE);
+		wifi_bind.setEnabled(wifi_service.getWifiState() == WifiManager.WIFI_STATE_ENABLED);
+		WifiInfo wifiInfo = wifi_service.getConnectionInfo();
+		if (wifiInfo != null) {
+			wifi_ssid.setText(wifiInfo.getSSID().replace("\"", ""));
+		} else {
+			wifi_ssid.setText("");
+		}
+	}
 
 	class Monitor extends BroadcastReceiver
 	{
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			adpater.Reload();
+			if (intent.getAction().equals(WifiManager.WIFI_STATE_CHANGED_ACTION)) {
+				loadWifi();
+			}
+			if (intent.getAction().equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
+				loadWifi();
+			} else {
+				adapter.Reload();
+			}
 		}
 	}
 	@Override
@@ -49,22 +78,40 @@ public class AddDeviceActivity extends Activity {
 		
 		IntentFilter filter=new IntentFilter();
 		filter.addAction(BluetoothScan.ACTION_SCANNER_FOUND);
-
 		filter.addAction(OznerBluetoothDevice.ACTION_OZNER_BLUETOOTH_BIND_MODE);
+		filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
+		filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
+
 		this.registerReceiver(mMonitor, filter);
 		setTitle("设备配对");
 		setContentView(layout.activity_add);
-		adpater=new ListAdpater(this);
-		list=(ListView)findViewById(R.id.devcieList);
-		list.setAdapter(adpater);
-	}	
-	
-	class ListAdpater extends BaseAdapter implements View.OnClickListener
+		adapter = new ListAdapter(this);
+		list = (ListView) findViewById(R.id.deviceList);
+		list.setAdapter(adapter);
+
+		wifi_ssid = (EditText) findViewById(id.wifi_ssid);
+		wifi_passwd = (EditText) findViewById(id.wifi_password);
+		wifi_bind = (Button) findViewById(id.wifi_bind);
+		wifi_bind.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+
+			}
+		});
+
+		loadWifi();
+		elapi = new EasyLinkAPI(this);
+
+		mWifiManager = new EasyLinkWifiManager(this);
+	}
+
+	class ListAdapter extends BaseAdapter implements View.OnClickListener
 	{
 		ArrayList<OznerBluetoothDevice> list=new ArrayList<OznerBluetoothDevice>();
 		Context mContext;
 		LayoutInflater mInflater;
-		public ListAdpater(Context context)
+
+		public ListAdapter(Context context)
 		{
 			mContext=context;
 			mInflater=LayoutInflater.from(context); 
@@ -108,7 +155,7 @@ public class AddDeviceActivity extends Activity {
 			if (device!=null)
 			{
 				((TextView) convertView.findViewById(id.Device_Name)).setText(
-						device.getName()+"("+device.getAddress()+")");
+						device.getName() + "(" + device.getAddress() + ")");
 				((TextView) convertView.findViewById(id.Device_Model)).setText(
 						device.getModel());
 				((TextView) convertView.findViewById(id.Device_Platfrom)).setText(
@@ -117,46 +164,51 @@ public class AddDeviceActivity extends Activity {
 						fmt.format(new Date(device.getFirmware())));
 				
 				((TextView) convertView.findViewById(id.Device_Custom)).setText(
-						device.getCustomObject()!=null?device.getCustomObject().toString():"");
+						device.getCustomObject() != null ? device.getCustomObject().toString() : "");
 				if (device.isBindMode())
 					convertView.findViewById(id.addDeviceButton).setEnabled(true);
 				else
 					convertView.findViewById(id.addDeviceButton).setEnabled(false);
 				convertView.findViewById(id.addDeviceButton).setTag(device);
 				convertView.findViewById(id.addDeviceButton).setOnClickListener(this);
-				
+
 			}
 			
 			return convertView;
 		}
+
 		@Override
 		public void onClick(View v) {
-			if (v.getId()==id.addDeviceButton)
+			switch (v.getId())
 			{
-				//获取点击的蓝牙设备
-				OznerBluetoothDevice bluetooth=(OznerBluetoothDevice)v.getTag();
-				
-				OznerBLEApplication app=(OznerBLEApplication)getApplication();
-				//获取服务
-				OznerBLEBinder service=app.getService();
-				OznerDevice device;
-				try {
-					//通过找到的蓝牙对象控制对象获取设备对象
-					device = service.getDeviceManager().getDevice(bluetooth);
-					//设置设备名称
-					device.Setting().name("test");
-					if (device!=null)
-					{
-						//保存设备
-						service.getDeviceManager().save(device);
-						//配对完成,重新加载配对设备列表
-						this.Reload();
+				case id.addDeviceButton: {
+					//获取点击的蓝牙设备
+					OznerBluetoothDevice bluetooth = (OznerBluetoothDevice) v.getTag();
+
+					OznerBLEApplication app = (OznerBLEApplication) getApplication();
+					//获取服务
+					OznerBLEBinder service = app.getService();
+					OznerDevice device;
+					try {
+						//通过找到的蓝牙对象控制对象获取设备对象
+						device = service.getDeviceManager().getDevice(bluetooth);
+						//设置设备名称
+						device.Setting().name("test");
+						if (device != null) {
+							//保存设备
+							service.getDeviceManager().save(device);
+							//配对完成,重新加载配对设备列表
+							this.Reload();
+						}
+					} catch (NotSupportDevcieException e) {
+						e.printStackTrace();
 					}
-				} catch (NotSupportDevcieException e) {
-					e.printStackTrace();
+
 				}
-				
+				break;
+
 			}
+
 		}
 	}
 }

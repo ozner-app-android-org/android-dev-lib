@@ -127,12 +127,11 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 		filter.addAction(OznerBluetoothDevice.ACTION_BLUETOOTH_CONNECTED);
 		this.registerReceiver(mMonitor, filter);
 		adpater=new ListAdpater();
-		list=(ListView)findViewById(R.id.devcieList);
+		list = (ListView) findViewById(R.id.deviceList);
 		list.setAdapter(adpater);
 		list.setOnItemClickListener(this);
 		super.onCreate(savedInstanceState);
 		findViewById(R.id.Device_Bind).setOnClickListener(this);
-
 		LoadServiceStatus();
 	}
 	
