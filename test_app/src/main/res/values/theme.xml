@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="backgoundColor">#ffffffff</color>
+    <dimen name="titleHeight">40dp</dimen>
+
+    <color name="ActionBarColor">#ff8bc34a</color>
+    <color name="textColor">#ffffffff</color>
+    <color name="titleTextColor">#ffffffff</color>
+
+    <dimen name="default_padding">16dp</dimen>
+
+    <style name="BaseTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowBackground">@color/backgoundColor</item>
+        <item name="android:textColorPrimary">@color/textColor</item>
+    </style>
+
+    <style name="ActionBar" parent="Widget.AppCompat.ActionBar">
+        <item name="android:background">@color/ActionBarColor</item>
+        <item name="android:height">56dp</item>
+        <item name="android:minHeight">56dp</item>
+    </style>
+
+</resources>

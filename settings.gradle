@@ -1,1 +1,1 @@
-include ':app', ':OznerLibrary'
+include ':app', ':OznerLibrary', ':test_app', ':xzy_ui_lib'
