@@ -1,9 +1,5 @@
 package com.example.oznerble;
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -23,25 +19,27 @@ import android.widget.TextView;
 
 import com.example.oznerble.R.id;
 import com.example.oznerble.R.layout;
-import com.mxchip.easylink.EasyLinkAPI;
 import com.ozner.application.OznerBLEService.OznerBLEBinder;
 import com.ozner.bluetooth.BluetoothScan;
 import com.ozner.device.NotSupportDevcieException;
 import com.ozner.device.OznerBluetoothDevice;
 import com.ozner.device.OznerDevice;
-import com.mxchip.wifiman.EasyLinkWifiManager;
+import com.ozner.wifi.mxchip.mxchip;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 
 public class AddDeviceActivity extends Activity {
 
-	EasyLinkAPI elapi;
-	EasyLinkWifiManager mWifiManager;
+
 	ListView list;
 	ListAdapter adapter;
 	EditText wifi_ssid;
 	EditText wifi_passwd;
 	Button wifi_bind;
 	Monitor mMonitor=new Monitor();
-
+	mxchip mxChip;
 	private void loadWifi() {
 		WifiManager wifi_service = (WifiManager) getSystemService(WIFI_SERVICE);
 		wifi_bind.setEnabled(wifi_service.getWifiState() == WifiManager.WIFI_STATE_ENABLED);
@@ -96,13 +94,12 @@ public class AddDeviceActivity extends Activity {
 			@Override
 			public void onClick(View view) {
 
+				mxChip.start(wifi_ssid.getText().toString(), wifi_passwd.getText().toString());
 			}
 		});
-
+		mxChip = new mxchip(this);
 		loadWifi();
-		elapi = new EasyLinkAPI(this);
 
-		mWifiManager = new EasyLinkWifiManager(this);
 	}
 
 	class ListAdapter extends BaseAdapter implements View.OnClickListener
@@ -181,6 +178,7 @@ public class AddDeviceActivity extends Activity {
 		public void onClick(View v) {
 			switch (v.getId())
 			{
+
 				case id.addDeviceButton: {
 					//获取点击的蓝牙设备
 					OznerBluetoothDevice bluetooth = (OznerBluetoothDevice) v.getTag();

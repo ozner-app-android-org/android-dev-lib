@@ -133,6 +133,9 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 		super.onCreate(savedInstanceState);
 		findViewById(R.id.Device_Bind).setOnClickListener(this);
 		LoadServiceStatus();
+
+		Intent intent = new Intent(this, AddDeviceActivity.class);
+		startActivity(intent);
 	}
 	
 	private void LoadServiceStatus() {
