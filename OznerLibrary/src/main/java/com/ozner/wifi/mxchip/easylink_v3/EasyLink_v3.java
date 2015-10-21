@@ -49,9 +49,10 @@ public class EasyLink_v3 {
      * wifi.getConnectionInfo(); String bssid_str = info.getBSSID(); bssid_str =
      * bssid_str.replace(":", ""); bssid = Helper.hexStringToBytes(bssid_str); }
      */
-    public void transmitSettings(byte[] Ssid, byte[] Key, byte[] Userinfo) {
+    public void transmitSettings(byte[] Ssid, byte[] Key, String broadcastIp, byte[] Userinfo) {
         try {
-            this.address = InetAddress.getByName("255.255.255.255");
+
+            this.address = InetAddress.getByName(broadcastIp);
         } catch (Exception e) {
             e.printStackTrace();
         }

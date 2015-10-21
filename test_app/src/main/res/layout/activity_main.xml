@@ -18,20 +18,23 @@
         android:id="@+id/right_labels"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="16dp"
+        android:layout_marginBottom="16dp"
         fab:fab_addButtonColorNormal="@color/white"
         fab:fab_addButtonColorPressed="@color/white_pressed"
         fab:fab_addButtonPlusIconColor="@color/half_black"
-        fab:fab_addButtonSize="mini"
+        fab:fab_addButtonSize="normal"
         fab:fab_labelStyle="@style/menu_labels_style"
-        fab:fab_labelsPosition="right">
+        fab:fab_labelsPosition="left">
 
         <com.getbase.floatingactionbutton.FloatingActionButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:id="@+id/addWifiButton"
             fab:fab_colorNormal="@color/white"
-            fab:fab_title="Label on the right"
+            fab:fab_title="Wifi"
             fab:fab_size="mini"
             fab:fab_colorPressed="@color/white_pressed"/>
 
@@ -40,7 +43,7 @@
             android:layout_height="wrap_content"
             fab:fab_colorNormal="@color/white"
             fab:fab_size="mini"
-            fab:fab_title="Another one on the right"
+            fab:fab_title="Bluetooth"
             fab:fab_colorPressed="@color/white_pressed"/>
 
     </com.getbase.floatingactionbutton.FloatingActionsMenu>
