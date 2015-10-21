@@ -1,0 +1,5 @@
+<resources>
+    <string name="good_water">健康</string>
+    <string name="bad_water">较差</string>
+    <string name="normal_water">一般</string>
+</resources>
