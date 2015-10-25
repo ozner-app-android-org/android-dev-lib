@@ -6,4 +6,6 @@
         <item name="android:background">@android:color/transparent</item>
         <item name="android:textColor">@color/half_black</item>
     </style>
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 </resources>

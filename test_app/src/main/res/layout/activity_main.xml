@@ -13,7 +13,6 @@
     </android.support.v7.widget.Toolbar>
 
 
-
     <com.getbase.floatingactionbutton.FloatingActionsMenu
         android:id="@+id/right_labels"
         android:layout_width="wrap_content"

@@ -7,6 +7,7 @@ import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 
+import com.dd.CircularProgressButton;
 import com.ozner.ui.library.RoundDrawable;
 
 
@@ -26,6 +27,8 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         toolbar.setNavigationIcon(icon);
         findViewById(R.id.addWifiButton).setOnClickListener(this);
 
+        Intent intent = new Intent(this, WifiConfigurationActivity.class);
+        startActivity(intent);
     }
 
 
@@ -33,7 +36,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.addWifiButton:
-                Intent intent = new Intent(this, AddWifiActivity.class);
+                Intent intent = new Intent(this, WifiConfigurationActivity.class);
                 startActivity(intent);
                 break;
         }

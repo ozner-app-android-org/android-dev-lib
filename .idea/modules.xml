@@ -2,9 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/OznerBLETestApp.iml" filepath="$PROJECT_DIR$/OznerBLETestApp.iml" />
       <module fileurl="file://$PROJECT_DIR$/OznerLibrary/OznerLibrary.iml" filepath="$PROJECT_DIR$/OznerLibrary/OznerLibrary.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ozner.iml" filepath="$PROJECT_DIR$/ozner.iml" />
       <module fileurl="file://$PROJECT_DIR$/test_app/test_app.iml" filepath="$PROJECT_DIR$/test_app/test_app.iml" />
       <module fileurl="file://$PROJECT_DIR$/xzy_ui_lib/xzy_ui_lib.iml" filepath="$PROJECT_DIR$/xzy_ui_lib/xzy_ui_lib.iml" />
     </modules>

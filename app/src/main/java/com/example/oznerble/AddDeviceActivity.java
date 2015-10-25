@@ -24,8 +24,8 @@ import com.ozner.bluetooth.BluetoothScan;
 import com.ozner.device.NotSupportDevcieException;
 import com.ozner.device.OznerBluetoothDevice;
 import com.ozner.device.OznerDevice;
+import com.ozner.wifi.mxchip.MXWifiChip;
 import com.ozner.wifi.mxchip.WifiDevice;
-import com.ozner.wifi.mxchip.mxchip;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -40,7 +40,7 @@ public class AddDeviceActivity extends Activity {
 	EditText wifi_passwd;
 	Button wifi_bind;
 	Monitor mMonitor=new Monitor();
-	mxchip mxChip;
+	MXWifiChip mxChip;
 	private void loadWifi() {
 		WifiManager wifi_service = (WifiManager) getSystemService(WIFI_SERVICE);
 		wifi_bind.setEnabled(wifi_service.getWifiState() == WifiManager.WIFI_STATE_ENABLED);
@@ -94,7 +94,7 @@ public class AddDeviceActivity extends Activity {
 		wifi_bind.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-				mxChip.startWifiConfiguration(wifi_ssid.getText().toString(), wifi_passwd.getText().toString(), new mxchip.WifiConfigurationListener() {
+				mxChip.startWifiConfiguration(wifi_ssid.getText().toString(), wifi_passwd.getText().toString(), new MXWifiChip.WifiConfigurationListener() {
 					@Override
 					public void onWifiConfiguration(WifiDevice device) {
 
@@ -111,7 +111,7 @@ public class AddDeviceActivity extends Activity {
 					}
 				});
 				/*
-				mxChip.startWifiSearch(new mxchip.WifiSearchDeviceListener() {
+				mxChip.startWifiSearch(new MXWifiChip.WifiSearchDeviceListener() {
 					@Override
 					public void onWifiSearchFound(WifiDevice device) {
 						if (device.name==null)
@@ -133,7 +133,7 @@ public class AddDeviceActivity extends Activity {
 				//mxChip.start(wifi_ssid.getText().toString(), wifi_passwd.getText().toString());
 			}
 		});
-		mxChip = new mxchip(this);
+		mxChip = new MXWifiChip(this);
 		loadWifi();
 
 	}
