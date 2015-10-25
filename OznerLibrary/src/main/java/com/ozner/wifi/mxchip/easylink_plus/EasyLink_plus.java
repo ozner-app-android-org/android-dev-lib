@@ -6,7 +6,6 @@ package com.ozner.wifi.mxchip.easylink_plus;
 import android.content.Context;
 import android.net.wifi.WifiManager;
 
-import com.ozner.wifi.mxchip.easylink_v2.EasyLink_v2;
 import com.ozner.wifi.mxchip.easylink_v3.EasyLink_v3;
 import com.ozner.wifi.mxchip.helper.Helper;
 
@@ -19,7 +18,7 @@ import java.util.concurrent.Executors;
  * @date 2014-10-21
  */
 public class EasyLink_plus {
-    private static EasyLink_v2 e2;
+    //private static EasyLink_v2 e2;
     private static EasyLink_v3 e3;
     //    private static EasyLink_minus minus;
     private static EasyLink_plus me;
@@ -30,7 +29,7 @@ public class EasyLink_plus {
     private EasyLink_plus(Context ctx) {
         try {
             wifiManager = (WifiManager) ctx.getSystemService(Context.WIFI_SERVICE);
-            e2 = EasyLink_v2.getInstence();
+//            e2 = EasyLink_v2.getInstence();
             e3 = EasyLink_v3.getInstence();
 //            minus = new EasyLink_minus(ctx);
         } catch (Exception e) {
@@ -73,16 +72,17 @@ public class EasyLink_plus {
 
                             String ipString = ((broadcatIp & 0xff) + "." + (broadcatIp >> 8 & 0xff) + "."
                                     + (broadcatIp >> 16 & 0xff) + "." + (broadcatIp >> 24 & 0xff));
-                            e2.transmitSettings(ssid_byte, key_byte, userinfo);
+                            //ipString="255.255.255.255";
+                            //e2.transmitSettings(ssid_byte, key_byte, userinfo);
                             e3.transmitSettings(ssid_byte, key_byte, ipString, userinfo);
                             // Log.e("minus--->", "sending");
                             try {
                                 Thread.sleep(10 * 1000);
-                                e2.stopTransmitting();
+                                //e2.stopTransmitting();
                                 e3.stopTransmitting();
                                 //minus.stopTransmitting();
                                 // Log.e("easylink", "STOP!!!!");
-//                                Thread.sleep(3 * 1000);
+                                //Thread.sleep(3 * 1000);
                                 Thread.sleep(10 * 1000);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();

@@ -1,6 +1,7 @@
 package com.ozner.util;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -11,8 +12,7 @@ import java.net.URL;
  */
 public class HttpUtil {
 
-    public static String postJSON(String url, String json) {
-        try {
+    public static String postJSON(String url, String json) throws IOException {
             URL my_url = new URL(url);
             HttpURLConnection connection = null;
             connection = (HttpURLConnection) my_url.openConnection();
@@ -44,9 +44,6 @@ public class HttpUtil {
                 byteArrayOutputStream.close();
             }
 
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+
     }
 }
