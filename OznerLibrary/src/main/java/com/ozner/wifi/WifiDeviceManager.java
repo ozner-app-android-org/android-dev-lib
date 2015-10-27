@@ -20,7 +20,6 @@ import java.util.HashMap;
 public class WifiDeviceManager extends BaseOznerManager {
     MXChip mxChip;
     HashMap<String, WifiDevice> deviceList = new HashMap<>();
-
     SharedPreferences preferences;
 
     @Override
