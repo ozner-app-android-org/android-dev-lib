@@ -1,6 +1,7 @@
 package com.ozner.device;
 
 import android.content.Context;
+
 import com.ozner.cup.BluetoothCup;
 import com.ozner.util.SQLiteDB;
 /**
@@ -84,8 +85,9 @@ public abstract class OznerDevice {
 		setting.load(Setting);
 		return setting;
 	}
-	public OznerDevice(OznerContext context, String Address,String Serial,String Model,String Setting, SQLiteDB db) {
-		mAddress = Address;
+
+    public OznerDevice(OznerContext context, String Address, String Serial, String Model, String Setting, SQLiteDB db) {
+        mAddress = Address;
 		mSerial=Serial;
 		mModel=Model;
 		mConetxt = context;

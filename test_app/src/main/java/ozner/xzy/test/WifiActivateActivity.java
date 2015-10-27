@@ -13,26 +13,31 @@ import android.widget.TextView;
 import com.dd.CircularProgressButton;
 import com.lsjwzh.widget.materialloadingprogressbar.CircleProgressBar;
 import com.ozner.ui.library.Screen;
-import com.ozner.wifi.mxchip.MXWifiChip;
-import com.ozner.wifi.mxchip.WifiDevice;
+import com.ozner.wifi.mxchip.ConfigurationDevice;
+import com.ozner.wifi.mxchip.MQTTService;
+import com.ozner.wifi.mxchip.WifiConfiguration;
 
 public class WifiActivateActivity extends AppCompatActivity {
-    WifiDevice wifiDevice;
+    ConfigurationDevice wifiDevice;
     CircleProgressBar progressBar;
     CircularProgressButton finishButton;
     LinearLayout logLayout;
     String deivceID;
     Handler handler;
+    MQTTService mqttService;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mqttService = new MQTTService(this);
+
         handler=new Handler();
         setContentView(R.layout.activity_wifi_activate);
         progressBar=(CircleProgressBar)findViewById(R.id.progress);
         logLayout=(LinearLayout)findViewById(R.id.textLogPanel);
         progressBar.setColorSchemeResources(android.R.color.holo_red_light);
         finishButton =(CircularProgressButton)findViewById(R.id.finishButton);
-        wifiDevice=WifiDevice.loadByJSON(getIntent().getStringExtra("json"));
+        wifiDevice = ConfigurationDevice.loadByJSON(getIntent().getStringExtra("json"));
         addLog("开始激活:"+wifiDevice.localIP);
 
         finishButton.setOnClickListener(new View.OnClickListener() {
@@ -59,9 +64,10 @@ public class WifiActivateActivity extends AppCompatActivity {
             @Override
             public void run() {
 
-                MXWifiChip mxChip=new MXWifiChip(WifiActivateActivity.this);
+                WifiConfiguration wifiConfiguration = new WifiConfiguration(WifiActivateActivity.this);
                 try {
-                    deivceID=mxChip.ActiveDevice(wifiDevice);
+                    //wifiConfiguration.CloudReset(wifiDevice);
+                    deivceID = wifiConfiguration.ActiveDevice(wifiDevice);
 
                     handler.post(new Runnable() {
                         @Override
@@ -72,13 +78,14 @@ public class WifiActivateActivity extends AppCompatActivity {
                             finishButton.setEnabled(true);
                         }
                     });
-                }catch (Exception e)
+                } catch (final Exception e)
                 {
+                    e.printStackTrace();
 
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            addLog("网络错误");
+                            addLog(e.getMessage());
                             progressBar.setVisibility(View.INVISIBLE);
                             finishButton.setProgress(-1);
                             finishButton.setEnabled(true);

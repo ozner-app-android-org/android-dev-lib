@@ -6,6 +6,8 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 
+import java.util.Random;
+
 public class Helper {
 	/**
 	 * 将px值转换为dip或dp值，保证尺寸大小不变
@@ -103,5 +105,28 @@ public class Helper {
 		return apiKey;
 	}
 
+	final static char HexString[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+
+	/**
+	 * 生成随机16进制数字字符串
+	 *
+	 * @param len 长度
+	 * @return
+	 */
+	public static String rndString(int len) {
+		StringBuilder sb = new StringBuilder();
+		Random random = new Random(System.currentTimeMillis());
+		for (int i = 0; i < len; i++) {
+			int p = random.nextInt(HexString.length);
+			sb.append(HexString[p]);
+		}
+		return sb.toString();
+	}
+
+	public static boolean StringIsNullOrEmpty(String s) {
+		if (s == null) return true;
+		if (s.isEmpty()) return true;
+		return false;
+	}
 
 }

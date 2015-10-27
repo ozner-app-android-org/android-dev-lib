@@ -7,14 +7,14 @@ import com.alibaba.fastjson.JSONObject;
 /**
  * Created by zhiyongxu on 15/10/18.
  */
-public class WifiDevice {
+public class ConfigurationDevice {
     public String name;
     public String ap;
     public String localIP;
     public String firmware;
-    public String loginId;
-    public String devPasswd;
-    public int localPort = 8080;
+    public String loginId = "admin";
+    public String devPasswd = "12345678";
+    public int localPort = 8000;
     public boolean activated;
     public boolean connected;
     /**
@@ -39,9 +39,9 @@ public class WifiDevice {
         return jsonObject.toJSONString();
     }
 
-    public static WifiDevice loadByJSON(String jsonString) {
+    public static ConfigurationDevice loadByJSON(String jsonString) {
         JSONObject jsonObject = (JSONObject) JSON.parse(jsonString);
-        WifiDevice device = new WifiDevice();
+        ConfigurationDevice device = new ConfigurationDevice();
         device.name = jsonObject.getString("name");
         device.ap = jsonObject.getString("ap");
         device.localIP = jsonObject.getString("localIP");
@@ -56,7 +56,7 @@ public class WifiDevice {
     }
 
 
-    public static WifiDevice loadByFTCJson(String jsonString) {
+    public static ConfigurationDevice loadByFTCJson(String jsonString) {
         if ((jsonString == null) || (jsonString.equals(""))) {
             return null;
         }
@@ -64,7 +64,7 @@ public class WifiDevice {
             JSONObject json = JSON.parseObject(jsonString);
             if (json == null) return null;
 
-            WifiDevice device = new WifiDevice();
+            ConfigurationDevice device = new ConfigurationDevice();
             device.name = json.getString("N");
             device.Type = json.getString("FW").replace("@", "");
             JSONArray array = json.getJSONArray("C");
@@ -106,11 +106,13 @@ public class WifiDevice {
                             device.firmware = sub.getString("C");
                             continue;
                         }
-
+                        if (name.equals("device_id")) {
+                            device.activeDeviceID = sub.getString("C");
+                        }
                         if (name.equals("Cloud settings")) {
                             JSONArray setting = sub.getJSONArray("C");
-                            for (int y = 0; x < setting.size(); y++) {
-                                JSONObject sj = setting.getObject(x, JSONObject.class);
+                            for (int y = 0; y < setting.size(); y++) {
+                                JSONObject sj = setting.getObject(y, JSONObject.class);
                                 String sn = sj.getString("N");
                                 if (sn.equals("login_id")) {
                                     device.loginId = sj.getString("C");
@@ -120,6 +122,8 @@ public class WifiDevice {
                                     device.devPasswd = sj.getString("C");
                                     continue;
                                 }
+
+
                             }
                             continue;
                         }

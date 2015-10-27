@@ -9,10 +9,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 
+import com.ozner.BaseOznerManager;
 import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.bluetooth.BluetoothScan;
 import com.ozner.bluetooth.BluetoothSynchronizedObject;
-import com.ozner.util.SQLiteDB;
 import com.ozner.util.dbg;
 
 import java.util.ArrayList;
@@ -20,38 +20,17 @@ import java.util.HashMap;
 import java.util.List;
 
 @SuppressLint("NewApi")
-public class OznerDeviceManager implements BluetoothIO.BluetoothCloseCallback {
-	/**
-	 * 新增一个配对设备广播
-	 */
-	public final static String ACTION_OZNER_MANAGER_DEVICE_ADD = "com.ozner.manager.device.add";
-	/**
-	 * 删除设备广播
-	 */
-	public final static String ACTION_OZNER_MANAGER_DEVICE_REMOVE = "com.ozner.manager.device.remove";
-	/**
-	 * 修改设备广播
-	 */
-	public final static String ACTION_OZNER_MANAGER_DEVICE_CHANGE = "com.ozner.manager.device.change";
-	OznerContext mContext;
+public class OznerDeviceManager extends BaseOznerManager implements BluetoothIO.BluetoothCloseCallback {
+
+
 	BluetoothMonitor mMonitor = new BluetoothMonitor();
 	BluetoothScan mScaner = null;
-	String mOwner = "";
+
 	HashMap<String, OznerDevice> mDevices = new HashMap<String, OznerDevice>();
 	HashMap<String, OznerBluetoothDevice> mBluetooths = new HashMap<String, OznerBluetoothDevice>();
 	boolean _isBackground = false;
 
-	protected SQLiteDB getDB() {
-		return mContext.getDB();
-	}
 
-	protected Context getContext() {
-		return mContext.getApplication();
-	}
-
-	protected String getOwner() {
-		return mOwner;
-	}
 
 	/**
 	 * 获取发现并且未配对的设备集合
@@ -70,23 +49,11 @@ public class OznerDeviceManager implements BluetoothIO.BluetoothCloseCallback {
 		}
 	}
 
-	/**
-	 * 设置绑定的用户
-	 * 
-	 * @param Owner
-	 *            用户ID
-	 */
-	public void setOwner(String Owner) {
-		if (Owner == null)
-			return;
-		if (Owner.isEmpty())
-			return;
-		if (mOwner.equals(Owner))
-			return;
-		mOwner = Owner;
-		dbg.i("Set Owner:%s", Owner);
-		synchronized (this) {
-			mDevices.clear();
+    @Override
+    public void setOwner(String Owner) {
+        super.setOwner(Owner);
+        synchronized (this) {
+            mDevices.clear();
 		}
 		CloseAll();
 		LoadDevices();
@@ -290,9 +257,9 @@ public class OznerDeviceManager implements BluetoothIO.BluetoothCloseCallback {
 	}
 
 	public OznerDeviceManager(OznerContext context, BluetoothScan scaner) {
-		mScaner = scaner;
-		mContext = context;
-		getDB().execSQLNonQuery(
+        super(context);
+        mScaner = scaner;
+        getDB().execSQLNonQuery(
 				"CREATE TABLE IF NOT EXISTS OznerDevices (Address VARCHAR PRIMARY KEY NOT NULL, Serial TEXT,Model Text,Owner TEXT, JSON TEXT)",
 				new String[] {});
 		/*
@@ -309,10 +276,10 @@ public class OznerDeviceManager implements BluetoothIO.BluetoothCloseCallback {
 
 		}
 
-		if (mOwner != "") {
-			setOwner(mOwner);
-		}
-	}
+        //if (getOwner() != "") {
+        //	setOwner(mOwner);
+        //}
+    }
 
 	BluetoothMonitor mBluetoothMonitor = new BluetoothMonitor();
 

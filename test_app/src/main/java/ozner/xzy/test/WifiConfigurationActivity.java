@@ -20,16 +20,16 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.dd.CircularProgressButton;
-import com.ozner.wifi.mxchip.MXWifiChip;
-import com.ozner.wifi.mxchip.WifiDevice;
+import com.ozner.wifi.mxchip.ConfigurationDevice;
+import com.ozner.wifi.mxchip.WifiConfiguration;
 
 
 /**
  * A placeholder fragment containing a simple view.
  */
-public class WifiConfigurationActivity extends Activity implements MXWifiChip.WifiConfigurationListener {
-
+public class WifiConfigurationActivity extends Activity implements WifiConfiguration.WifiConfigurationListener {
     public static final String ActivityResultKey="Result";
+
     EditText wifi_ssid;
     EditText wifi_passwd;
     CircularProgressButton nextButton;
@@ -37,8 +37,8 @@ public class WifiConfigurationActivity extends Activity implements MXWifiChip.Wi
     WifiManager wifiManager;
     SharedPreferences wifiPreferences;
     Monitor monitor;
-    WifiDevice selectionDevice=null;
-    MXWifiChip mxChip;
+    ConfigurationDevice selectionDevice = null;
+    WifiConfiguration wifiConfiguration;
     Handler handler;
     private void loadDevice()
     {
@@ -52,8 +52,10 @@ public class WifiConfigurationActivity extends Activity implements MXWifiChip.Wi
             ((TextView) this.findViewById(R.id.ip)).setText("IP:" + selectionDevice.localIP);
             ((TextView) this.findViewById(R.id.connected)).setText("激活:" + selectionDevice.activated);
             findViewById(R.id.deviceInfoPanel).setVisibility(View.VISIBLE);
+            if ((selectionDevice.activated) && (!selectionDevice.activeDeviceID.isEmpty())) {
+                nextButton.setCompleteText("完成");
+            }
             nextButton.setProgress(100);
-
         }
     }
 
@@ -73,7 +75,7 @@ public class WifiConfigurationActivity extends Activity implements MXWifiChip.Wi
         super.onCreate(savedInstanceState);
         handler=new Handler();
         setContentView(R.layout.activity_wifi_configuration);
-        mxChip=new MXWifiChip(this);
+        wifiConfiguration = new WifiConfiguration(this);
         wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE);
         wifiPreferences = this.getSharedPreferences("WifiPassword", Context.MODE_PRIVATE);
         monitor = new Monitor();
@@ -107,14 +109,16 @@ public class WifiConfigurationActivity extends Activity implements MXWifiChip.Wi
         loadWifi();
         if (savedInstanceState!=null) {
             if (savedInstanceState.containsKey("selectDevice")) {
-                selectionDevice = WifiDevice.loadByJSON(savedInstanceState.getString("selectDevice"));
+                selectionDevice = ConfigurationDevice.loadByJSON(savedInstanceState.getString("selectDevice"));
                 nextButton.setProgress(100);
             }
         }
 
-        Intent intent=new Intent(this,WifiActivateActivity.class);
-        intent.putExtra("json", "{\"Type\":\"FOG_HAOZE_AIR\",\"ap\":\"ITDEV\",\"firmware\":\"FOG_HAOZE_AIR@004\",\"activated\":false,\"name\":\"EMW3162(C04DF4)\",\"connected\":false,\"localIP\":\"10.203.1.74\",\"localPort\":8080}");
-        this.startActivityForResult(intent, 0x100);
+        //Intent intent=new Intent(this,WifiActivateActivity.class);
+        //intent.putExtra("json", "{\"Type\":\"FOG_HAOZE_AIR\",\"ap\":\"ITDEV\",\"firmware\":\"FOG_HAOZE_AIR@004\",\"devPasswd\":\"12345678\",\"activated\":false,\"localPort\":8000,\"name\":\"EMW3162(C04DF4)\",\"connected\":false,\"localIP\":\"10.203.1.74\",\"loginId\":\"admin\"}");
+
+
+        //this.startActivityForResult(intent, 0x100);
 
     }
 
@@ -135,7 +139,7 @@ public class WifiConfigurationActivity extends Activity implements MXWifiChip.Wi
     }
 
     @Override
-    public void onWifiConfiguration(WifiDevice device) {
+    public void onWifiConfiguration(ConfigurationDevice device) {
         selectionDevice=device;
         handler.post(new Runnable() {
             @Override
@@ -175,7 +179,7 @@ public class WifiConfigurationActivity extends Activity implements MXWifiChip.Wi
 
     @Override
     protected void onDestroy() {
-        mxChip.stopWifiConfiguration();
+        wifiConfiguration.stopWifiConfiguration();
         super.onDestroy();
     }
 
@@ -186,7 +190,7 @@ public class WifiConfigurationActivity extends Activity implements MXWifiChip.Wi
         {
             Intent intent=new Intent();
             intent.putExtra(ActivityResultKey,selectionDevice.toJSON());
-            setResult(0,intent);
+            setResult(RESULT_OK, intent);
             finish();
         }
         super.onActivityResult(requestCode, resultCode, data);
@@ -195,16 +199,22 @@ public class WifiConfigurationActivity extends Activity implements MXWifiChip.Wi
     private void onClickStartButton() {
         if(nextButton.getProgress()==100) {
             if (selectionDevice!=null) {
-                Intent intent=new Intent(this,WifiActivateActivity.class);
-                intent.putExtra("json", selectionDevice.toJSON());
-                this.startActivity(intent);
-
+                if ((selectionDevice.activated) && (!selectionDevice.activeDeviceID.isEmpty())) {
+                    Intent intent = new Intent();
+                    intent.putExtra(ActivityResultKey, selectionDevice.toJSON());
+                    setResult(RESULT_OK, intent);
+                    finish();
+                } else {
+                    Intent intent = new Intent(this, WifiActivateActivity.class);
+                    intent.putExtra("json", selectionDevice.toJSON());
+                    this.startActivity(intent);
+                }
             }
         }else
         {
             if (wifiManager.getConnectionInfo().getSupplicantState()!=SupplicantState.COMPLETED)
             {
-                Toast toast=Toast.makeText(this,"没有连接WIFI",Toast.LENGTH_LONG);
+                Toast toast = Toast.makeText(this, "没有连接WIFI", Toast.LENGTH_LONG);
                 toast.show();
                 return;
             }
@@ -221,7 +231,7 @@ public class WifiConfigurationActivity extends Activity implements MXWifiChip.Wi
             }finally {
                 editor.commit();
             }
-            mxChip.startWifiConfiguration(ssid, wifi_passwd.getText().toString(), this);
+            wifiConfiguration.startWifiConfiguration(ssid, wifi_passwd.getText().toString(), this);
         }
     }
     private void startConfiguration()
