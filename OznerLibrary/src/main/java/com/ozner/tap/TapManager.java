@@ -3,8 +3,6 @@ package com.ozner.tap;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 
-import com.ozner.bluetooth.BluetoothIO;
-import com.ozner.cup.Cup;
 import com.ozner.device.DeviceManager;
 import com.ozner.device.OznerBluetoothDevice;
 import com.ozner.device.OznerContext;

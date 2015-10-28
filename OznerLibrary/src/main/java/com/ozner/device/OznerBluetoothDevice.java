@@ -4,7 +4,6 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.Intent;
 
-import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.util.dbg;
 
 public abstract class OznerBluetoothDevice extends BluetoothIO {

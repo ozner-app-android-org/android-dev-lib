@@ -10,7 +10,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 
-import com.ozner.cup.BluetoothCup;
 import com.ozner.util.dbg;
 
 import java.util.Arrays;

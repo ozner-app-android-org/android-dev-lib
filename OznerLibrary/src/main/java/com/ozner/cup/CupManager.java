@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 
-import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.device.DeviceManager;
 import com.ozner.device.NotSupportDevcieException;
 import com.ozner.device.OznerBluetoothDevice;

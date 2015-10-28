@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 
 import com.ozner.BaseOznerManager;
-import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.bluetooth.BluetoothScan;
 import com.ozner.bluetooth.BluetoothSynchronizedObject;
 import com.ozner.util.dbg;

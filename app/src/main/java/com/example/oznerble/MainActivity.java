@@ -20,13 +20,9 @@ import android.widget.TabHost;
 import android.widget.TextView;
 
 import com.ozner.application.OznerBLEService;
-import com.ozner.cup.BluetoothCup;
-import com.ozner.cup.Cup;
 import com.ozner.device.OznerBluetoothDevice;
 import com.ozner.device.OznerDevice;
 import com.ozner.device.OznerDeviceManager;
-import com.ozner.tap.BluetoothTap;
-import com.ozner.tap.Tap;
 import com.ozner.util.dbg;
 
 import java.io.File;
@@ -100,7 +96,7 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 //			{
 //				return;
 //			}
-//		} catch (CupFirmwareTools.FirmwareExcpetion firmwareExcpetion) {
+//		} catch (CupFirmwareTools.FirmwareException firmwareExcpetion) {
 //			firmwareExcpetion.printStackTrace();
 //		} catch (IOException e) {
 //			e.printStackTrace();

@@ -23,13 +23,9 @@ import android.widget.Toast;
 import com.example.oznerble.R.id;
 import com.example.oznerble.R.layout;
 import com.ozner.application.OznerBLEService.OznerBLEBinder;
-import com.ozner.bluetooth.BluetoothIO;
-import com.ozner.cup.BluetoothCup;
 import com.ozner.device.OznerBluetoothDevice;
 import com.ozner.device.OznerDevice;
-import com.ozner.tap.BluetoothTap;
 import com.ozner.tap.Record;
-import com.ozner.tap.Tap;
 import com.ozner.util.dbg;
 
 import java.text.SimpleDateFormat;

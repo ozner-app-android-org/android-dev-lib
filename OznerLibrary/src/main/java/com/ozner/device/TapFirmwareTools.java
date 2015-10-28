@@ -1,36 +1,27 @@
 package com.ozner.device;
 
+import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.util.ByteUtil;
 import com.ozner.util.dbg;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public class TapFirmwareTools {
-    public class FirmwareExcpetion extends Exception {
+public class TapFirmwareTools extends FirmwareTools {
+    static final byte opCode_GetFirmwareSum = (byte) 0xc5;
+    static final byte opCode_GetFirmwareSumRet = (byte) 0xc5;
 
-        /**
-         *
-         */
-        private static final long serialVersionUID = 1L;
-
-        public FirmwareExcpetion(String message) {
-            super(message);
-        }
+    public TapFirmwareTools(BluetoothIO bluetoothIO) {
+        super(bluetoothIO);
     }
 
-    public String Platform;
-    public long Firmware;
-    public int Size;
-    public byte[] bytes;
-    public int Cheksum;
-
-    public TapFirmwareTools(String path, String Address) throws FirmwareExcpetion, IOException {
+    @Override
+    public void loadFile(String path) throws Exception {
         File file = new File(path);
         byte[] key = {0x23, 0x23, 0x24, 0x24, 0x40, 0x40, 0x2a, 0x2a, 0x54, 0x61, 0x70, 0x00};
         Size = (int) file.length();
@@ -40,8 +31,7 @@ public class TapFirmwareTools {
             Size = (Size / 128) * 128 + 128;
         }
 
-
-        FileInputStream fs = new FileInputStream(path);
+        FileInputStream fs = new FileInputStream(file);
         try {
             bytes = new byte[Size];
             fs.read(bytes, 0, Size);
@@ -77,37 +67,40 @@ public class TapFirmwareTools {
             }
 
             if (!ver) {
-                throw new FirmwareExcpetion("错误的文件");
+                throw new FirmwareException("错误的文件");
             } else {
                 int ver_pos = ByteUtil.getInt(bytes, v_pos + 16);
-                if ((ver_pos < 0) || (ver_pos > bytes.length)) throw new FirmwareExcpetion("错误的文件");
+                if ((ver_pos < 0) || (ver_pos > bytes.length)) throw new FirmwareException("错误的文件");
 
                 int day_pos = ByteUtil.getInt(bytes, v_pos + 20);
-                if ((day_pos < 0) || (day_pos > bytes.length)) throw new FirmwareExcpetion("错误的文件");
+                if ((day_pos < 0) || (day_pos > bytes.length)) throw new FirmwareException("错误的文件");
 
                 int time_pos = ByteUtil.getInt(bytes, v_pos + 24);
                 if ((time_pos < 0) || (time_pos > bytes.length))
-                    throw new FirmwareExcpetion("错误的文件");
+                    throw new FirmwareException("错误的文件");
 
                 String verS = new String(bytes, ver_pos, 3, Charset.forName("US-ASCII"));
                 String dayS = new String(bytes, day_pos, 11, Charset.forName("US-ASCII"));
                 String timeS = new String(bytes, time_pos, 8, Charset.forName("US-ASCII"));
 
-                if (verS == "") throw new FirmwareExcpetion("错误的文件");
-                if (dayS == "") throw new FirmwareExcpetion("错误的文件");
-                if (timeS == "") throw new FirmwareExcpetion("错误的文件");
+                if (verS == "") throw new FirmwareException("错误的文件");
+                if (dayS == "") throw new FirmwareException("错误的文件");
+                if (timeS == "") throw new FirmwareException("错误的文件");
 
                 try {
                     Platform = verS.substring(0, 3);
                     SimpleDateFormat df = new SimpleDateFormat("MMM dd yyyy HH:mm:ss", Locale.US);
                     Date date = df.parse(dayS + " " + timeS);
                     Firmware = date.getTime();
-
+                    if (!(Platform.equals("T01") || Platform.equals("T02") || (Platform.equals("T03")))) {
+                        throw new FirmwareException("错误的文件");
+                    }
                 } catch (Exception e) {
                     dbg.e(e.toString());
 
                 }
             }
+            String Address = bluetoothIO.getAddress();
             if (myLoc1 != 0) {
                 bytes[myLoc1 + 5] = (byte) Integer.parseInt(Address.substring(0, 2), 16);
                 bytes[myLoc1 + 4] = (byte) Integer.parseInt(Address.substring(3, 5), 16);
@@ -138,6 +131,88 @@ public class TapFirmwareTools {
         } finally {
             fs.close();
         }
-
     }
+
+    @Override
+    protected boolean startFirmwareUpdate(BaseDeviceIO.DataSendProxy sendHandle) throws InterruptedException {
+        try {
+            onFirmwareUpdateStart();
+            if (bytes.length > 31 * 1024) {
+                onFirmwareFail();
+                return false;
+            }
+
+//            if (!getPlatform().equals(firmware.Platform))
+//            {
+//                onFirmwareFail();
+//                return false;
+//            }
+
+            if (Firmware == bluetoothIO.Firmware()) {
+                onFirmwareFail();
+                return false;
+            }
+
+
+            byte[] data = new byte[20];
+            data[0] = (byte) 0x89;
+
+            for (int i = 0; i < Size; i += 8) {
+                int p = i + 0x17c00;
+                ByteUtil.putInt(data, p, 1);
+                System.arraycopy(bytes, i, data, 5, 8);
+                if (!sendHandle.send(data)) {
+                    onFirmwareFail();
+                    return false;
+                } else {
+                    onFirmwarePosition(i, Size);
+                }
+            }
+
+            Thread.sleep(1000);
+            byte[] checkSum = new byte[5];
+            checkSum[0] = opCode_GetFirmwareSum;
+            ByteUtil.putInt(checkSum, Size, 1);
+            if (sendHandle.send(checkSum)) {
+                Thread.sleep(200);
+                checkSum = bluetoothIO.getLastRecvPacket();
+                if (checkSum[0] == opCode_GetFirmwareSumRet) {
+                    long sum = ByteUtil.getUInt(checkSum, 1);
+                    if (sum == Cheksum) {
+                        byte[] update = new byte[5];
+                        ByteUtil.putInt(data, Size, 0);
+                        ByteBuffer buffer = ByteBuffer.allocate(6);
+                        buffer.put((byte) 0xc3);
+                        buffer.put(update);
+
+                        if (sendHandle.send(buffer.array())) {
+                            onFirmwareComplete();
+                            Thread.sleep(5000);
+                            return true;
+                        } else {
+                            onFirmwareFail();
+                            return false;
+                        }
+                    } else {
+                        onFirmwareFail();
+                        return false;
+                    }
+
+                } else {
+                    onFirmwareFail();
+                    return false;
+                }
+            } else {
+                onFirmwareFail();
+                return false;
+            }
+
+
+        } catch (Exception e) {
+            onFirmwareFail();
+            return false;
+        }
+    }
+
+
 }
