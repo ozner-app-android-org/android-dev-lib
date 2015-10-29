@@ -1,11 +1,14 @@
 package com.ozner.tap;
 
 import android.annotation.SuppressLint;
-import android.bluetooth.BluetoothDevice;
+import android.content.Context;
+import android.content.Intent;
 
-import com.ozner.device.DeviceManager;
-import com.ozner.device.OznerBluetoothDevice;
-import com.ozner.device.OznerContext;
+import com.ozner.bluetooth.BluetoothIO;
+import com.ozner.cup.Cup;
+import com.ozner.device.BaseDeviceIO;
+import com.ozner.device.BaseDeviceManager;
+import com.ozner.device.DeviceNotReadlyException;
 import com.ozner.device.OznerDevice;
 import com.ozner.device.OznerDeviceManager;
 
@@ -16,13 +19,26 @@ import com.ozner.device.OznerDeviceManager;
  * @author zhiyongxu
  *
  */
-public class TapManager extends DeviceManager {
+public class TapManager extends BaseDeviceManager {
 
-    public TapManager(OznerContext context, OznerDeviceManager bluetoothManger) {
-        super(context, bluetoothManger);
+    /**
+     * 新增一个配对的水杯
+     */
+    public final static String ACTION_MANAGER_TAP_ADD = "com.ozner.Tap.Add";
+    /**
+     * 删除配对水杯
+     */
+    public final static String ACTION_MANAGER_TAP_REMOVE = "com.ozner.Tap.Remove";
+    /**
+     * 更新配对水杯
+     */
+    public final static String ACTION_MANAGER_TAP_CHANGE = "com.ozner.Tap.Change";
+
+    public TapManager(Context context) {
+        super(context);
     }
 
-    private boolean isTap(BluetoothDevice device, String model) {
+    public static boolean IsTap(String model) {
         if (model.equals("SC001")) {
             return true;
         } else
@@ -36,18 +52,9 @@ public class TapManager extends DeviceManager {
      * @return 水探头实例
      */
     public Tap getTap(String address) {
-        return (Tap) getBluetoothManager().getDevice(address);
+        return (Tap) OznerDeviceManager.Instance().getDevice(address);
     }
 
-    @Override
-    protected OznerBluetoothDevice getBluetoothDevice(BluetoothDevice device,
-                                                      BluetoothIO.BluetoothCloseCallback bluetoothCallback, String Paltform,
-                                                      String Model, long Firewarm) {
-        if (isTap(device, Model)) {
-            return new BluetoothTap(getApplication(), bluetoothCallback, device, Paltform, Model, Firewarm);
-        }
-        return null;
-    }
 
     /**
      * 在数据库中构造一个新的水探头
@@ -57,36 +64,68 @@ public class TapManager extends DeviceManager {
      * @param Name        名称
      * @return 水探头实例
      */
-    public Cup newCup(String address, String Name, String SettingJson) {
-        Cup c = new Cup(getContext(), address, address, "SC001", SettingJson, getDB());
+    public Tap newTap(String address, String Name, String SettingJson) {
+        Tap c = new Tap(context(), address, "SC001", SettingJson);
         c.Setting().name(Name);
-        getBluetoothManager().save(c);
+        OznerDeviceManager.Instance().save(c);
         return c;
     }
 
     @Override
-    protected OznerDevice getDevice(OznerBluetoothDevice bluetooth) {
-        String address = bluetooth.getAddress();
-        OznerDevice device = getBluetoothManager().getDevice(address);
-        if (device != null) {
-            return device;
-        } else {
-            Tap tap = new Tap(getContext(), address, bluetooth.getSerial(), bluetooth.getModel(), "",
-                    getDB());
-            tap.Setting().name(bluetooth.getName());
-            tap.Bind(bluetooth);
-            return tap;
+    protected OznerDevice getDevice(BaseDeviceIO io) throws DeviceNotReadlyException {
+        if (io instanceof BluetoothIO) {
+            String address = io.getAddress();
+            OznerDevice device = OznerDeviceManager.Instance().getDevice(address);
+            if (device != null) {
+                return device;
+            } else {
+                if (IsTap(io.Model())) {
+                    Tap c = new Tap(context(), address, io.Model(), "");
+                    c.Setting().name(io.getName());
+                    c.Bind(io);
+                    return c;
+                }
+            }
         }
+        return null;
     }
 
     @Override
-    protected OznerDevice loadDevice(String address, String Serial, String Model,
+    protected OznerDevice loadDevice(String address, String Model,
                                      String Setting) {
-        if (isTap(null, Model))
-            return new Tap(getContext(), address, Serial, Model, Setting, getDB());
-        else
+        if (IsTap(Model)) {
+            return new Tap(context(), address, Model, Setting);
+        } else
             return null;
     }
 
 
+    @Override
+    protected void update(OznerDevice device) {
+        if (device instanceof Cup) {
+            Intent intent = new Intent(ACTION_MANAGER_TAP_CHANGE);
+            intent.putExtra("Address", device.Address());
+            context().sendBroadcast(intent);
+        }
+    }
+
+    @Override
+    protected void add(OznerDevice device) {
+        if (device instanceof Cup) {
+            Intent intent = new Intent(ACTION_MANAGER_TAP_ADD);
+            intent.putExtra("Address", device.Address());
+            context().sendBroadcast(intent);
+        }
+        super.add(device);
+    }
+
+    @Override
+    protected void remove(OznerDevice device) {
+        if (device instanceof Cup) {
+            Intent intent = new Intent(ACTION_MANAGER_TAP_REMOVE);
+            intent.putExtra("Address", device.Address());
+            context().sendBroadcast(intent);
+        }
+        super.remove(device);
+    }
 }

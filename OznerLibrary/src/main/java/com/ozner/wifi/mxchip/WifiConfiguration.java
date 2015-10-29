@@ -24,25 +24,12 @@ public class WifiConfiguration implements FTC_Listener {
      * 默认1分钟配网超时
      */
     final static int ConfigurationTimeout = 60000;
-
-    /**
-     * 配置WIFI设备回调接口
-     */
-    public interface WifiConfigurationListener {
-        void onWifiConfiguration(ConfigurationDevice device);
-
-        void onWifiConfigurationStart();
-
-        void onWifiConfigurationStop();
-    }
-
     WifiConfigurationListener wifiConfigurationListener = null;
     boolean isConfigurationMode = false;
     FTC_Service ftc_service;
     Context context;
     WifiManager wifiManager;
     Handler handler;
-
     public WifiConfiguration(Context context) {
         this.context = context;
         handler = new Handler(Looper.getMainLooper());
@@ -126,6 +113,17 @@ public class WifiConfiguration implements FTC_Listener {
         String retString = HttpUtil.postJSON(url, jsonObject.toJSONString());
         JSONObject ret = (JSONObject) JSON.parse(retString);
         return ret.getString("device_id");
+    }
+
+    /**
+     * 配置WIFI设备回调接口
+     */
+    public interface WifiConfigurationListener {
+        void onWifiConfiguration(ConfigurationDevice device);
+
+        void onWifiConfigurationStart();
+
+        void onWifiConfigurationStop();
     }
 
 

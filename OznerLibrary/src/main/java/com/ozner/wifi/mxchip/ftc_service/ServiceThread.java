@@ -15,9 +15,9 @@ public class ServiceThread implements Runnable {
     String data = "";
     String name, model, type, category, uuid, sn, mac, manufacturer, version;
     int count = 0;
-    private FTC_Listener listener = null;
     // ���߳������Socket���Ӧ��������
     DataInputStream serverIn = null;
+    private FTC_Listener listener = null;
     private OutputStream outputStream = null;
 
     public ServiceThread(Socket s, FTC_Listener listener2) {

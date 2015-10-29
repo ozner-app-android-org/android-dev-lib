@@ -16,18 +16,35 @@ public class WifiAutoConnectManager {
 
     WifiManager wifiManager;
 
-    public void test() {
-        Log.e(TAG, "test");
-    }
-
-    // ���弸�ּ��ܷ�ʽ��һ����WEP��һ����WPA������û����������
-    public enum WifiCipherType {
-        WIFICIPHER_WEP, WIFICIPHER_WPA, WIFICIPHER_NOPASS, WIFICIPHER_INVALID
-    }
-
     // ���캯��
     public WifiAutoConnectManager(WifiManager wifiManager) {
         this.wifiManager = wifiManager;
+    }
+
+    private static boolean isHexWepKey(String wepKey) {
+        final int len = wepKey.length();
+
+        // WEP-40, WEP-104, and some vendors using 256-bit WEP (WEP-232?)
+        if (len != 10 && len != 26 && len != 58) {
+            return false;
+        }
+
+        return isHex(wepKey);
+    }
+
+    private static boolean isHex(String key) {
+        for (int i = key.length() - 1; i >= 0; i--) {
+            final char c = key.charAt(i);
+            if (!(c >= '0' && c <= '9' || c >= 'A' && c <= 'F' || c >= 'a'
+                    && c <= 'f')) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public void test() {
+        Log.e(TAG, "test");
     }
 
     // �ṩһ���ⲿ�ӿڣ�����Ҫ���ӵ�������
@@ -138,6 +155,11 @@ public class WifiAutoConnectManager {
         return bRet;
     }
 
+    // ���弸�ּ��ܷ�ʽ��һ����WEP��һ����WPA������û����������
+    public enum WifiCipherType {
+        WIFICIPHER_WEP, WIFICIPHER_WPA, WIFICIPHER_NOPASS, WIFICIPHER_INVALID
+    }
+
     class ConnectRunnable implements Runnable {
         private String ssid;
 
@@ -184,27 +206,5 @@ public class WifiAutoConnectManager {
             boolean connected = wifiManager.reconnect();
             Log.d(TAG, "enableNetwork connected=" + connected);
         }
-    }
-
-    private static boolean isHexWepKey(String wepKey) {
-        final int len = wepKey.length();
-
-        // WEP-40, WEP-104, and some vendors using 256-bit WEP (WEP-232?)
-        if (len != 10 && len != 26 && len != 58) {
-            return false;
-        }
-
-        return isHex(wepKey);
-    }
-
-    private static boolean isHex(String key) {
-        for (int i = key.length() - 1; i >= 0; i--) {
-            final char c = key.charAt(i);
-            if (!(c >= '0' && c <= '9' || c >= 'A' && c <= 'F' || c >= 'a'
-                    && c <= 'f')) {
-                return false;
-            }
-        }
-        return true;
     }
 }

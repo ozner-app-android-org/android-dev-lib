@@ -1,477 +1,370 @@
 package com.ozner.device;
 
-import android.annotation.SuppressLint;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothManager;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 
-import com.ozner.BaseOznerManager;
-import com.ozner.bluetooth.BluetoothScan;
-import com.ozner.bluetooth.BluetoothSynchronizedObject;
+import com.ozner.bluetooth.BluetoothIOMgr;
+import com.ozner.util.Helper;
+import com.ozner.util.SQLiteDB;
 import com.ozner.util.dbg;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
-@SuppressLint("NewApi")
-public class OznerDeviceManager extends BaseOznerManager implements BluetoothIO.BluetoothCloseCallback {
+public class OznerDeviceManager implements IOManager.IOManagerCallback {
+
+    /**
+     * 新增一个配对设备广播
+     */
+    public final static String ACTION_OZNER_MANAGER_DEVICE_ADD = "com.ozner.manager.device.add";
+    /**
+     * 删除设备广播
+     */
+    public final static String ACTION_OZNER_MANAGER_DEVICE_REMOVE = "com.ozner.manager.device.remove";
+    /**
+     * 修改设备广播
+     */
+    public final static String ACTION_OZNER_MANAGER_DEVICE_CHANGE = "com.ozner.manager.device.change";
+    static OznerDeviceManager instance;
+    final HashMap<String, OznerDevice> devices = new HashMap<>();
+    final ArrayList<BaseDeviceManager> mManagers = new ArrayList<>();
+    SQLiteDB sqLiteDB;
+    String owner = "";
+    boolean isBackground = false;
+    //蓝牙管理器
+    BluetoothIOMgr bluetoothIOMgr;
+    Context context;
 
 
-	BluetoothMonitor mMonitor = new BluetoothMonitor();
-	BluetoothScan mScaner = null;
+    public OznerDeviceManager(Context context) throws InstantiationException {
+        if (instance != null) {
+            throw new InstantiationException();
+        }
 
-	HashMap<String, OznerDevice> mDevices = new HashMap<String, OznerDevice>();
-	HashMap<String, OznerBluetoothDevice> mBluetooths = new HashMap<String, OznerBluetoothDevice>();
-	boolean _isBackground = false;
-
-
-
-	/**
-	 * 获取发现并且未配对的设备集合
-	 * 
-	 * @return
-	 */
-	public OznerBluetoothDevice[] getNotBindDevices() {
-		ArrayList<OznerBluetoothDevice> list = new ArrayList<OznerBluetoothDevice>();
-		synchronized (this) {
-			for (OznerBluetoothDevice blue : mBluetooths.values()) {
-				if (!mDevices.containsKey(blue.getAddress())) {
-					list.add(blue);
-				}
-			}
-			return list.toArray(new OznerBluetoothDevice[0]);
-		}
-	}
-
-    @Override
-    public void setOwner(String Owner) {
-        super.setOwner(Owner);
-        synchronized (this) {
-            mDevices.clear();
-		}
-		CloseAll();
-		LoadDevices();
-	}
-
-	/**
-	 * 删除所有配对的设备
-	 */
-	public void removeAllDevice() {
-		getDB().execSQLNonQuery("delete from OznerDevices", new String[0]);
-		synchronized (this) {
-			mDevices.clear();
-		}
-		CloseAll();
-	}
-
-	protected void CloseAll() {
-		synchronized (this) {
-			ArrayList<BluetoothIO> list = new ArrayList<BluetoothIO>(
-					mBluetooths.values());
-			for (BluetoothIO device : list) {
-
-				device.close();
-			}
-			mBluetooths.clear();
-		}
-	}
-
-	private void LoadDevices() {
-		synchronized (this) {
-			List<String[]> list = getDB()
-					.ExecSQL(
-							"select Address,Serial,JSON,Model from OznerDevices where Owner=?",
-							new String[] { getOwner() });
-			for (String[] v : list) {
-				String Address = v[0];
-				String Serial = v[1];
-				String Json = v[2];
-				String Model = v[3];
-				if (Model == null)
-					Model = "CUP001";
-				if (Model.isEmpty())
-					Model = "CUP001";
-				Model=Model.trim();
-				if (!mDevices.containsKey(Address)) {
-					OznerDevice device = null;
-					ArrayList<DeviceManager> mgrs = getManagers();
-					for (DeviceManager mgr : mgrs) {
-
-						device = mgr.loadDevice(Address, Serial, Model, Json);
-						if (device != null) {
-							mDevices.put(Address, device);
-							break;
-						}
-					}
-				}
-			}
-		}
-	}
-
-	/**
-	 * 删除一个已经配对的设备
-	 * 
-	 * @param device
-	 */
-	public void remove(OznerDevice device) {
-		getDB().execSQLNonQuery("delete from OznerDevices where Address=?",
-				new String[] { device.Address() });
-		String address = device.Address();
-		synchronized (this) {
-			if (mDevices.containsKey(address)) {
-				mDevices.remove(address);
-			}
-	
-			Intent intent = new Intent(ACTION_OZNER_MANAGER_DEVICE_REMOVE);
-			intent.putExtra("Address", address);
-			getContext().sendBroadcast(intent);
-
-			ArrayList<DeviceManager> list = getManagers();
-			for (DeviceManager mgr : list) {
-				mgr.remove(device);
-			}
-			
-			
-			if (device.Bluetooth() != null) {
-				device.Bluetooth().close();
-			}
-			device.Bind(null);
-		}
-	}
-
-	/**
-	 * 判断一个设备MAC地址是否属于配对过的设备
-	 * 
-	 * @param address
-	 * @return
-	 */
-	public boolean isBindDevice(String address) {
-		synchronized (this) {
-			return mDevices.containsKey(address);
-		}
-	}
-
-	/**
-	 * 获取所有设备集合
-	 * 
-	 * @return
-	 */
-	public OznerDevice[] getDevices() {
-		synchronized (this) {
-			return mDevices.values().toArray(new OznerDevice[0]);
-		}
-	}
-
-	/**
-	 * 通过蓝牙设备获取一个设备控制对象
-	 * 
-	 */
-	public OznerDevice getDevice(OznerBluetoothDevice bluetooth)
-			throws NotSupportDevcieException {
-		String address = bluetooth.getAddress();
-		OznerDevice device = getDevice(address);
-		if (device == null) {
-			ArrayList<DeviceManager> list = getManagers();
-			for (DeviceManager mgr : list) {
-				device = mgr.getDevice(bluetooth);
-				if (device != null)
-					return device;
-			}
-		}
-		return device;
-	}
-
-	/**
-	 * 通过MAC地址获取已经绑定的设备
-	 * 
-	 * @param address
-	 * @return
-	 */
-	public OznerDevice getDevice(String address) {
-		synchronized (this) {
-			if (mDevices.containsKey(address))
-				return mDevices.get(address);
-			else
-				return null;
-		}
-
-	}
-
-	/**
-	 * 保存并绑定设备设置
-	 */
-	public void save(OznerDevice device) {
-		synchronized (this) {
-			String Addres = device.Address();
-			boolean isNew = false;
-			if (getOwner() == null)
-				return;
-			if (getOwner().isEmpty())
-				return;
-			if (!mDevices.containsKey(Addres)) {
-				mDevices.put(Addres, device);
-				isNew = false;
-			} else
-				isNew = true;
-			getDB().execSQLNonQuery(
-					"INSERT OR REPLACE INTO OznerDevices(Address,Serial,Owner,Model,JSON) VALUES (?,?,?,?,?);",
-					new String[] { device.Address(), device.Serial(),
-							getOwner(), device.Model(),
-							device.Setting().toString() });
-
-			Intent intent = new Intent();
-			intent.putExtra("Address", Addres);
-			intent.setAction(isNew ? ACTION_OZNER_MANAGER_DEVICE_ADD
-					: ACTION_OZNER_MANAGER_DEVICE_CHANGE);
-			getContext().sendBroadcast(intent);
-
-			if (device.Bluetooth() != null) {
-				device.Bluetooth().SetChanged();
-			}
-
-			ArrayList<DeviceManager> list = getManagers();
-			if (isNew) {
-				for (DeviceManager mgr : list) {
-					mgr.add(device);
-				}
-			} else {
-				for (DeviceManager mgr : list) {
-					mgr.update(device);
-				}
-			}
-		}
-	}
-
-	private ArrayList<DeviceManager> getManagers() {
-		ArrayList<DeviceManager> list = new ArrayList<DeviceManager>();
-		synchronized (this) {
-			list.addAll(mManagers);
-		}
-		return list;
-	}
-
-	public OznerDeviceManager(OznerContext context, BluetoothScan scaner) {
-        super(context);
-        mScaner = scaner;
-        getDB().execSQLNonQuery(
-				"CREATE TABLE IF NOT EXISTS OznerDevices (Address VARCHAR PRIMARY KEY NOT NULL, Serial TEXT,Model Text,Owner TEXT, JSON TEXT)",
-				new String[] {});
-		/*
-		 * getDB().execSQLNonQuery(
-		 * "CREATE TABLE IF NOT EXISTS CupSetting (Address VARCHAR PRIMARY KEY NOT NULL, Serial TEXT,Model Text,Owner TEXT, JSON TEXT)"
-		 * , new String[] {});
-		 */
-		try {
-			getDB().execSQLNonQuery(
-					"INSERT INTO OznerDevices (Address, Serial,Owner,JSON) SELECT Address,Serial,Owner,JSON from CupSetting",
-					new String[] {});
-			getDB().execSQLNonQuery("DROP TABLE CupSetting", new String[] {});
-		} catch (Exception e) {
-
-		}
-
-        //if (getOwner() != "") {
-        //	setOwner(mOwner);
-        //}
+        this.context = context;
+        sqLiteDB = new SQLiteDB(context);
+        //导入老表
+        importOldDB();
+        bluetoothIOMgr = new BluetoothIOMgr(context);
+        instance = this;
     }
 
-	BluetoothMonitor mBluetoothMonitor = new BluetoothMonitor();
+    public static OznerDeviceManager Instance() {
+        return instance;
+    }
 
-	class BluetoothMonitor extends BroadcastReceiver {
-		public void onReceive(Context context, Intent intent) {
-			String Action = intent.getAction();
-			if (BluetoothScan.ACTION_SCANNER_FOUND.equals(Action)) {
-				String address = intent
-						.getStringExtra(BluetoothScan.Extra_Address);
-				BluetoothDevice bluetooth = mScaner.getDevice(address);
+    public BluetoothIOMgr bluetoothIOMgr() {
+        return bluetoothIOMgr;
+    }
 
-				if (bluetooth != null) {
-					OznerBluetoothDevice device = foundDevice(bluetooth, intent
-							.getStringExtra(BluetoothScan.Extra_Platform),
-							intent.getStringExtra(BluetoothScan.Extra_Model),
-							intent.getLongExtra(BluetoothScan.Extra_Firmware,
-									Integer.MAX_VALUE));
+    /**
+     * 获取用户对应的表名
+     */
+    private String getOwnerTableName() {
+        if (Helper.StringIsNullOrEmpty(owner)) return null;
+        return Helper.MD5(owner.trim());
+    }
 
-					if (device != null) {
-						device.updateCustomData(
-								intent.getIntExtra(
-										BluetoothScan.Extra_CustomType, 0),
-								intent.getByteArrayExtra(BluetoothScan.Extra_CustomData));
+    private void importOldDB() {
+        HashSet<String> ownerList = new HashSet<>();
 
-						/*device.updateInfo(
-								intent.getStringExtra(BluetoothScan.Extra_Model),
-								intent.getStringExtra(BluetoothScan.Extra_Platform),
-								intent.getLongExtra(BluetoothScan.Extra_Firmware,
-										Long.MAX_VALUE));*/
+        try {
+            List<String[]> result = sqLiteDB.ExecSQL("SELECT DISTINCT name from OznerDevices", new String[0]);
+            for (String[] list : result) {
+                String owner = list[0];
+                if (owner != null) {
+                    owner = owner.trim();
+                }
 
-						boolean dataAvailable=intent.getBooleanExtra(
-								BluetoothScan.Extra_DataAvailable, false);
+                if (Helper.StringIsNullOrEmpty(owner)) continue;
 
-						
-						// 如果是配对的设备，直接连接操作
-						synchronized (this) {
-							if (mDevices.containsKey(address)) {
-								device.setBackgroundMode(_isBackground);
-								OznerDevice d = mDevices.get(address);
-								d.Bind(device);
-								try {
-									if (_isBackground) {
-										// 如果有数据可用，连接设备
-										if (dataAvailable) {
-											device.start();
-										}
-									} else {
-										// 如果是已配对设备，并且在前台，直接连接操作
-										device.start();
-									}
-								}catch (BluetoothIO.BlueDeviceNotReadlyException e)
-								{
-									return;
-								}
-							}
-						}
-					}
-				}
-				dbg.d("Bluetooth Found Address:" + address);
-				return;
-			}
+                if (!ownerList.contains(owner))
+                    ownerList.add(owner);
+            }
+        } catch (Exception e) {
+        }
 
-			/*if (BluetoothScan.ACTION_SCANNER_LOST.equals(Action)) {
-				{
-					lostDevice(intent
-							.getStringExtra(BluetoothScan.Extra_Address));
-				}
-				dbg.i("Bluetooth Lost Address:"
-						+ intent.getStringExtra("Address"));
-				return;
-			}*/
 
-			if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(Action)) {
-				BluetoothManager bluetoothManager = (BluetoothManager) context
-						.getSystemService(Context.BLUETOOTH_SERVICE);
-				if (!bluetoothManager.getAdapter().isEnabled()) {
-					CloseAll();
-				}
-			}
-		}
-	}
+        try {
+            List<String[]> result = sqLiteDB.ExecSQL("SELECT DISTINCT name from CupSetting", new String[0]);
+            for (String[] list : result) {
+                String owner = list[0];
+                if (owner != null)
+                    owner = owner.trim();
+                if (Helper.StringIsNullOrEmpty(owner)) continue;
+                if (!ownerList.contains(owner))
+                    ownerList.add(owner);
+            }
+        } catch (Exception e) {
+        }
 
-	/**
-	 * 启动服务
-	 */
-	public void Start() {
-		IntentFilter filter = new IntentFilter();
-		filter.addAction(BluetoothScan.ACTION_SCANNER_FOUND);
-		filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
-		getContext().registerReceiver(mMonitor, filter);
-	}
+        for (String owner : ownerList) {
+            String table = Helper.MD5(owner);
+            String Sql = String.format("CREATE TABLE IF NOT EXISTS %s (Address VARCHAR PRIMARY KEY NOT NULL,Model Text NOT NULL,JSON TEXT)", table);
+            sqLiteDB.execSQLNonQuery(Sql, new String[]{});
+            try {
+                String sql = String.format("INSERT INTO %s (Address,Model,JSON) SELECT Address,'CUP001',JSON from CupSetting where Owner=?", table);
+                sqLiteDB.execSQLNonQuery(sql, new String[]{owner});
+            } catch (Exception e) {
 
-	/**
-	 * 停止服务
-	 */
-	public void Stop() {
-		CloseAll();
-	}
+            }
 
-	ArrayList<DeviceManager> mManagers = new ArrayList<DeviceManager>();
+            try {
+                String sql = String.format("INSERT INTO %s (Address,Model,JSON) SELECT Address,Model,JSON from OznerDevices where Owner=?", table);
+                sqLiteDB.execSQLNonQuery(sql, new String[]{owner});
+            } catch (Exception e) {
 
-	/**
-	 * 注册一个设备管理器
-	 * 
-	 * @param manager
-	 */
-	public void registerManager(DeviceManager manager) {
-		synchronized (this) {
-			if (!mManagers.contains(manager)) {
-				mManagers.add(manager);
-			}
-		}
-	}
+            }
+        }
 
-	/**
-	 * 注销设备管理器
-	 * 
-	 * @param manager
-	 */
-	public void unregisterManager(DeviceManager manager) {
-		synchronized (this) {
-			if (mManagers.contains(manager))
-				mManagers.remove(manager);
-		}
-	}
+        sqLiteDB.execSQLNonQuery("DROP TABLE CupSetting", new String[]{});
+        sqLiteDB.execSQLNonQuery("DROP TABLE OznerDevices", new String[]{});
 
-	@Override
-	public void OnOznerBluetoothClose(BluetoothIO device) {
-		synchronized (this) {
-			mBluetooths.remove(device.getAddress());
-			if (mDevices.containsKey(device.getAddress())) {
-				mDevices.get(device.getAddress()).Bind(null);
-			}
-		}
-	}
+    }
 
-	protected OznerBluetoothDevice foundDevice(BluetoothDevice device,
-			String Paltform, String Model, long Firewarm) {
+    protected String Owner() {
+        return owner;
+    }
 
-		String Address = device.getAddress();
-		if (mBluetooths.containsKey(Address)) {
-			if (BluetoothSynchronizedObject.hashBluetoothBusy(Address))
-				return mBluetooths.get(Address);
-			else {
-				mBluetooths.get(Address).close();
-				mBluetooths.remove(Address);
-			}
-		}
+    /**
+     * 设置绑定的用户
+     *
+     * @param owner 用户ID
+     */
+    public void setOwner(String owner) {
+        if (owner != null)
+            owner = owner.trim();
+        if (Helper.StringIsNullOrEmpty(owner)) return;
+        if (this.owner != null) {
+            if (this.owner.equals(owner)) return;
+        }
+        this.owner = owner;
+        synchronized (this) {
+            devices.clear();
+        }
+        CloseAll();
+        LoadDevices();
+        dbg.i("Set Owner:%s", owner);
+    }
 
-		ArrayList<DeviceManager> list = getManagers();
-		for (DeviceManager mgr : list) {
-			OznerBluetoothDevice ret = mgr.getBluetoothDevice(device, this,
-					Paltform, Model, Firewarm);
-			if (ret != null) {
-				mBluetooths.put(device.getAddress(), ret);
-				return ret;
-			}
-		}
-		return null;
-	}
+    protected void CloseAll() {
+        bluetoothIOMgr.closeAll();
+    }
 
-	protected void lostDevice(String Address) {
-		ArrayList<DeviceManager> list = getManagers();
-		for (DeviceManager mgr : list) {
-			mgr.lostDevice(Address);
-		}
-	}
-	public boolean isBackground()
-	{
-		return _isBackground;
-	}
-	/**
-	 * 设置前后台模式
-	 * 
-	 * @param isBackground
-	 */
-	public void setBackgroundMode(boolean isBackground) {
-		if (isBackground==_isBackground) return;
-		this._isBackground = isBackground;
-		for (BluetoothIO bluetoothIO : mBluetooths.values()) {
-			bluetoothIO.setBackgroundMode(isBackground);
-		}
-//			// 如果设置到前台模式
-//		synchronized (this) {
-//				for (OznerDevice d : mDevices.values()) {
-//					if (d.Bluetooth() != null) {
-//						d.Bluetooth().setBackgroundMode(isBackground);
-//						if ((!d.connected()) && (!isBackground)) {
-//							d.Bluetooth().start();
-//						}
-//					}
-//				}
+    private void LoadDevices() {
+        String sql = String.format("select Address,Model,JSON from %s", getOwnerTableName());
+        List<String[]> list = sqLiteDB.ExecSQL(sql, new String[]{});
+        synchronized (this) {
+            for (String[] v : list) {
+                String Address = v[0];
+                String Model = v[2];
+                String Json = v[3];
+                if (!devices.containsKey(Address)) {
+                    for (BaseDeviceManager mgr : getManagers()) {
+                        OznerDevice device = mgr.loadDevice(Address, Model, Json);
+                        device.setBackground(isBackground());
+
+                        if (device != null) {
+                            devices.put(Address, device);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 删除一个已经配对的设备
+     */
+    public void remove(OznerDevice device) {
+        String sql = String.format("delete from %s where Address=?", getOwnerTableName());
+        sqLiteDB.execSQLNonQuery(sql, new String[]{device.Address()});
+
+        String address = device.Address();
+        synchronized (this) {
+            if (devices.containsKey(address)) {
+                devices.remove(address);
+            }
+            Intent intent = new Intent(ACTION_OZNER_MANAGER_DEVICE_REMOVE);
+            intent.putExtra("Address", address);
+            context.sendBroadcast(intent);
+
+            ArrayList<BaseDeviceManager> list = getManagers();
+            for (BaseDeviceManager mgr : list) {
+                mgr.remove(device);
+            }
+
+            if (device.Bluetooth() != null) {
+                device.Bluetooth().close();
+            }
+            try {
+                device.Bind(null);
+            } catch (DeviceNotReadlyException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+//	/**
+//	 * 通过蓝牙设备获取一个设备控制对象
+//	 *
+//	 */
+//	public OznerDevice getDevice(OznerBluetoothDevice bluetooth)
+//			throws NotSupportDevcieException {
+//		String address = bluetooth.getAddress();
+//		OznerDevice device = getDevice(address);
+//		if (device == null) {
+//			ArrayList<BaseDeviceManager> list = getManagers();
+//			for (BaseDeviceManager mgr : list) {
+//				device = mgr.getDevice(bluetooth);
+//				if (device != null)
+//					return device;
 //			}
-		
-	}
+//		}
+//		return device;
+//	}
+
+    /**
+     * 获取所有设备集合
+     */
+    public OznerDevice[] getDevices() {
+        synchronized (this) {
+            return devices.values().toArray(new OznerDevice[devices.size()]);
+        }
+    }
+
+    /**
+     * 通过MAC地址获取已经保存的设备
+     */
+    public OznerDevice getDevice(String address) {
+        synchronized (this) {
+            if (devices.containsKey(address))
+                return devices.get(address);
+            else
+                return null;
+        }
+
+    }
+
+    /**
+     * 保存并绑定设备设置
+     */
+    public void save(OznerDevice device) {
+        synchronized (this) {
+            String Address = device.Address();
+            boolean isNew;
+            if (Helper.StringIsNullOrEmpty(Owner())) return;
+
+            if (!devices.containsKey(Address)) {
+                devices.put(Address, device);
+                isNew = false;
+            } else
+                isNew = true;
+            device.setBackground(isBackground());
+
+            String sql = String.format("INSERT OR REPLACE INTO %s (Address,Model,JSON) VALUES (?,?,?);", getOwnerTableName());
+
+            sqLiteDB.execSQLNonQuery(sql,
+                    new String[]{device.Address(), device.Model(),
+                            device.Setting().toString()});
+
+            Intent intent = new Intent();
+            intent.putExtra("Address", Address);
+            intent.setAction(isNew ? ACTION_OZNER_MANAGER_DEVICE_ADD
+                    : ACTION_OZNER_MANAGER_DEVICE_CHANGE);
+            context.sendBroadcast(intent);
+            device.resetSettingUpdate(); //刷新设置变更
+
+            ArrayList<BaseDeviceManager> list = getManagers();
+            if (isNew) {
+                for (BaseDeviceManager mgr : list) {
+                    mgr.add(device);
+                }
+            } else {
+                for (BaseDeviceManager mgr : list) {
+                    mgr.update(device);
+                }
+            }
+        }
+    }
+
+    private ArrayList<BaseDeviceManager> getManagers() {
+        ArrayList<BaseDeviceManager> list = new ArrayList<>();
+        synchronized (this) {
+            list.addAll(mManagers);
+        }
+        return list;
+    }
+
+    /**
+     * 注册一个设备管理器
+     */
+    public void registerManager(BaseDeviceManager manager) {
+        synchronized (mManagers) {
+            if (!mManagers.contains(manager)) {
+                mManagers.add(manager);
+            }
+        }
+    }
+
+    /**
+     * 注销设备管理器
+     */
+    public void unregisterManager(BaseDeviceManager manager) {
+        synchronized (mManagers) {
+            if (mManagers.contains(manager))
+                mManagers.remove(manager);
+        }
+    }
+
+
+    public boolean isBackground() {
+        return isBackground;
+    }
+
+    /**
+     * 设置前后台模式
+     */
+    public void setBackgroundMode(boolean isBackground) {
+        if (this.isBackground == isBackground) return;
+        this.isBackground = isBackground;
+        bluetoothIOMgr.setBackgroundMode(isBackground);
+
+        synchronized (devices) {
+            for (OznerDevice device : devices.values()) {
+                device.setBackground(isBackground);
+            }
+        }
+    }
+
+    @Override
+    public void onDeviceAvailable(IOManager manager, BaseDeviceIO io) {
+        if (io != null) {
+            OznerDevice device = getDevice(io.getAddress());
+            if (device != null) {
+                try {
+                    device.Bind(io);
+                } catch (DeviceNotReadlyException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onDeviceUnavailable(IOManager manager, BaseDeviceIO io) {
+        if (io != null) {
+            OznerDevice device = getDevice(io.getAddress());
+            if (device != null) {
+                try {
+                    device.Bind(null);
+                } catch (DeviceNotReadlyException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 }

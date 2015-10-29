@@ -1,15 +1,15 @@
 package com.ozner.cup;
 
+import android.content.Context;
 import android.content.Intent;
 import android.text.format.Time;
 
 import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.device.BaseDeviceIO;
+import com.ozner.device.DeviceNotReadlyException;
 import com.ozner.device.DeviceSetting;
-import com.ozner.device.OznerContext;
 import com.ozner.device.OznerDevice;
 import com.ozner.util.ByteUtil;
-import com.ozner.util.SQLiteDB;
 import com.ozner.util.dbg;
 
 import java.util.ArrayList;
@@ -20,6 +20,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 /**
+ * 水杯对象
  * Created by zhiyongxu on 15/10/28.
  */
 public class Cup extends OznerDevice implements
@@ -50,25 +51,58 @@ public class Cup extends OznerDevice implements
      * 收到传感器信息
      */
     public final static String ACTION_BLUETOOTHCUP_SENSOR = "com.ozner.cup.bluetooth.sensor";
-
+    public static final byte AD_CustomType_Gravity = 0x1;
     static final byte opCode_SetRemind = 0x11;
     static final byte opCode_ReadSensor = 0x12;
     static final byte opCode_ReadSensorRet = (byte) 0xA2;
-    static final byte opCode_ReadGravity = 0x13;
-    static final byte opCode_ReadGravityRet = (byte) 0xA3;
+    //    static final byte opCode_ReadGravity = 0x13;
+//    static final byte opCode_ReadGravityRet = (byte) 0xA3;
     static final byte opCode_ReadRecord = 0x14;
     static final byte opCode_ReadRecordRet = (byte) 0xA4;
     static final byte opCode_UpdateTime = (byte) 0xF0;
     static final byte opCode_FrontMode = (byte) 0x21;
-
-    CupSensor mSensor = new CupSensor();
-    ArrayList<CupRecord> mRecords = new ArrayList<>();
+    final CupSensor mSensor = new CupSensor();
+    final CupFirmwareTools firmwareTools = new CupFirmwareTools();
+    final ArrayList<CupRecord> mRecords = new ArrayList<>();
+    CupVolume mCupVolume;
     Date mLastDataTime = null;
-    boolean updateSetting = false;
+    Timer autoUpdateTimer = new Timer();
+    int RequestCount = 0;
+    HashSet<String> dataHash = new HashSet<>();
 
-    public Cup(OznerContext context, String Address, String Serial, String Model, String Setting, SQLiteDB db) {
-        super(context, Address, Serial, Model, Setting, db);
+    public Cup(Context context, String Address, String Model, String Setting) {
+        super(context, Address, Model, Setting);
         initSetting(Setting);
+        mCupVolume = new CupVolume(context, Address);
+    }
+
+
+    /**
+     * 判断设备是否处于配对状态
+     *
+     * @param io 设备接口
+     * @return true=配对状态
+     */
+    public static boolean isBindMode(BluetoothIO io) {
+        if (!CupManager.IsCup(io.Model())) return false;
+        if ((io.getCustomDataType() == AD_CustomType_Gravity) && (io.getCustomData() != null)) {
+            CupGravity gravity = new CupGravity();
+            gravity.FromBytes(io.getCustomData(), 0);
+            return gravity.IsHandstand();
+        }
+        return false;
+    }
+
+    public CupSensor Sensor() {
+        return mSensor;
+    }
+
+    public CupVolume Volume() {
+        return mCupVolume;
+    }
+
+    public CupFirmwareTools firmwareTools() {
+        return firmwareTools;
     }
 
     @Override
@@ -80,7 +114,6 @@ public class Cup extends OznerDevice implements
 
     private boolean sendTime(BaseDeviceIO.DataSendProxy proxy) {
         dbg.i("开始设置时间:%s", Bluetooth().getAddress());
-
         Time time = new Time();
         time.setToNow();
         byte[] data = new byte[6];
@@ -91,6 +124,16 @@ public class Cup extends OznerDevice implements
         data[4] = (byte) time.minute;
         data[5] = (byte) time.second;
         return proxy.send(BluetoothIO.makePacket(opCode_UpdateTime, data));
+    }
+
+    private void sendBackground(BaseDeviceIO.DataSendProxy proxy) {
+        if (!isBackgroundMode()) {
+            if (proxy != null) {
+                proxy.send(BluetoothIO.makePacket(opCode_FrontMode, null));
+            } else {
+                send(opCode_FrontMode, null);
+            }
+        }
     }
 
     private boolean sendSetting(BaseDeviceIO.DataSendProxy proxy) {
@@ -109,18 +152,31 @@ public class Cup extends OznerDevice implements
         data[17] = 0;// (byte) (isNewCup ? 1 : 0);
         data[18] = 0;
         dbg.i(Bluetooth().getAddress() + " 写入提醒数据", getContext());
-        if (proxy.send(BluetoothIO.makePacket(opCode_SetRemind, data))) {
-            resetSettingUpdate();
-            return true;
+        if (proxy != null) {
+            if (proxy.send(BluetoothIO.makePacket(opCode_SetRemind, data))) {
+                resetSettingUpdate();
+                return true;
+            } else {
+                return false;
+            }
         } else {
-            return false;
+            if (send(opCode_SetRemind, data)) {
+                resetSettingUpdate();
+                return true;
+            } else
+                return false;
         }
+    }
+
+    private boolean send(byte opCode, byte[] data) {
+        return Bluetooth() != null && Bluetooth().send(BluetoothIO.makePacket(opCode, data));
     }
 
     /**
      * 设置光环颜色
-     * @param Color
-     * @return
+     *
+     * @param Color 光环色值
+     * @return True设置成功
      */
     public boolean changeHaloColor(int Color) {
         CupSetting setting = (CupSetting) Setting();
@@ -140,26 +196,25 @@ public class Cup extends OznerDevice implements
         return Bluetooth().send(BluetoothIO.makePacket(opCode_SetRemind, data));
     }
 
-    Timer autoUpdateTimer = new Timer();
     @Override
-    protected boolean Bind(BaseDeviceIO bluetooth) {
+    public boolean Bind(BaseDeviceIO bluetooth) throws DeviceNotReadlyException {
         if (bluetooth == this.Bluetooth()) return true;
         if (this.Bluetooth() != null) {
             Bluetooth().setOnInitCallback(null);
             Bluetooth().setRecvPacketCallback(null);
             Bluetooth().setStatusCallback(null);
+            firmwareTools.bind(null);
         }
 
         if (bluetooth != null) {
             Bluetooth().setRecvPacketCallback(this);
             bluetooth.setOnInitCallback(this);
             bluetooth.setStatusCallback(this);
+            firmwareTools.bind((BluetoothIO) bluetooth);
         }
 
         return super.Bind(bluetooth);
     }
-
-    int RequestCount = 0;
 
     private void doTime() {
         if (mLastDataTime != null) {
@@ -169,16 +224,19 @@ public class Cup extends OznerDevice implements
                 return;
             }
         }
-        try {
-            if ((RequestCount % 2) == 0) {
-                requestRecord();
-            } else {
-                requestSensor();
-            }
-            RequestCount++;
-        } catch (Exception e) {
-
+        if ((RequestCount % 2) == 0) {
+            requestRecord();
+        } else {
+            requestSensor();
         }
+        RequestCount++;
+
+    }
+
+    @Override
+    protected void resetSettingUpdate() {
+        super.resetSettingUpdate();
+        sendSetting(null);
     }
 
     @Override
@@ -190,6 +248,9 @@ public class Cup extends OznerDevice implements
 
             if (!sendSetting(sendHandle))
                 return false;
+
+            Thread.sleep(100);
+            sendBackground(sendHandle);
             Thread.sleep(100);
             return true;
         } catch (Exception e) {
@@ -213,9 +274,6 @@ public class Cup extends OznerDevice implements
             }
         }
     }
-
-
-    HashSet<String> dataHash = new HashSet<>();
 
     @Override
     public void onRecvPacket(byte[] bytes) {
@@ -264,11 +322,21 @@ public class Cup extends OznerDevice implements
                         Intent comp_intent = new Intent(ACTION_BLUETOOTHCUP_RECORD_COMPLETE);
                         comp_intent.putExtra("Address", Bluetooth().getAddress());
                         getContext().sendBroadcast(comp_intent);
+                        synchronized (mRecords) {
+                            mCupVolume.addRecord(mRecords);
+                        }
 
                     }
                 }
                 break;
             }
+        }
+    }
+
+    @Override
+    protected void doBackgroundModeChange() {
+        if (!isBackgroundMode()) {
+            sendBackground(null);
         }
     }
 
@@ -292,7 +360,7 @@ public class Cup extends OznerDevice implements
     }
 
     @Override
-    public void onReadly(BaseDeviceIO io) {
+    public void onReady(BaseDeviceIO io) {
         autoUpdateTimer.schedule(new TimerTask() {
             @Override
             public void run() {
@@ -300,4 +368,6 @@ public class Cup extends OznerDevice implements
             }
         }, 1000);
     }
+
+
 }

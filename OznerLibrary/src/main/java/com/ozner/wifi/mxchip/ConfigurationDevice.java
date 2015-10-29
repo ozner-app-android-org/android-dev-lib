@@ -24,21 +24,6 @@ public class ConfigurationDevice {
 
     public String Type;
 
-    public String toJSON() {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("name", name);
-        jsonObject.put("ap", ap);
-        jsonObject.put("localIP", localIP);
-        jsonObject.put("firmware", firmware);
-        jsonObject.put("loginId", loginId);
-        jsonObject.put("devPasswd", devPasswd);
-        jsonObject.put("activated", activated);
-        jsonObject.put("connected", connected);
-        jsonObject.put("localPort", localPort);
-        jsonObject.put("Type", Type);
-        return jsonObject.toJSONString();
-    }
-
     public static ConfigurationDevice loadByJSON(String jsonString) {
         JSONObject jsonObject = (JSONObject) JSON.parse(jsonString);
         ConfigurationDevice device = new ConfigurationDevice();
@@ -54,7 +39,6 @@ public class ConfigurationDevice {
         device.Type = jsonObject.getString("Type");
         return device;
     }
-
 
     public static ConfigurationDevice loadByFTCJson(String jsonString) {
         if ((jsonString == null) || (jsonString.equals(""))) {
@@ -140,6 +124,21 @@ public class ConfigurationDevice {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public String toJSON() {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("name", name);
+        jsonObject.put("ap", ap);
+        jsonObject.put("localIP", localIP);
+        jsonObject.put("firmware", firmware);
+        jsonObject.put("loginId", loginId);
+        jsonObject.put("devPasswd", devPasswd);
+        jsonObject.put("activated", activated);
+        jsonObject.put("connected", connected);
+        jsonObject.put("localPort", localPort);
+        jsonObject.put("Type", Type);
+        return jsonObject.toJSONString();
     }
 
 }

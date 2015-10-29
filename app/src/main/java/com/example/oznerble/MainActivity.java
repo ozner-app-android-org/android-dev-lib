@@ -92,7 +92,7 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 //		CupFirmwareTools tools= null;
 //		try {
 //			tools = new CupFirmwareTools("/storage/emulated/0/#Cup#C03-Mar-27-2015-121118.bin","37:16:12:24:03:65");
-//			if (tools.Cheksum!=29578524)
+//			if (tools.Checksum!=29578524)
 //			{
 //				return;
 //			}

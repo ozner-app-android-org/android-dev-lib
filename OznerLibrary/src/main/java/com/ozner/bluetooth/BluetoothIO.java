@@ -16,20 +16,19 @@ import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.DeviceNotReadlyException;
 import com.ozner.util.dbg;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
 /**
+ * 蓝牙IO接口
  * Created by zhiyongxu on 15/10/28.
  */
-public abstract class BluetoothIO extends BaseDeviceIO {
+public class BluetoothIO extends BaseDeviceIO {
     /**
      * 设备连接成功广播
      */
     public final static String ACTION_BLUETOOTH_CONNECTED = "com.ozner.bluetooth.connected";
-    public final static String ACTION_BLUETOOTH_ERROR = "com.ozner.bluetooth.error";
+    //public final static String ACTION_BLUETOOTH_ERROR = "com.ozner.bluetooth.error";
 
     /**
      * 设备就绪广播
@@ -39,44 +38,35 @@ public abstract class BluetoothIO extends BaseDeviceIO {
      * 设备连接断开广播
      */
     public final static String ACTION_BLUETOOTH_DISCONNECTED = "com.ozner.bluetooth.disconnected";
-    /**
-     * 连接中
-     */
-    public final static int STATE_CONNECTING = BluetoothGatt.STATE_CONNECTING;
-    /**
-     * 已连接
-     */
-    public final static int STATE_CONNECTED = BluetoothGatt.STATE_CONNECTED;
-    /**
-     * 连接断开
-     */
-    public final static int STATE_DISCONNECTED = BluetoothGatt.STATE_DISCONNECTED;
-    /**
-     * 关闭中
-     */
-    public final static int STATE_DISCONNECTING = BluetoothGatt.STATE_DISCONNECTING;
-
-    String Model = "";
-    String Platform = "";
+    //    /**
+//     * 连接中
+//     */
+//    public final static int STATE_CONNECTING = BluetoothGatt.STATE_CONNECTING;
+//    /**
+//     * 已连接
+//     */
+//    public final static int STATE_CONNECTED = BluetoothGatt.STATE_CONNECTED;
+//    /**
+//     * 连接断开
+//     */
+//    public final static int STATE_DISCONNECTED = BluetoothGatt.STATE_DISCONNECTED;
+//    /**
+//     * 关闭中
+//     */
+//    public final static int STATE_DISCONNECTING = BluetoothGatt.STATE_DISCONNECTING;
+    byte[] customData = null;
+    int customDataType = 0;
+    Context context;
+    BluetoothDevice device;
+    BluetoothProxy bluetoothProxy;
     long Firmware = 0;
 
-    /**
-     * 获取最后一次收到的数据包
-     */
-    public byte[] getLastRecvPacket() {
-        return bluetoothProxy.lastRecvPacket;
-    }
-
-    public String Model() {
-        return this.Model;
-    }
-
-    public String Platform() {
-        return Platform;
-    }
-
-    public long Firmware() {
-        return Firmware;
+    public BluetoothIO(Context context, BluetoothDevice device, String Model, long Firmware) {
+        super(Model);
+        this.context = context;
+        this.device = device;
+        this.Firmware = Firmware;
+        bluetoothProxy = new BluetoothProxy();
     }
 
     public static byte[] makePacket(byte opCode, byte[] data) {
@@ -88,20 +78,29 @@ public abstract class BluetoothIO extends BaseDeviceIO {
         return buffer.array();
     }
 
-    Context context;
-    BluetoothDevice device;
-    BluetoothProxy bluetoothProxy;
-
-    public BluetoothIO(Context context, BluetoothDevice device,
-                       String Platform, String Model, long Firmware) {
-        this.context = context;
-        this.device = device;
-        this.Platform = Platform;
-        this.Firmware = Firmware;
-        this.Model = Model;
-        bluetoothProxy = new BluetoothProxy();
+    public void updateCustomData(int customDataType, byte[] customData) {
+        this.customDataType = customDataType;
+        this.customData = customData;
     }
 
+    public int getCustomDataType() {
+        return customDataType;
+    }
+
+    public byte[] getCustomData() {
+        return customData;
+    }
+
+    /**
+     * 获取最后一次收到的数据包
+     */
+    public byte[] getLastRecvPacket() {
+        return bluetoothProxy.lastRecvPacket;
+    }
+
+    public long Firmware() {
+        return Firmware;
+    }
 
     @Override
     public boolean send(byte[] bytes) {
@@ -110,9 +109,6 @@ public abstract class BluetoothIO extends BaseDeviceIO {
 
     /**
      * 设置一个循环发送runnable,来执行发送大数据包,比如挂件升级过程
-     *
-     * @param runnable
-     * @return
      */
     public boolean post(BluetoothRunnable runnable) {
         return bluetoothProxy.postRunable(runnable);
@@ -134,10 +130,52 @@ public abstract class BluetoothIO extends BaseDeviceIO {
     }
 
     @Override
-    public boolean connected() {
-        return bluetoothProxy.connectionState == STATE_CONNECTED;
+    public String getName() {
+        return device.getName();
     }
 
+    @Override
+    public boolean connected() {
+        return bluetoothProxy.connectionState == BluetoothGatt.STATE_CONNECTED;
+    }
+
+    @Override
+    protected void doConnected() {
+        Intent intent = new Intent();
+        intent.setAction(ACTION_BLUETOOTH_CONNECTED);
+        intent.putExtra("Address", device.getAddress());
+        context.sendBroadcast(intent);
+        super.doConnected();
+    }
+
+    @Override
+    protected void doReady() {
+
+        Intent intent = new Intent();
+        intent.setAction(ACTION_BLUETOOTH_READLY);
+        intent.putExtra("Address", device.getAddress());
+        context.sendBroadcast(intent);
+        super.doReady();
+    }
+
+    @Override
+    protected void doDisconnected() {
+        Intent intent = new Intent();
+        intent.setAction(ACTION_BLUETOOTH_DISCONNECTED);
+        intent.putExtra("Address", device.getAddress());
+        context.sendBroadcast(intent);
+        super.doDisconnected();
+    }
+
+    @Override
+    protected void doBackgroundModeChange() {
+        if (isBackgroundMode()) {
+            //如果是后台模式,退出LOOP消息循环
+            if (bluetoothProxy.mLooper != null) {
+                bluetoothProxy.mLooper.quitSafely();
+            }
+        }
+    }
 
     public interface BluetoothRunnable {
         void run(DataSendProxy sendHandle);
@@ -159,34 +197,6 @@ public abstract class BluetoothIO extends BaseDeviceIO {
         }
     }
 
-    @Override
-    protected void doConnected() {
-        Intent intent = new Intent();
-        intent.setAction(ACTION_BLUETOOTH_CONNECTED);
-        intent.putExtra("Address", device.getAddress());
-        context.sendBroadcast(intent);
-        super.doConnected();
-    }
-
-    @Override
-    protected void doReadly() {
-
-        Intent intent = new Intent();
-        intent.setAction(ACTION_BLUETOOTH_READLY);
-        intent.putExtra("Address", device.getAddress());
-        context.sendBroadcast(intent);
-        super.doReadly();
-    }
-
-    @Override
-    protected void doDisconnected() {
-        Intent intent = new Intent();
-        intent.setAction(ACTION_BLUETOOTH_DISCONNECTED);
-        intent.putExtra("Address", device.getAddress());
-        context.sendBroadcast(intent);
-        super.doDisconnected();
-    }
-
     private class BluetoothProxy extends BluetoothGattCallback implements Runnable {
         final static int MSG_SendData = 0x1000;
         final static int MSG_Runnable = 0x2000;
@@ -194,7 +204,7 @@ public abstract class BluetoothIO extends BaseDeviceIO {
         final UUID Characteristic_Input = GetUUID(0xFFF2);
         final UUID Characteristic_Output = GetUUID(0xFFF1);
         final UUID GATT_CLIENT_CHAR_CFG_UUID = GetUUID(0x2902);
-        Object waitObject = new Object();
+        final Object waitObject = new Object();
         Thread thread = null;
         BluetoothGattCharacteristic mInput = null;
         BluetoothGattCharacteristic mOutput = null;
@@ -235,8 +245,11 @@ public abstract class BluetoothIO extends BaseDeviceIO {
             lastStatus = status;
             if (newState == BluetoothGatt.STATE_CONNECTED) {
                 doConnected();
-            } else if (newState == BluetoothGatt.STATE_DISCONNECTED)
+            } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
                 doDisconnected();
+                close();
+            }
+
             set();
             super.onConnectionStateChange(gatt, status, newState);
         }
@@ -250,7 +263,6 @@ public abstract class BluetoothIO extends BaseDeviceIO {
                 mInput = mService.getCharacteristic(Characteristic_Input);
                 mOutput = mService.getCharacteristic(Characteristic_Output);
                 mInput.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
-
             }
             set();
         }
@@ -355,6 +367,7 @@ public abstract class BluetoothIO extends BaseDeviceIO {
         public void run() {
             if (BluetoothSynchronizedObject.hashBluetoothBusy(device.getAddress())) return;
             mGatt = device.connectGatt(context, false, this);
+            if (mGatt == null) return;
             try {
                 BluetoothSynchronizedObject.Busy(device.getAddress());
                 synchronized (BluetoothSynchronizedObject.getLockObject()) {
@@ -382,57 +395,43 @@ public abstract class BluetoothIO extends BaseDeviceIO {
                         return;
                     }
                 }
-                doReadly();
+                doReady();
                 dbg.i("初始化成功:%s", device.getAddress());
-                //连接完成以后建立一个HANDLE来接受发送的数据
-                Looper.prepare();
-                mLooper = Looper.myLooper();
-                mHandler = new MessageHandler(mLooper);
-                Looper.loop();
-
+                if (!isBackgroundMode()) {
+                    //连接完成以后建立一个HANDLE来接受发送的数据
+                    Looper.prepare();
+                    mLooper = Looper.myLooper();
+                    mHandler = new MessageHandler(mLooper);
+                    Looper.loop();
+                }
             } catch (InterruptedException ignore) {
                 dbg.i("线程关闭:" + getAddress());
                 ignore.printStackTrace();
-                return;
             } finally {
-                doClose();
                 dbg.i("连接关闭:" + getAddress());
                 BluetoothSynchronizedObject.Idle(device.getAddress());
-                mGatt.close();
-                mGatt = null;
+                if (mGatt != null) {
+                    mGatt.close();
+                    mGatt = null;
+                }
             }
         }
 
         protected boolean send(byte[] data) throws InterruptedException {
             if (data == null) return false;
             if (mGatt == null) return false;
-            ByteArrayOutputStream out = new ByteArrayOutputStream(20);
-            try {
-                try {
-                    if (data != null)
-                        out.write(data);
-                    out.flush();
-                    mInput.setValue(out.toByteArray());
-                    synchronized (BluetoothSynchronizedObject.getLockObject()) {
-                        if (!mGatt.writeCharacteristic(mInput)) {
-                            return false;
-                        }
-                    }
-                    wait(10000);
-                    return checkStatus();
-                } finally {
-                    out.close();
+            mInput.setValue(data);
+            synchronized (BluetoothSynchronizedObject.getLockObject()) {
+                if (!mGatt.writeCharacteristic(mInput)) {
+                    return false;
                 }
-            } catch (IOException e) {
-                return false;
             }
+            wait(10000);
+            return checkStatus();
         }
 
         /**
          * 设置一个循环发送runnable,来执行发送大数据包,比如挂件升级过程
-         *
-         * @param runnable
-         * @return
          */
         public boolean postRunable(BluetoothRunnable runnable) {
             if (mHandler == null) return false;
@@ -464,6 +463,7 @@ public abstract class BluetoothIO extends BaseDeviceIO {
                         BluetoothRunnable runable = (BluetoothRunnable) msg.obj;
                         runable.run(new BluetoothSendProxy());
                     }
+
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();

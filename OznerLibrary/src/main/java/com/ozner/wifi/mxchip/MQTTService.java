@@ -35,18 +35,6 @@ public class MQTTService implements Listener {
      */
     onPublishCallback onPublishCallback = null;
 
-    public void setOnPublishCallback(onPublishCallback callback) {
-        onPublishCallback = callback;
-    }
-
-    public MQTTService.onPublishCallback getOnPublishCallback() {
-        return onPublishCallback;
-    }
-
-    public interface onPublishCallback {
-        void onPublish(String topic, byte[] data);
-    }
-
     public MQTTService(Context context) {
         this.context = context;
         //MQTT设置说明
@@ -95,6 +83,14 @@ public class MQTTService implements Listener {
         });
     }
 
+    public MQTTService.onPublishCallback getOnPublishCallback() {
+        return onPublishCallback;
+    }
+
+    public void setOnPublishCallback(onPublishCallback callback) {
+        onPublishCallback = callback;
+    }
+
     /*private void setSubscribe()
     {
         if (subscribes.size()>0) {
@@ -141,7 +137,6 @@ public class MQTTService implements Listener {
         connection.subscribe(new Topic[]{new Topic(topic, QoS.AT_LEAST_ONCE)}, null);
     }
 
-
     public void unSubscribe(String topic) {
         connection.unsubscribe(new UTF8Buffer[]{new UTF8Buffer(topic)}, null);
     }
@@ -149,7 +144,6 @@ public class MQTTService implements Listener {
     public void publish(String topic, byte[] data, OperationCallback<Void> cb) {
         connection.publish(topic, data, QoS.AT_LEAST_ONCE, false, cb);
     }
-
 
     @Override
     public void onConnected() {
@@ -172,5 +166,9 @@ public class MQTTService implements Listener {
     @Override
     public void onFailure(Throwable throwable) {
 
+    }
+
+    public interface onPublishCallback {
+        void onPublish(String topic, byte[] data);
     }
 }

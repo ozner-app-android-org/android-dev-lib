@@ -22,17 +22,12 @@ import java.util.List;
  */
 public class EasyLink_minus {
     private static final String TAG = "EasyLink_minus";
+    boolean stopSending = false;
     private Thread mCallbackThread; // call start ap after wifi enabled
     private Context mContext;
-    boolean stopSending = false;
     private IntentFilter mIntentFilter = null;
     private boolean mScanning;
     private int mErrorId = 0;
-
-    public boolean isScanning() {
-        return mScanning;
-    }
-
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
         public void onReceive(Context paramAnonymousContext, Intent intent) {
             EasyLink_minus.this.mScanning = false;
@@ -73,7 +68,6 @@ public class EasyLink_minus {
             return;
         }
     };
-
     private List<Integer> mNetId = new ArrayList<Integer>();
 
     public EasyLink_minus(Context ctx, Thread t) {
@@ -88,6 +82,10 @@ public class EasyLink_minus {
         mIntentFilter.addAction("android.net.wifi.WIFI_STATE_CHANGED");
         mIntentFilter.addAction("android.net.wifi.STATE_CHANGE");
         mContext.registerReceiver(this.mReceiver, this.mIntentFilter);
+    }
+
+    public boolean isScanning() {
+        return mScanning;
     }
 
     // private void clearNetList() {

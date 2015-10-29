@@ -15,10 +15,10 @@ public class EasyLink_v2 {
     private static String head = "239.118.0.0";
     private static String ip;
     private static String syncHString = "abcdefghijklmnopqrstuvw";
+    private static EasyLink_v2 e2;
     private byte key[] = new byte[65];
     private byte ssid[] = new byte[65];
     private byte user_info[] = new byte[65];
-    private static EasyLink_v2 e2;
 
     private EasyLink_v2() {
         stopSending = false;
@@ -29,6 +29,24 @@ public class EasyLink_v2 {
             e2 = new EasyLink_v2();
         }
         return e2;
+    }
+
+    protected static void sendData(DatagramPacket datagramPacket, String ip_addr)
+            throws IOException {
+        MulticastSocket sock = null;
+        sock = new MulticastSocket(54064);
+        sock.joinGroup(InetAddress.getByName(ip_addr));
+        // sock.setReuseAddress(true);
+        sock.send(datagramPacket);
+        sock.close();
+    }
+
+    private static int getRandomNumber() {
+        int num = new Random().nextInt(65536);
+        if (num < 10000)
+            return 65523;
+        else
+            return num;
     }
 
     /**
@@ -137,28 +155,10 @@ public class EasyLink_v2 {
         }
     }
 
-    protected static void sendData(DatagramPacket datagramPacket, String ip_addr)
-            throws IOException {
-        MulticastSocket sock = null;
-        sock = new MulticastSocket(54064);
-        sock.joinGroup(InetAddress.getByName(ip_addr));
-        // sock.setReuseAddress(true);
-        sock.send(datagramPacket);
-        sock.close();
-    }
-
     /**
      * Stop EasyLink
      */
     public void stopTransmitting() {
         stopSending = true;
-    }
-
-    private static int getRandomNumber() {
-        int num = new Random().nextInt(65536);
-        if (num < 10000)
-            return 65523;
-        else
-            return num;
     }
 }

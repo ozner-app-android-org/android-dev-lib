@@ -8,12 +8,12 @@ import java.net.SocketException;
 
 public class udpSearch {
 
+    boolean bFindGateway = false;
     // private int iReceivePort = 0; // ���յ���Ϣ�Ķ˿ں�
     // private static final int TIMEOUT = 1000; // ���ó�ʱΪ100ms
     private String udpresult = null; // ���������ص���Ϣ
     // private String ip;
     private DatagramSocket socketSend, socketReceive = null;
-    boolean bFindGateway = false;
 
     /**
      * Send UDP broadcast

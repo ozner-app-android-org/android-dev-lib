@@ -18,17 +18,17 @@ public class EasyLink_v3 {
     private static int START_FLAG3 = 0x5AC;
     private static int UDP_START_PORT = 50000;
     private static boolean stopSending;
-    private byte key[] = new byte[65];
-    private byte ssid[] = new byte[65];
-    private byte user_info[] = new byte[65];
     private static byte send_data[] = new byte[128];
     private static byte buffer[] = new byte[1500];
     private static DatagramSocket udpSocket;
     private static int len;
+    private static EasyLink_v3 e3;
+    private byte key[] = new byte[65];
+    private byte ssid[] = new byte[65];
+    private byte user_info[] = new byte[65];
     private InetAddress address = null;
     private DatagramPacket send_packet = null;
     private int port;
-    private static EasyLink_v3 e3;
     private boolean small_mtu;
 
     private EasyLink_v3() {

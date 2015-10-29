@@ -1,4 +1,4 @@
-package com.ozner.cup;
+package com.ozner.tap;
 
 import com.ozner.util.ByteUtil;
 
@@ -7,7 +7,7 @@ import com.ozner.util.ByteUtil;
  *         智能杯传感器对象
  * @category 智能杯
  */
-public class CupSensor {
+public class TapSensor {
     public int Battery = 0;
     /**
      * 电池电压
@@ -29,7 +29,7 @@ public class CupSensor {
      */
     public int TDSFix = 0;
 
-    public CupSensor() {
+    public TapSensor() {
     }
 
     /**

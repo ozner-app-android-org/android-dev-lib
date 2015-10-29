@@ -13,43 +13,25 @@ import android.content.IntentFilter;
 import com.ozner.util.dbg;
 
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 
 @SuppressLint("NewApi")
 public class BluetoothScan implements LeScanCallback, Runnable {
 
-    public final static int AD_CustomType_BindStatus = 0x10;
-    public static final String Extra_Address = "Address";
-    public static final String Extra_Model = "Model";
-    public static final String Extra_Firmware = "Firmware";
-    public static final String Extra_Platform = "Platform";
-    public static final String Extra_ScanData = "scanData";
-    public static final String Extra_CustomType = "CustomType";
-    public static final String Extra_CustomData = "CustomData";
-    public static final String Extra_RSSI = "RSSI";
-    public static final String Extra_DataAvailable = "DataAvailable";
-
-    /**
-     * 扫描开始广播,无附加数据
-     */
-    public final static String ACTION_SCANNER_START = "com.ozner.bluetooth.sanner.start";
-
-    /**
-     * 扫描停止广播
-     */
-    public final static String ACTION_SCANNER_STOP = "com.ozner.bluetooth.sanner.stop";
-
-    /**
-     * 找到设备广播,附加设备的MAC地址
-     */
-    public final static String ACTION_SCANNER_FOUND = "com.ozner.bluetooth.sanner.found";
-
-
+    final static int AD_CustomType_BindStatus = 0x10;
+    final static byte AD_CustomType_Gravity = 0x1;
     final static byte GAP_ADTYPE_MANUFACTURER_SPECIFIC = (byte) 0xff;
     final static byte GAP_ADTYPE_SERVICE_DATA = 0x16;
+    final static int FrontPeriod = 500;
+    final static int BackgroundPeriod = 5000;
+    BluetoothScanCallback scanCallback = null;
     Context mContext;
     BluetoothMonitor mMonitor;
+    boolean isScanning = false;
+    int scanPeriod = FrontPeriod;
+    HashMap<String, FoundDevice> mFoundDevice = new HashMap<>();
+    private Thread scanThread;
+    private boolean isBackground = false;
     public BluetoothScan(Context context) {
         mContext = context;
         mMonitor = new BluetoothMonitor();
@@ -57,34 +39,13 @@ public class BluetoothScan implements LeScanCallback, Runnable {
         mContext.registerReceiver(mMonitor, filter);
     }
 
-    /**
-     * 用来接收系统蓝牙开关信息,打开开启自动扫描,关闭就关掉
-     */
-    class BluetoothMonitor extends BroadcastReceiver {
-        @SuppressWarnings("deprecation")
-        public void onReceive(Context context, Intent intent) {
-            if (BluetoothAdapter.ACTION_STATE_CHANGED
-                    .equals(intent.getAction())) {
-                BluetoothManager bluetoothManager = (BluetoothManager) mContext
-                        .getSystemService(Context.BLUETOOTH_SERVICE);
-                BluetoothAdapter adapter = bluetoothManager.getAdapter();
-                if (adapter.getState() == BluetoothAdapter.STATE_OFF) {
-                    StopScan();
-                } else if (adapter.getState() == BluetoothAdapter.STATE_ON) {
-                    StartScan();
-                }
-            }
-        }
+    public BluetoothScanCallback getScanCallback() {
+        return scanCallback;
     }
 
-    boolean isScanning = false;
-    final static int FrontPeriod = 500;
-    final static int BackgroundPeriod = 5000;
-    int scanPeriod = FrontPeriod;
-
-    private Thread scanThread;
-    private boolean isBackground = false;
-
+    public void setScanCallback(BluetoothScanCallback scanCallback) {
+        this.scanCallback = scanCallback;
+    }
 
     public void run() {
         BluetoothManager bluetoothManager = (BluetoothManager) mContext
@@ -121,7 +82,6 @@ public class BluetoothScan implements LeScanCallback, Runnable {
         }
     }
 
-
     public void StartScan() {
         if (isRuning())
             return;
@@ -144,7 +104,6 @@ public class BluetoothScan implements LeScanCallback, Runnable {
 
     }
 
-
     public boolean isRuning() {
         return scanThread != null && scanThread.isAlive();
     }
@@ -153,21 +112,10 @@ public class BluetoothScan implements LeScanCallback, Runnable {
         this.isBackground = isBackground;
         scanPeriod = isBackground ? BackgroundPeriod : FrontPeriod;
     }
-    class FoundDevice {
-        public BluetoothDevice device;
-        public byte[] scanRecord;
-        public int rssi;
-    }
-    HashMap<String, FoundDevice> mFoundDevice = new HashMap<>();
+
     private void onFound(BluetoothDevice device, int rssi, byte[] scanRecord) {
         String address = device.getAddress();
-        byte[] repData = null;
-        String Model = "";
-        Date Firmware = null;
-        byte[] CustomData = null;
-        String Platform = "";
-        boolean Available = false;
-        int CustomType = 0;
+        BluetoothScanRep rep = new BluetoothScanRep();
         int pos = 0;
         while (true) {
             try {
@@ -188,25 +136,18 @@ public class BluetoothScan implements LeScanCallback, Runnable {
                                 dbg.e(e.toString());
                             }
                             if (device.getName().equals("Ozner Cup")) {
-                                CustomType = BluetoothCup.AD_CustomType_Gravity;
-                                Model = "CP001";
-                                Platform = "C01";
-                                CustomData = data;
-                                Available = true;
+                                rep.Model = "CP001";
+                                rep.Platform = "C01";
+                                rep.CustomData = data;
+                                rep.Available = true;
+                                rep.CustomDataType = AD_CustomType_Gravity;
                             }
                         }
                         if (flag == GAP_ADTYPE_SERVICE_DATA) {
                             byte[] data = Arrays.copyOfRange(scanRecord,
                                     pos + 1, pos + len);
-                            BluetoothScanRep rep = new BluetoothScanRep();
+                            //BluetoothScanRep rep = new BluetoothScanRep();
                             rep.FromBytes(data);
-                            repData = data;
-                            Model = rep.Model;
-                            Platform = rep.Platform;
-                            Firmware = rep.Firmware;
-                            CustomType = rep.CustomDataType;
-                            CustomData = rep.CustomData;
-                            Available = rep.Available;
                         }
                     }
                 }
@@ -218,21 +159,12 @@ public class BluetoothScan implements LeScanCallback, Runnable {
                 return;
             }
         }
-        Intent intent = new Intent(ACTION_SCANNER_FOUND);
-        intent.putExtra(Extra_Address, address);
-        intent.putExtra(Extra_Model, Model);
-        intent.putExtra(Extra_Platform, Platform);
-        intent.putExtra(Extra_RSSI, rssi);
-        if (Firmware != null)
-            intent.putExtra(Extra_Firmware, Firmware.getTime());
-        intent.putExtra(Extra_CustomType, CustomType);
-        intent.putExtra(Extra_CustomData, CustomData);
-        intent.putExtra(Extra_DataAvailable, Available);
-        intent.putExtra(Extra_ScanData, repData);
-        mContext.sendBroadcast(intent);
+        if (scanCallback != null) {
+            scanCallback.onFoundDevice(device, rep);
+        }
     }
-    public BluetoothDevice getDevice(String address)
-    {
+
+    public BluetoothDevice getDevice(String address) {
         BluetoothManager bluetoothManager = (BluetoothManager) mContext
                 .getSystemService(Context.BLUETOOTH_SERVICE);
         BluetoothAdapter adapter = bluetoothManager.getAdapter();
@@ -253,6 +185,36 @@ public class BluetoothScan implements LeScanCallback, Runnable {
         }
 
 
+    }
+
+    public interface BluetoothScanCallback {
+        void onFoundDevice(BluetoothDevice device, BluetoothScanRep scanRep);
+    }
+
+    /**
+     * 用来接收系统蓝牙开关信息,打开开启自动扫描,关闭就关掉
+     */
+    class BluetoothMonitor extends BroadcastReceiver {
+        @SuppressWarnings("deprecation")
+        public void onReceive(Context context, Intent intent) {
+            if (BluetoothAdapter.ACTION_STATE_CHANGED
+                    .equals(intent.getAction())) {
+                BluetoothManager bluetoothManager = (BluetoothManager) mContext
+                        .getSystemService(Context.BLUETOOTH_SERVICE);
+                BluetoothAdapter adapter = bluetoothManager.getAdapter();
+                if (adapter.getState() == BluetoothAdapter.STATE_OFF) {
+                    StopScan();
+                } else if (adapter.getState() == BluetoothAdapter.STATE_ON) {
+                    StartScan();
+                }
+            }
+        }
+    }
+
+    class FoundDevice {
+        public BluetoothDevice device;
+        public byte[] scanRecord;
+        public int rssi;
     }
 
 }

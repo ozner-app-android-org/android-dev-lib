@@ -23,6 +23,7 @@ import android.widget.Toast;
 import com.example.oznerble.R.id;
 import com.example.oznerble.R.layout;
 import com.ozner.application.OznerBLEService.OznerBLEBinder;
+import com.ozner.cup.Cup;
 import com.ozner.cup.CupRecord;
 import com.ozner.cup.Record;
 import com.ozner.device.OznerBluetoothDevice;

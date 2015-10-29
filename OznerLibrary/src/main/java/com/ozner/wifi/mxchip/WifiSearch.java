@@ -14,26 +14,16 @@ import org.json.JSONArray;
  * Created by zhiyongxu on 15/10/27.
  */
 public class WifiSearch implements JmdnsListener {
-    public interface WifiSearchDeviceListener {
-        void onWifiSearchFound(ConfigurationDevice device);
-
-        void onWifiSearchStart();
-
-        void onWifiSearchStop();
-    }
-
     final static int SearchTimeout = 60000;
     JmdnsAPI mdnsApi;
     boolean isSearchMode = false;
     WifiSearchDeviceListener wifiSearchDeviceListener = null;
     Handler handler;
     Context context;
-
     public WifiSearch(Context context) {
         this.context = context;
         handler = new Handler(Looper.getMainLooper());
     }
-
 
     public boolean startWifiSearch(WifiSearchDeviceListener listener) {
         if (isSearchMode) return false;
@@ -69,5 +59,13 @@ public class WifiSearch implements JmdnsListener {
             wifiSearchDeviceListener.onWifiSearchFound(device);
         }
         dbg.d(jsonArray.toString());
+    }
+
+    public interface WifiSearchDeviceListener {
+        void onWifiSearchFound(ConfigurationDevice device);
+
+        void onWifiSearchStart();
+
+        void onWifiSearchStop();
     }
 }

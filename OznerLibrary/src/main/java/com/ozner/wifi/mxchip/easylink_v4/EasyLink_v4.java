@@ -31,30 +31,28 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class EasyLink_v4 {
-    private String TAG = "====EasyLink_v4====";
-    private Context context;
+    private static final int REQUEST_TIMEOUT = 5 * 1000;
+    private static final int SO_TIMEOUT = 20 * 1000;
     private static boolean listening;
     private static ServerSocket server = null;
-    private Thread listen;
-    private EasyLink_plus easylink_plus;
     private static ServiceThread service;
     private static EasyLink_v4 e4 = null;
-
-    private WifiManager wifiManager = null;
-    private WifiAutoConnectManager wifiConnect = null;
+    private String TAG = "====EasyLink_v4====";
+    private Context context;
+    private Thread listen;
+    private EasyLink_plus easylink_plus;
 
     // private byte realSSID[] = new byte[65];
     // private byte realKey[] = new byte[65];
     //
     // private byte virturalSSID[] = new byte[65];
     // private byte virturalKey[] = new byte[65];
-
+    private WifiManager wifiManager = null;
+    private WifiAutoConnectManager wifiConnect = null;
     private String realSSID = "";
     private String realKey = "";
-
     private String virturalSSID = "";
     private String virturalKey = "88888888";
-
     // private boolean isSending = false;
     private Timer conTimer;
     private TimerTask conTimerTask;
@@ -232,36 +230,6 @@ public class EasyLink_v4 {
         boolean reConResult = wifiManager.reconnect();
     }
 
-    public static class MyService implements Runnable {
-        public final static List<Socket> socketList = new ArrayList<Socket>();
-        private FTC_Listener listener;
-        private Thread t;
-
-        public MyService(FTC_Listener listener) {
-            this.listener = listener;
-        }
-
-        public void run() {
-            while (listening == true) {
-                Socket s = null;
-                try {
-                    s = server.accept();
-                    if (s != null) {
-                        Log.e("client", "connected!!");
-                        socketList.add(s);
-                        service = new ServiceThread(s, listener);
-                        t = new Thread(service);
-                        t.start();
-                    } else
-                        System.out
-                                .println("------------socket s = null--------------");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
     public void transmitSettings_softap(final String Ssid, final String Key,
                                         final SoftAP_Listener listener) {
         new Thread(new Runnable() {
@@ -276,9 +244,6 @@ public class EasyLink_v4 {
             }
         }).start();
     }
-
-    private static final int REQUEST_TIMEOUT = 5 * 1000;
-    private static final int SO_TIMEOUT = 20 * 1000;
 
     public HttpClient getHttpClient() {
         BasicHttpParams httpParams = new BasicHttpParams();
@@ -337,6 +302,36 @@ public class EasyLink_v4 {
         } catch (Exception e) {
             e.printStackTrace();
             listener.onSoftAPconfigFail(600);
+        }
+    }
+
+    public static class MyService implements Runnable {
+        public final static List<Socket> socketList = new ArrayList<Socket>();
+        private FTC_Listener listener;
+        private Thread t;
+
+        public MyService(FTC_Listener listener) {
+            this.listener = listener;
+        }
+
+        public void run() {
+            while (listening == true) {
+                Socket s = null;
+                try {
+                    s = server.accept();
+                    if (s != null) {
+                        Log.e("client", "connected!!");
+                        socketList.add(s);
+                        service = new ServiceThread(s, listener);
+                        t = new Thread(service);
+                        t.start();
+                    } else
+                        System.out
+                                .println("------------socket s = null--------------");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 }
