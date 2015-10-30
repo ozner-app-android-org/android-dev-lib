@@ -23,15 +23,17 @@ import android.widget.Toast;
 import com.example.oznerble.R.id;
 import com.example.oznerble.R.layout;
 import com.ozner.application.OznerBLEService.OznerBLEBinder;
-import com.ozner.device.OznerBluetoothDevice;
+import com.ozner.bluetooth.BluetoothIO;
+import com.ozner.device.FirmwareTools;
 import com.ozner.device.OznerDevice;
 import com.ozner.tap.Record;
+import com.ozner.tap.Tap;
 import com.ozner.util.dbg;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class TapActivity extends Activity implements View.OnClickListener, BluetoothIO.FirmwareUpateInterface {
+public class TapActivity extends Activity implements View.OnClickListener, FirmwareTools.FirmwareUpateInterface {
     Tap mTap;
     OznerBLEBinder service = null;
     Monitr mMonitor = new Monitr();
@@ -58,15 +60,14 @@ public class TapActivity extends Activity implements View.OnClickListener, Bluet
         if (mTap == null)
             return;
         if (mTap.Bluetooth() != null) {
-            mTap.Bluetooth().setFirmwareUpateInterface(this);
+            mTap.firmwareTools().setFirmwareUpateInterface(this);
         }
         IntentFilter filter = new IntentFilter();
         filter.addAction(Tap.ACTION_BLUETOOTHTAP_RECORD_COMPLETE);
-        filter.addAction(BluetoothTap.ACTION_BLUETOOTHTAP_SENSOR);
-        filter.addAction(OznerBluetoothDevice.ACTION_BLUETOOTH_READLY);
-        filter.addAction(OznerBluetoothDevice.ACTION_BLUETOOTH_DISCONNECTED);
-        filter.addAction(OznerBluetoothDevice.ACTION_BLUETOOTH_CONNECTED);
-        filter.addAction(OznerBluetoothDevice.ACTION_BLUETOOTH_ERROR);
+        filter.addAction(Tap.ACTION_BLUETOOTHTAP_SENSOR);
+        filter.addAction(BluetoothIO.ACTION_BLUETOOTH_READY);
+        filter.addAction(BluetoothIO.ACTION_BLUETOOTH_DISCONNECTED);
+        filter.addAction(BluetoothIO.ACTION_BLUETOOTH_CONNECTED);
 
         this.registerReceiver(mMonitor, filter);
         adapter = new ArrayAdapter<String>(this,
@@ -144,12 +145,12 @@ public class TapActivity extends Activity implements View.OnClickListener, Bluet
             if (!Address.equals(mTap.Address()))
                 return;
 
-            if (action.equals(BluetoothTap.ACTION_BLUETOOTHTAP_SENSOR)) {
+            if (action.equals(Tap.ACTION_BLUETOOTHTAP_SENSOR)) {
                 ((TextView) findViewById(id.Device_Message)).setText(mTap
                         .GetBluetooth().getSensor().toString());
                 return;
             }
-            if (action.equals(BluetoothCup.ACTION_BLUETOOTH_READLY)) {
+            if (action.equals(BluetoothIO.ACTION_BLUETOOTH_READY)) {
                 ((TextView) findViewById(id.Device_Name)).setText(mTap.getName() + "(设备已连接)");
                 Date now = new Date();
                 long time = now.getTime() - closeTime.getTime();
@@ -157,19 +158,14 @@ public class TapActivity extends Activity implements View.OnClickListener, Bluet
                 ConnectCount++;
                 WriteMessage(String.format("成功:%d 失败:%d", ConnectCount, ErrorCount));
             }
-            if (action.equals(BluetoothCup.ACTION_BLUETOOTH_DISCONNECTED)) {
+            if (action.equals(BluetoothIO.ACTION_BLUETOOTH_DISCONNECTED)) {
                 ((TextView) findViewById(id.Device_Name)).setText(mTap.getName() + "(设备未连接)");
                 WriteMessage("设备连接断开");
             }
 
-            if (action.equals(BluetoothCup.ACTION_BLUETOOTH_CONNECTED)) {
+            if (action.equals(BluetoothIO.ACTION_BLUETOOTH_CONNECTED)) {
                 WriteMessage("设备连接成功");
 
-            }
-            if (action.equals(BluetoothCup.ACTION_BLUETOOTH_ERROR)) {
-                WriteMessage("设备连接失败 " + intent.getStringExtra("Message"));
-                ErrorCount++;
-                WriteMessage(String.format("成功:%d 失败:%d", ConnectCount, ErrorCount));
             }
 
             if (action.equals(Tap.ACTION_BLUETOOTHTAP_RECORD_COMPLETE)) {
@@ -177,7 +173,7 @@ public class TapActivity extends Activity implements View.OnClickListener, Bluet
                 return;
             }
             if (mTap.Bluetooth() != null) {
-                mTap.Bluetooth().setFirmwareUpateInterface(TapActivity.this);
+                mTap.firmwareTools().setFirmwareUpateInterface(TapActivity.this);
             }
         }
     }
@@ -186,7 +182,7 @@ public class TapActivity extends Activity implements View.OnClickListener, Bluet
 
     private void updateFirmware() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("*.bin/Firmware");
+        intent.setType("*.bin/getFirmware");
         intent.addCategory(Intent.CATEGORY_OPENABLE);
 
         try {
@@ -235,7 +231,7 @@ public class TapActivity extends Activity implements View.OnClickListener, Bluet
                 String path = actualimagecursor.getString(actual_image_column_index);
                 Toast.makeText(this, path, Toast.LENGTH_LONG).show();
                 if (mTap.Bluetooth() != null) {
-                    mTap.Bluetooth().udateFirmware(path);
+                    mTap.firmwareTools().udateFirmware(path);
                 }
             }
         }

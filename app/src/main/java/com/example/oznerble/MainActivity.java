@@ -20,9 +20,11 @@ import android.widget.TabHost;
 import android.widget.TextView;
 
 import com.ozner.application.OznerBLEService;
-import com.ozner.device.OznerBluetoothDevice;
+import com.ozner.bluetooth.BluetoothIO;
+import com.ozner.cup.Cup;
 import com.ozner.device.OznerDevice;
 import com.ozner.device.OznerDeviceManager;
+import com.ozner.tap.Tap;
 import com.ozner.util.dbg;
 
 import java.io.File;
@@ -115,12 +117,12 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 		filter.addAction(OznerDeviceManager.ACTION_OZNER_MANAGER_DEVICE_ADD);
 		filter.addAction(OznerDeviceManager.ACTION_OZNER_MANAGER_DEVICE_REMOVE);
 		filter.addAction(OznerDeviceManager.ACTION_OZNER_MANAGER_DEVICE_CHANGE);
-		filter.addAction(OznerBluetoothDevice.ACTION_BLUETOOTH_READLY);
-		filter.addAction(OznerBluetoothDevice.ACTION_BLUETOOTH_DISCONNECTED);
-		filter.addAction(BluetoothCup.ACTION_BLUETOOTHCUP_SENSOR);
-		filter.addAction(BluetoothTap.ACTION_BLUETOOTHTAP_SENSOR);
+		filter.addAction(BluetoothIO.ACTION_BLUETOOTH_READY);
+		filter.addAction(BluetoothIO.ACTION_BLUETOOTH_DISCONNECTED);
+		filter.addAction(Cup.ACTION_BLUETOOTHCUP_SENSOR);
+		filter.addAction(Tap.ACTION_BLUETOOTHTAP_SENSOR);
 		filter.addAction(OznerApplication.ACTION_ServiceInit);
-		filter.addAction(OznerBluetoothDevice.ACTION_BLUETOOTH_CONNECTED);
+		filter.addAction(BluetoothIO.ACTION_BLUETOOTH_CONNECTED);
 		this.registerReceiver(mMonitor, filter);
 		adpater=new ListAdpater();
 		list = (ListView) findViewById(R.id.deviceList);
@@ -130,8 +132,8 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 		findViewById(R.id.Device_Bind).setOnClickListener(this);
 		LoadServiceStatus();
 
-		Intent intent = new Intent(this, AddDeviceActivity.class);
-		startActivity(intent);
+		//Intent intent = new Intent(this, AddDeviceActivity.class);
+		//startActivity(intent);
 	}
 	
 	private void LoadServiceStatus() {
@@ -230,7 +232,14 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 			String msg="";
 			if (device.connected())
 			{
-				msg=device.Bluetooth().getSensor()!=null?device.Bluetooth().getSensor().toString():"";
+				if (device instanceof Cup) {
+					Cup cup = (Cup) device;
+					msg = cup.GetBluetooth().getSensor() != null ? cup.GetBluetooth().getSensor().toString() : "";
+				}
+				if (device instanceof Tap) {
+					Tap tap = (Tap) device;
+					msg = tap.GetBluetooth().getSensor() != null ? tap.GetBluetooth().getSensor().toString() : "";
+				}
 			}
 			((TextView) convertView.findViewById(R.id.Device_Message)).setText(msg);
 			return convertView;

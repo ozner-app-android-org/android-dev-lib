@@ -84,12 +84,12 @@ public abstract class FirmwareTools implements BluetoothIO.BluetoothRunnable {
             public void run() {
                 try {
                     if (deviceIO == null) {
-                        throw new DeviceNotReadlyException();
+                        throw new DeviceNotReadyException();
                     }
 
                     loadFile(filePath);
                     if (!deviceIO.post(FirmwareTools.this))
-                        throw new DeviceNotReadlyException();
+                        throw new DeviceNotReadyException();
                 } catch (Exception e) {
                     Message message = new Message();
                     message.obj = e;

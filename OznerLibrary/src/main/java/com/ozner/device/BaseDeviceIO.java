@@ -1,5 +1,7 @@
 package com.ozner.device;
 
+import java.util.ArrayList;
+
 /**
  * Created by zhiyongxu on 15/10/28.
  */
@@ -11,14 +13,14 @@ public abstract class BaseDeviceIO {
     OnRecvPacketCallback recvPacketCallback;
     boolean isBackgroundMode = false;
     OnInitCallback onInitCallback = null;
-    StatusCallback statusCallback = null;
+    final ArrayList<StatusCallback> statusCallback = new ArrayList<>();
 
 
     public BaseDeviceIO(String Model) {
         this.Model = Model;
     }
 
-    public String Model() {
+    public String getModel() {
         return this.Model;
     }
 
@@ -30,7 +32,7 @@ public abstract class BaseDeviceIO {
 
     public abstract void close();
 
-    public abstract void open() throws DeviceNotReadlyException;
+    public abstract void open() throws DeviceNotReadyException;
 
     public abstract boolean connected();
 
@@ -61,32 +63,41 @@ public abstract class BaseDeviceIO {
         recvPacketCallback = callback;
     }
 
-    public StatusCallback getStatusCallback() {
-        return statusCallback;
+    public void registerStatusCallback(StatusCallback callback) {
+        synchronized (statusCallback) {
+            if (!statusCallback.contains(callback))
+                statusCallback.add(callback);
+        }
     }
 
-    public void setStatusCallback(StatusCallback statusCallback) {
-        this.statusCallback = statusCallback;
+    public void unRegisterStatusCallback(StatusCallback callback) {
+        synchronized (statusCallback) {
+            statusCallback.remove(callback);
+        }
     }
+
 
     protected void doConnected() {
         isReady = false;
-        if (statusCallback != null) {
-            statusCallback.onConnected(this);
+        synchronized (statusCallback) {
+            for (StatusCallback cb : statusCallback)
+                cb.onConnected(this);
         }
     }
 
     protected void doDisconnected() {
         isReady = false;
-        if (statusCallback != null) {
-            statusCallback.onDisconnected(this);
+        synchronized (statusCallback) {
+            for (StatusCallback cb : statusCallback)
+                cb.onDisconnected(this);
         }
     }
 
     protected void doReady() {
         isReady = true;
-        if (statusCallback != null) {
-            statusCallback.onReady(this);
+        synchronized (statusCallback) {
+            for (StatusCallback cb : statusCallback)
+                cb.onReady(this);
         }
     }
 

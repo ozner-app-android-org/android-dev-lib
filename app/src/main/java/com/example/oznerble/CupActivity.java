@@ -23,18 +23,18 @@ import android.widget.Toast;
 import com.example.oznerble.R.id;
 import com.example.oznerble.R.layout;
 import com.ozner.application.OznerBLEService.OznerBLEBinder;
+import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.cup.Cup;
 import com.ozner.cup.CupRecord;
 import com.ozner.cup.Record;
-import com.ozner.device.OznerBluetoothDevice;
-import com.ozner.util.dbg;
+import com.ozner.device.FirmwareTools;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
 @SuppressLint("SimpleDateFormat")
-public class CupActivity extends Activity implements OnClickListener, BluetoothIO.FirmwareUpateInterface {
+public class CupActivity extends Activity implements OnClickListener, FirmwareTools.FirmwareUpateInterface {
 	Cup mCup;
 	OznerBLEBinder service = null;
 	Monitr mMonitor = new Monitr();
@@ -58,10 +58,10 @@ public class CupActivity extends Activity implements OnClickListener, BluetoothI
 			return;
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(Cup.ACTION_BLUETOOTHCUP_RECORD_COMPLETE);
-		filter.addAction(OznerBluetoothDevice.ACTION_BLUETOOTH_READLY);
-		filter.addAction(OznerBluetoothDevice.ACTION_BLUETOOTH_DISCONNECTED);
-		filter.addAction(OznerBluetoothDevice.ACTION_BLUETOOTH_CONNECTED);
-		filter.addAction(BluetoothCup.ACTION_BLUETOOTHCUP_SENSOR);
+		filter.addAction(BluetoothIO.ACTION_BLUETOOTH_READY);
+		filter.addAction(BluetoothIO.ACTION_BLUETOOTH_DISCONNECTED);
+		filter.addAction(BluetoothIO.ACTION_BLUETOOTH_CONNECTED);
+		filter.addAction(Cup.ACTION_BLUETOOTHCUP_SENSOR);
 		this.registerReceiver(mMonitor, filter);
 		adapter = new ArrayAdapter<String>(this,
 				android.R.layout.simple_list_item_1);
@@ -116,7 +116,7 @@ public class CupActivity extends Activity implements OnClickListener, BluetoothI
 			}
 		}
 		if (mCup.Bluetooth() != null) {
-			mCup.Bluetooth().setFirmwareUpateInterface(this);
+			mCup.firmwareTools().setFirmwareUpateInterface(this);
 		}
 	}
 
@@ -156,32 +156,24 @@ public class CupActivity extends Activity implements OnClickListener, BluetoothI
 			if (!Address.equals(mCup.Address()))
 				return;
 			if (mCup.GetBluetooth()==null) return;
-			if (action.equals(BluetoothCup.ACTION_BLUETOOTHCUP_SENSOR)) {
+			if (action.equals(Cup.ACTION_BLUETOOTHCUP_SENSOR)) {
 					
 				((TextView) findViewById(id.Device_Message)).setText(mCup
 						.GetBluetooth().getSensor().toString());
 				return;
 			}
-			if (action.equals(BluetoothCup.ACTION_BLUETOOTH_READLY)) {
+			if (action.equals(BluetoothIO.ACTION_BLUETOOTH_READY)) {
 				((TextView) findViewById(id.Device_Name)).setText(mCup
 						.getName() + "(设备已连接)");
 				if (mCup.Bluetooth() != null) {
-					mCup.Bluetooth().setFirmwareUpateInterface(CupActivity.this);
+					mCup.firmwareTools().setFirmwareUpateInterface(CupActivity.this);
 				}
 			}
-			if (action.equals(BluetoothCup.ACTION_BLUETOOTH_DISCONNECTED)) {
+			if (action.equals(BluetoothIO.ACTION_BLUETOOTH_DISCONNECTED)) {
 				((TextView) findViewById(id.Device_Name)).setText(mCup
 						.getName() + "(设备未连接)");
 			}
 			if (action.equals(Cup.ACTION_BLUETOOTHCUP_RECORD_COMPLETE)) {
-				CupRecord[] records = mCup.GetBluetooth().GetReocrds();
-				if (records != null) {
-					dbg.i("ACTION_BLUETOOTHCUP_RECORD_COMPLETE:"
-							+ records.length);
-					for (CupRecord record : mCup.GetBluetooth().GetReocrds()) {
-						mRecords.add(record);
-					}
-				}
 				load();
 				return;
 			}
@@ -219,7 +211,8 @@ public class CupActivity extends Activity implements OnClickListener, BluetoothI
 				String path = actualimagecursor.getString(actual_image_column_index);
             	Toast.makeText(this, path, Toast.LENGTH_LONG).show();
 				if (mCup.Bluetooth() != null) {
-					mCup.Bluetooth().udateFirmware(path);
+
+					mCup.firmwareTools().udateFirmware(path);
 				}
 			}
 		}

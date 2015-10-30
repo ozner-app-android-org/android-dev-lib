@@ -22,7 +22,7 @@ public class TapFirmwareTools extends FirmwareTools {
     }
 
     @Override
-    public void loadFile(String path) throws Exception {
+    protected void loadFile(String path) throws Exception {
         File file = new File(path);
         byte[] key = {0x23, 0x23, 0x24, 0x24, 0x40, 0x40, 0x2a, 0x2a, 0x54, 0x61, 0x70, 0x00};
         Size = (int) file.length();
@@ -149,7 +149,7 @@ public class TapFirmwareTools extends FirmwareTools {
 //                return false;
 //            }
 
-            if (Firmware == deviceIO.Firmware()) {
+            if (Firmware == deviceIO.getFirmware()) {
                 onFirmwareFail();
                 return false;
             }

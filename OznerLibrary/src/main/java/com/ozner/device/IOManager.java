@@ -29,15 +29,14 @@ public abstract class IOManager {
     }
 
     protected void doAvailable(BaseDeviceIO io) {
-        io.setStatusCallback(statusCallback);
-
+        io.registerStatusCallback(statusCallback);
         if (ioManagerCallback != null) {
             ioManagerCallback.onDeviceAvailable(this, io);
         }
     }
 
     protected void doUnavailable(BaseDeviceIO io) {
-        io.setStatusCallback(null);
+        io.unRegisterStatusCallback(statusCallback);
         if (ioManagerCallback != null) {
             ioManagerCallback.onDeviceUnavailable(this, io);
         }
@@ -57,6 +56,7 @@ public abstract class IOManager {
     }
 
     public void setBackgroundMode(boolean isBackground) {
+
         isBackgroundMode = isBackground;
     }
 

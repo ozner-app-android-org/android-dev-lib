@@ -5,7 +5,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -20,12 +19,18 @@ import android.widget.TextView;
 import com.example.oznerble.R.id;
 import com.example.oznerble.R.layout;
 import com.ozner.application.OznerBLEService.OznerBLEBinder;
+import com.ozner.bluetooth.BaseBluetoothDeviceManager;
+import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.bluetooth.BluetoothScan;
-import com.ozner.device.NotSupportDevcieException;
-import com.ozner.device.OznerBluetoothDevice;
+import com.ozner.cup.Cup;
+import com.ozner.cup.CupManager;
+import com.ozner.device.BaseDeviceIO;
+import com.ozner.device.NotSupportDeviceException;
 import com.ozner.device.OznerDevice;
-import com.ozner.wifi.mxchip.ConfigurationDevice;
+import com.ozner.tap.Tap;
+import com.ozner.tap.TapManager;
 import com.ozner.wifi.mxchip.MXChip;
+import com.ozner.wifi.mxchip.helper.Helper;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -42,14 +47,15 @@ public class AddDeviceActivity extends Activity {
 	Monitor mMonitor=new Monitor();
 	MXChip mxChip;
 	private void loadWifi() {
-		WifiManager wifi_service = (WifiManager) getSystemService(WIFI_SERVICE);
-		wifi_bind.setEnabled(wifi_service.getWifiState() == WifiManager.WIFI_STATE_ENABLED);
-		WifiInfo wifiInfo = wifi_service.getConnectionInfo();
-		if (wifiInfo != null) {
-			wifi_ssid.setText(wifiInfo.getSSID().replace("\"", ""));
-		} else {
-			wifi_ssid.setText("");
-		}
+//
+//		WifiManager wifi_service = (WifiManager) getSystemService(WIFI_SERVICE);
+//		wifi_bind.setEnabled(wifi_service.getWifiState() == WifiManager.WIFI_STATE_ENABLED);
+//		WifiInfo wifiInfo = wifi_service.getConnectionInfo();
+//		if (wifiInfo != null) {
+//			wifi_ssid.setText(wifiInfo.getSSID().replace("\"", ""));
+//		} else {
+//			wifi_ssid.setText("");
+//		}
 	}
 
 	class Monitor extends BroadcastReceiver
@@ -77,7 +83,7 @@ public class AddDeviceActivity extends Activity {
 		
 		IntentFilter filter=new IntentFilter();
 		filter.addAction(BluetoothScan.ACTION_SCANNER_FOUND);
-		filter.addAction(OznerBluetoothDevice.ACTION_OZNER_BLUETOOTH_BIND_MODE);
+		filter.addAction(BaseBluetoothDeviceManager.ACTION_OZNER_BLUETOOTH_BIND_MODE);
 		filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
 		filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
 
@@ -88,59 +94,59 @@ public class AddDeviceActivity extends Activity {
 		list = (ListView) findViewById(R.id.deviceList);
 		list.setAdapter(adapter);
 
-		wifi_ssid = (EditText) findViewById(id.wifi_ssid);
-		wifi_passwd = (EditText) findViewById(id.wifi_password);
-		wifi_bind = (Button) findViewById(id.wifi_bind);
-		wifi_bind.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				mxChip.startWifiConfiguration(wifi_ssid.getText().toString(), wifi_passwd.getText().toString(), new MXChip.WifiConfigurationListener() {
-					@Override
-					public void onWifiConfiguration(ConfigurationDevice device) {
-
-					}
-
-					@Override
-					public void onWifiConfigurationStart() {
-
-					}
-
-					@Override
-					public void onWifiConfigurationStop() {
-
-					}
-				});
-				/*
-				mxChip.startWifiSearch(new MXChip.WifiSearchDeviceListener() {
-					@Override
-					public void onWifiSearchFound(ConfigurationDevice device) {
-						if (device.name==null)
-						{
-
-						}
-					}
-
-					@Override
-					public void onWifiSearchStart() {
-
-					}
-
-					@Override
-					public void onWifiSearchStop() {
-
-					}
-				});*/
-				//mxChip.start(wifi_ssid.getText().toString(), wifi_passwd.getText().toString());
-			}
-		});
-		mxChip = new MXChip(this);
-		loadWifi();
+//		wifi_ssid = (EditText) findViewById(id.wifi_ssid);
+//		wifi_passwd = (EditText) findViewById(id.wifi_password);
+//		wifi_bind = (Button) findViewById(id.wifi_bind);
+//		wifi_bind.setOnClickListener(new View.OnClickListener() {
+//			@Override
+//			public void onClick(View view) {
+//				mxChip.startWifiConfiguration(wifi_ssid.getText().toString(), wifi_passwd.getText().toString(), new MXChip.WifiConfigurationListener() {
+//					@Override
+//					public void onWifiConfiguration(ConfigurationDevice device) {
+//
+//					}
+//
+//					@Override
+//					public void onWifiConfigurationStart() {
+//
+//					}
+//
+//					@Override
+//					public void onWifiConfigurationStop() {
+//
+//					}
+//				});
+//				/*
+//				mxChip.startWifiSearch(new MXChip.WifiSearchDeviceListener() {
+//					@Override
+//					public void onWifiSearchFound(ConfigurationDevice device) {
+//						if (device.name==null)
+//						{
+//
+//						}
+//					}
+//
+//					@Override
+//					public void onWifiSearchStart() {
+//
+//					}
+//
+//					@Override
+//					public void onWifiSearchStop() {
+//
+//					}
+//				});*/
+//				//mxChip.start(wifi_ssid.getText().toString(), wifi_passwd.getText().toString());
+//			}
+//		});
+		//mxChip = new MXChip(this);
+		//loadWifi();
 
 	}
 
 	class ListAdapter extends BaseAdapter implements View.OnClickListener
 	{
-		ArrayList<OznerBluetoothDevice> list=new ArrayList<OznerBluetoothDevice>();
+		ArrayList<BaseDeviceIO> list = new ArrayList<>();
 		Context mContext;
 		LayoutInflater mInflater;
 
@@ -156,7 +162,7 @@ public class AddDeviceActivity extends Activity {
 			OznerBLEBinder service=app.getService();
 			if (service==null) return;
 			list.clear();
-			for (OznerBluetoothDevice device : service.getDeviceManager().getNotBindDevices())
+			for (BaseDeviceIO device : service.getDeviceManager().getNotBindDevices())
 			{
 				list.add(device);
 			}
@@ -183,7 +189,7 @@ public class AddDeviceActivity extends Activity {
 			{
 				convertView=mInflater.inflate(R.layout.add_device_item, null);
 			}
-			OznerBluetoothDevice device=(OznerBluetoothDevice)getItem(position);
+			BaseDeviceIO device = (BaseDeviceIO) getItem(position);
 			SimpleDateFormat fmt=new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
 			if (device!=null)
 			{
@@ -191,17 +197,31 @@ public class AddDeviceActivity extends Activity {
 						device.getName() + "(" + device.getAddress() + ")");
 				((TextView) convertView.findViewById(id.Device_Model)).setText(
 						device.getModel());
-				((TextView) convertView.findViewById(id.Device_Platfrom)).setText(
-						device.getPlatform());
-				((TextView) convertView.findViewById(id.Device_Firmware)).setText(
-						fmt.format(new Date(device.getFirmware())));
-				
-				((TextView) convertView.findViewById(id.Device_Custom)).setText(
-						device.getCustomObject() != null ? device.getCustomObject().toString() : "");
-				if (device.isBindMode())
-					convertView.findViewById(id.addDeviceButton).setEnabled(true);
-				else
-					convertView.findViewById(id.addDeviceButton).setEnabled(false);
+				if (device instanceof BluetoothIO) {
+					BluetoothIO bluetoothIO = (BluetoothIO) device;
+					((TextView) convertView.findViewById(id.Device_Platfrom)).setText(
+							bluetoothIO.getPlatform());
+					((TextView) convertView.findViewById(id.Device_Firmware)).setText(
+							fmt.format(new Date(bluetoothIO.getFirmware())));
+					((TextView) convertView.findViewById(id.Device_Custom)).setText(
+							((BluetoothIO) device).getCustomData() != null ?
+									Helper.ConvertHexByteArrayToString(((BluetoothIO) device).getCustomData())
+									: "");
+					if (CupManager.IsCup(device.getModel())) {
+						if (Cup.isBindMode(bluetoothIO))
+							convertView.findViewById(id.addDeviceButton).setEnabled(true);
+						else
+							convertView.findViewById(id.addDeviceButton).setEnabled(false);
+					}
+					if (TapManager.IsTap(device.getModel())) {
+						if (Tap.isBindMode(bluetoothIO))
+							convertView.findViewById(id.addDeviceButton).setEnabled(true);
+						else
+							convertView.findViewById(id.addDeviceButton).setEnabled(false);
+					}
+
+
+				}
 				convertView.findViewById(id.addDeviceButton).setTag(device);
 				convertView.findViewById(id.addDeviceButton).setOnClickListener(this);
 
@@ -217,7 +237,7 @@ public class AddDeviceActivity extends Activity {
 
 				case id.addDeviceButton: {
 					//获取点击的蓝牙设备
-					OznerBluetoothDevice bluetooth = (OznerBluetoothDevice) v.getTag();
+					BaseDeviceIO bluetooth = (BaseDeviceIO) v.getTag();
 
 					OznerBLEApplication app = (OznerBLEApplication) getApplication();
 					//获取服务
@@ -234,7 +254,7 @@ public class AddDeviceActivity extends Activity {
 							//配对完成,重新加载配对设备列表
 							this.Reload();
 						}
-					} catch (NotSupportDevcieException e) {
+					} catch (NotSupportDeviceException e) {
 						e.printStackTrace();
 					}
 

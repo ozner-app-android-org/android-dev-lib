@@ -4,10 +4,10 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 
+import com.ozner.bluetooth.BaseBluetoothDeviceManager;
 import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.device.BaseDeviceIO;
-import com.ozner.device.BaseDeviceManager;
-import com.ozner.device.DeviceNotReadlyException;
+import com.ozner.device.DeviceNotReadyException;
 import com.ozner.device.OznerDevice;
 import com.ozner.device.OznerDeviceManager;
 
@@ -20,7 +20,7 @@ import java.util.ArrayList;
  * @author zhiyongxu
  *
  */
-public class CupManager extends BaseDeviceManager {
+public class CupManager extends BaseBluetoothDeviceManager {
 
     /**
      * 新增一个配对的水杯
@@ -50,7 +50,7 @@ public class CupManager extends BaseDeviceManager {
         ArrayList<BaseDeviceIO> list = new ArrayList<>();
         OznerDeviceManager mgr = OznerDeviceManager.Instance();
         for (BaseDeviceIO device : mgr.bluetoothIOMgr().getAvailableDevices()) {
-            if (IsCup(device.Model())) {
+            if (IsCup(device.getModel())) {
                 if (mgr.getDevice(device.getAddress()) == null) {
                     list.add(device);
                 }
@@ -169,15 +169,15 @@ public class CupManager extends BaseDeviceManager {
     }
 
     @Override
-    protected OznerDevice getDevice(BaseDeviceIO io) throws DeviceNotReadlyException {
+    protected OznerDevice getDevice(BaseDeviceIO io) throws DeviceNotReadyException {
         if (io instanceof BluetoothIO) {
             String address = io.getAddress();
             OznerDevice device = OznerDeviceManager.Instance().getDevice(address);
             if (device != null) {
                 return device;
             } else {
-                if (IsCup(io.Model())) {
-                    Cup c = new Cup(context(), address, io.Model(), "");
+                if (IsCup(io.getModel())) {
+                    Cup c = new Cup(context(), address, io.getModel(), "");
                     c.Setting().name(io.getName());
                     c.Bind(io);
                     return c;
@@ -185,5 +185,24 @@ public class CupManager extends BaseDeviceManager {
             }
         }
         return null;
+    }
+
+    @Override
+    protected boolean chekcBindMode(String Model, int CustomType, byte[] CustomData) {
+        if (IsCup(Model)) {
+            if ((CustomType == Cup.AD_CustomType_Gravity) && (CustomData != null)) {
+                CupGravity gravity = new CupGravity();
+                gravity.FromBytes(CustomData, 0);
+                return gravity.IsHandstand();
+            } else
+                return false;
+        } else
+            return false;
+    }
+
+    @Override
+    public boolean isMyDevice(BaseDeviceIO io) {
+        if (io == null) return false;
+        return IsCup(io.getModel());
     }
 }

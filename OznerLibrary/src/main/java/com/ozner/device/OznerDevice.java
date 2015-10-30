@@ -41,6 +41,7 @@ public abstract class OznerDevice {
         return setting;
     }
 
+
     /**
      * 地址
      *
@@ -68,7 +69,7 @@ public abstract class OznerDevice {
      *
      * @return NULL=没有蓝牙连接
      */
-    public BaseDeviceIO Bluetooth() {
+    public BaseDeviceIO IO() {
         return deviceIO;
     }
 
@@ -102,10 +103,13 @@ public abstract class OznerDevice {
         return setChanged;
     }
 
+    protected abstract void doSetDeviceIO(BaseDeviceIO oldIO, BaseDeviceIO newIO);
 
-    public boolean Bind(BaseDeviceIO deviceIO) throws DeviceNotReadlyException {
+    public boolean Bind(BaseDeviceIO deviceIO) throws DeviceNotReadyException {
         if (this.deviceIO == deviceIO)
             return false;
+        doSetDeviceIO(this.deviceIO, deviceIO);
+
         if (this.deviceIO != null) {
             this.deviceIO.close();
             this.deviceIO = null;
@@ -116,6 +120,7 @@ public abstract class OznerDevice {
             deviceIO.setBackgroundMode(isBackgroundMode());
             deviceIO.open();
         }
+
         return true;
     }
 

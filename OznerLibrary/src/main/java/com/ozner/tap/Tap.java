@@ -5,9 +5,7 @@ import android.content.Intent;
 import android.text.format.Time;
 
 import com.ozner.bluetooth.BluetoothIO;
-import com.ozner.cup.CupSetting;
 import com.ozner.device.BaseDeviceIO;
-import com.ozner.device.DeviceNotReadlyException;
 import com.ozner.device.DeviceSetting;
 import com.ozner.device.OznerDevice;
 import com.ozner.util.dbg;
@@ -75,6 +73,40 @@ public class Tap extends OznerDevice implements
     Timer autoUpdateTimer = new Timer();
     int RequestCount = 0;
     HashSet<String> dataHash = new HashSet<>();
+    Bluetooth bluetooth = new Bluetooth();
+
+    /**
+     * 兼容老的方法
+     *
+     * @deprecated
+     */
+    public Bluetooth GetBluetooth() {
+        if (IO() != null) {
+            return bluetooth;
+        } else
+            return null;
+    }
+
+    /**
+     * 兼容老的方法
+     *
+     * @deprecated
+     */
+    public BluetoothIO Bluetooth() {
+        return (BluetoothIO) IO();
+    }
+
+    /**
+     * 兼容老的方法
+     *
+     * @deprecated
+     */
+    public class Bluetooth {
+        public TapSensor getSensor() {
+            return mSensor;
+        }
+    }
+
 
     public Tap(Context context, String Address, String Model, String Setting) {
         super(context, Address, Model, Setting);
@@ -95,7 +127,7 @@ public class Tap extends OznerDevice implements
     }
 
     private boolean send(byte opCode, byte[] data) {
-        return Bluetooth() != null && Bluetooth().send(BluetoothIO.makePacket(opCode, data));
+        return IO() != null && IO().send(BluetoothIO.makePacket(opCode, data));
     }
 
     private void sendBackground(BaseDeviceIO.DataSendProxy proxy) {
@@ -108,15 +140,36 @@ public class Tap extends OznerDevice implements
         }
     }
 
+    public TapSetting Setting() {
+        return (TapSetting) super.Setting();
+    }
+
+    /**
+     * 判断设备是否处于配对状态
+     *
+     * @param io 设备接口
+     * @return true=配对状态
+     */
+    public static boolean isBindMode(BluetoothIO io) {
+        if (!TapManager.IsTap(io.getModel())) return false;
+        if (io.getCustomData() != null) {
+            byte[] data = io.getCustomData();
+            if (data.length > 0) {
+                return data[0] == 1;
+            }
+        }
+        return false;
+    }
+
     @Override
     protected DeviceSetting initSetting(String Setting) {
-        DeviceSetting setting = new CupSetting();
+        DeviceSetting setting = new TapSetting();
         setting.load(Setting);
         return setting;
     }
 
     private boolean sendTime(BaseDeviceIO.DataSendProxy proxy) {
-        dbg.i("开始设置时间:%s", Bluetooth().getAddress());
+        dbg.i("开始设置时间:%s", IO().getAddress());
 
         Time time = new Time();
         time.setToNow();
@@ -197,24 +250,22 @@ public class Tap extends OznerDevice implements
     }
 
     @Override
-    public boolean Bind(BaseDeviceIO bluetooth) throws DeviceNotReadlyException {
-        if (bluetooth == this.Bluetooth()) return true;
-        if (this.Bluetooth() != null) {
-            Bluetooth().setOnInitCallback(null);
-            Bluetooth().setRecvPacketCallback(null);
-            Bluetooth().setStatusCallback(null);
+    protected void doSetDeviceIO(BaseDeviceIO oldIO, BaseDeviceIO newIO) {
+        if (oldIO != null) {
+            IO().setOnInitCallback(null);
+            IO().setRecvPacketCallback(null);
+            IO().unRegisterStatusCallback(this);
             firmwareTools.bind(null);
         }
-
-        if (bluetooth != null) {
-            Bluetooth().setRecvPacketCallback(this);
-            bluetooth.setOnInitCallback(this);
-            bluetooth.setStatusCallback(this);
-            firmwareTools.bind((BluetoothIO) bluetooth);
+        if (newIO != null) {
+            newIO.setRecvPacketCallback(this);
+            newIO.setOnInitCallback(this);
+            newIO.registerStatusCallback(this);
+            firmwareTools.bind((BluetoothIO) newIO);
         }
-
-        return super.Bind(bluetooth);
     }
+
+
 
     @Override
     protected void doBackgroundModeChange() {
@@ -262,14 +313,14 @@ public class Tap extends OznerDevice implements
     }
 
     private void requestSensor() {
-        if (Bluetooth() != null) {
-            Bluetooth().send(BluetoothIO.makePacket(opCode_ReadSensor, null));
+        if (IO() != null) {
+            IO().send(BluetoothIO.makePacket(opCode_ReadSensor, null));
         }
     }
 
     private void requestRecord() {
-        if (Bluetooth() != null) {
-            if (Bluetooth().send(BluetoothIO.makePacket(opCode_ReadTDSRecord, null))) {
+        if (IO() != null) {
+            if (IO().send(BluetoothIO.makePacket(opCode_ReadTDSRecord, null))) {
                 mLastDataTime = null;
                 synchronized (mRecords) {
                     mRecords.clear();
@@ -294,7 +345,7 @@ public class Tap extends OznerDevice implements
                     mSensor.FromBytes(data, 0);
                 }
                 Intent intent = new Intent(ACTION_BLUETOOTHTAP_SENSOR);
-                intent.putExtra("Address", Bluetooth().getAddress());
+                intent.putExtra("Address", IO().getAddress());
                 intent.putExtra("Sensor", data);
                 getContext().sendBroadcast(intent);
                 break;
@@ -315,7 +366,7 @@ public class Tap extends OznerDevice implements
                             mRecords.add(0, record);
                         }
                         Intent intent = new Intent(ACTION_BLUETOOTHTAP_RECORD);
-                        intent.putExtra("Address", Bluetooth().getAddress());
+                        intent.putExtra("Address", IO().getAddress());
                         intent.putExtra("Record", data);
                         getContext().sendBroadcast(intent);
 
@@ -323,7 +374,7 @@ public class Tap extends OznerDevice implements
                     mLastDataTime = new Date();
                     if (record.Index == 0) {
                         Intent comp_intent = new Intent(ACTION_BLUETOOTHTAP_RECORD_COMPLETE);
-                        comp_intent.putExtra("Address", Bluetooth().getAddress());
+                        comp_intent.putExtra("Address", IO().getAddress());
                         getContext().sendBroadcast(comp_intent);
                         synchronized (mRecords) {
                             mDatas.addRecord(mRecords);
@@ -341,7 +392,7 @@ public class Tap extends OznerDevice implements
     public void onConnected(BaseDeviceIO io) {
         Intent intent = new Intent();
         intent.setAction(ACTION_BLUETOOTHTAP_CONNECTED);
-        intent.putExtra("Address", Bluetooth().getAddress());
+        intent.putExtra("Address", IO().getAddress());
         getContext().sendBroadcast(intent);
     }
 
@@ -350,7 +401,7 @@ public class Tap extends OznerDevice implements
         autoUpdateTimer.cancel();
         Intent intent = new Intent();
         intent.setAction(ACTION_BLUETOOTHTAP_DISCONNECTED);
-        intent.putExtra("Address", Bluetooth().getAddress());
+        intent.putExtra("Address", IO().getAddress());
         getContext().sendBroadcast(intent);
 
     }

@@ -1,6 +1,7 @@
 package com.ozner.application;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.Application.ActivityLifecycleCallbacks;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
@@ -11,41 +12,43 @@ import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 
-import com.ozner.bluetooth.BluetoothScan;
 import com.ozner.cup.CupManager;
 import com.ozner.device.OznerDeviceManager;
 import com.ozner.tap.TapManager;
 import com.ozner.util.dbg;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.List;
 
 public class OznerBLEService extends Service implements ActivityLifecycleCallbacks {
     static OznerDeviceManager mManager;
     static CupManager mCups;
     static TapManager mTaps;
     OznerBLEBinder binder = new OznerBLEBinder();
-    Timer checkTimer = new Timer();
-    ArrayList<Activity> activitys = new ArrayList<Activity>();
-    Date lastTime;
+    public static final String ACTION_ServiceInit = "ozner.service.init";
+
     public OznerBLEService() {
+
+    }
+
+    public void checkBackgroundMode(boolean isClose) {
+        ActivityManager activityManager = ((ActivityManager) getSystemService(Context.ACTIVITY_SERVICE));
+        List<ActivityManager.RunningTaskInfo> tasksInfo = activityManager.getRunningTasks(1);
+        if (tasksInfo.size() > 0) {
+            dbg.i("top Activity = "
+                    + tasksInfo.get(0).topActivity.getPackageName());
+            String packet = getPackageName();
+            // 应用程序位于堆栈的顶层
+            if (packet.equals(tasksInfo.get(0).topActivity.getPackageName())) {
+                mManager.setBackgroundMode(isClose);
+                return;
+            }
+        }
+        mManager.setBackgroundMode(true);
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
-
-        checkTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                Date date = new Date();
-                long t = lastTime != null ? date.getTime() - lastTime.getTime() : 0;
-                if (t > 5000)
-                    checkBackMode();
-            }
-        }, 1000, 5000);
         try {
             mManager = new OznerDeviceManager(getApplicationContext());
         } catch (InstantiationException e) {
@@ -53,10 +56,12 @@ public class OznerBLEService extends Service implements ActivityLifecycleCallbac
         }
         mCups = new CupManager(getApplicationContext());
         mTaps = new TapManager(getApplicationContext());
+        mManager.start();
     }
 
     @Override
     public void onDestroy() {
+        mManager.stop();
         super.onDestroy();
     }
 
@@ -80,32 +85,21 @@ public class OznerBLEService extends Service implements ActivityLifecycleCallbac
         return super.onUnbind(intent);
     }
 
-    private void checkBackMode() {
-        boolean back = mManager.isBackground();
-        back = activitys.size() <= 0;
-        if (mManager.isBackground() != back) {
-            mManager.setBackgroundMode(back);
-            dbg.i("setBackgroundMode:%s", back ? "yes" : "no");
-        }
-    }
-
     @Override
     public void onActivityResumed(Activity activity) {
-        if (!activitys.contains(activity))
-            activitys.add(activity);
-        checkBackMode();
+        checkBackgroundMode(false);
 
     }
 
     @Override
     public void onActivityPaused(Activity activity) {
+        checkBackgroundMode(true);
     }
 
     @Override
     public void onActivityStopped(Activity activity) {
-        if (activitys.contains(activity))
-            activitys.remove(activity);
-        lastTime = new Date();
+
+        checkBackgroundMode(true);
 
     }
 
@@ -116,17 +110,17 @@ public class OznerBLEService extends Service implements ActivityLifecycleCallbac
 
     @Override
     public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
-
+        checkBackgroundMode(false);
     }
 
     @Override
     public void onActivityStarted(Activity activity) {
+        checkBackgroundMode(false);
     }
 
     @Override
     public void onActivityDestroyed(Activity activity) {
-        if (activitys.contains(activity))
-            activitys.remove(activity);
+        checkBackgroundMode(true);
     }
 
     public class OznerBLEBinder extends Binder {

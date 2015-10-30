@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 
+import com.ozner.util.Helper;
 import com.ozner.util.dbg;
 
 import java.util.Arrays;
@@ -17,8 +18,32 @@ import java.util.HashMap;
 
 @SuppressLint("NewApi")
 public class BluetoothScan implements LeScanCallback, Runnable {
+    public static final String Extra_Address = "Address";
+    public static final String Extra_Model = "getModel";
+    public static final String Extra_Firmware = "getFirmware";
+    public static final String Extra_Platform = "Platform";
+    public static final String Extra_CustomType = "CustomType";
+    public static final String Extra_CustomData = "CustomData";
+    public static final String Extra_RSSI = "RSSI";
+    public static final String Extra_DataAvailable = "DataAvailable";
 
-    final static int AD_CustomType_BindStatus = 0x10;
+    /**
+     * 扫描开始广播,无附加数据
+     */
+    //public final static String ACTION_SCANNER_START = "com.ozner.bluetooth.sanner.start";
+
+    /**
+     * 扫描停止广播
+     */
+    //public final static String ACTION_SCANNER_STOP = "com.ozner.bluetooth.sanner.stop";
+
+    /**
+     * 找到设备广播,附加设备的MAC地址
+     */
+    public final static String ACTION_SCANNER_FOUND = "com.ozner.bluetooth.sanner.found";
+
+
+    //
     final static byte AD_CustomType_Gravity = 0x1;
     final static byte GAP_ADTYPE_MANUFACTURER_SPECIFIC = (byte) 0xff;
     final static byte GAP_ADTYPE_SERVICE_DATA = 0x16;
@@ -109,13 +134,19 @@ public class BluetoothScan implements LeScanCallback, Runnable {
     }
 
     public void setBackgroundMode(boolean isBackground) {
-        this.isBackground = isBackground;
-        scanPeriod = isBackground ? BackgroundPeriod : FrontPeriod;
+        if (this.isBackground != isBackground) {
+            this.isBackground = isBackground;
+            scanPeriod = isBackground ? BackgroundPeriod : FrontPeriod;
+            dbg.d("后台模式:" + String.valueOf(isBackground));
+        }
+
     }
 
     private void onFound(BluetoothDevice device, int rssi, byte[] scanRecord) {
         String address = device.getAddress();
         BluetoothScanRep rep = new BluetoothScanRep();
+        if (scanRecord == null) return;
+        if (Helper.StringIsNullOrEmpty(device.getName())) return;
         int pos = 0;
         while (true) {
             try {
@@ -162,6 +193,18 @@ public class BluetoothScan implements LeScanCallback, Runnable {
         if (scanCallback != null) {
             scanCallback.onFoundDevice(device, rep);
         }
+
+        Intent intent = new Intent(ACTION_SCANNER_FOUND);
+        intent.putExtra(Extra_Address, address);
+        intent.putExtra(Extra_Model, rep.Model);
+        intent.putExtra(Extra_Platform, rep.Platform);
+        intent.putExtra(Extra_RSSI, rssi);
+        if (rep.Firmware != null)
+            intent.putExtra(Extra_Firmware, rep.Firmware.getTime());
+        intent.putExtra(Extra_CustomType, rep.CustomDataType);
+        intent.putExtra(Extra_CustomData, rep.CustomData);
+        intent.putExtra(Extra_DataAvailable, rep.Available);
+        mContext.sendBroadcast(intent);
     }
 
     public BluetoothDevice getDevice(String address) {

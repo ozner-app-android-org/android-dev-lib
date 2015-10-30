@@ -22,7 +22,7 @@ public abstract class BaseDeviceManager {
     }
 
 
-    protected abstract OznerDevice getDevice(BaseDeviceIO io) throws DeviceNotReadlyException;
+    protected abstract OznerDevice getDevice(BaseDeviceIO io) throws DeviceNotReadyException;
 
     protected abstract OznerDevice loadDevice(String address, String Model, String Setting);
 
@@ -37,4 +37,6 @@ public abstract class BaseDeviceManager {
 
     protected void add(OznerDevice device) {
     }
+
+    public abstract boolean isMyDevice(BaseDeviceIO io);
 }

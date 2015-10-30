@@ -18,6 +18,7 @@ import android.widget.TimePicker.OnTimeChangedListener;
 import com.example.oznerble.R.id;
 import com.example.oznerble.R.layout;
 import com.ozner.application.OznerBLEService.OznerBLEBinder;
+import com.ozner.cup.Cup;
 import com.ozner.cup.CupSetting;
 
 import java.text.SimpleDateFormat;
@@ -36,8 +37,9 @@ public class CupSetupActivity extends Activity implements View.OnClickListener {
 		service=app.getService();
 		if (service==null) return;
 		String address=getIntent().getStringExtra("Address");
+
 		mCup=service.getCupManager().getCup(address);
-		mCupSetting=mCup.Setting();
+		mCupSetting = (CupSetting) mCup.Setting();
 		setContentView(R.layout.activity_cup_setup);
 		cup_Name = (EditText) this.findViewById(id.Cup_Name);
 		cup_Address = (TextView) this.findViewById(id.Cup_Address);
@@ -205,13 +207,8 @@ public class CupSetupActivity extends Activity implements View.OnClickListener {
 		case id.Submit:
 			this.Submit();
 			break;
-		case id.SensorZero:
-			if (mCup.Bluetooth()!=null)
-			{
-				mCup.GetBluetooth().sensorZero();
-			}
-			break;
-		case id.Cup_RemindStartPanel: {
+
+			case id.Cup_RemindStartPanel: {
 			final TimePicker picker = new TimePicker(this);
 
 			SimpleDateFormat fmt = new SimpleDateFormat("hh:mm");

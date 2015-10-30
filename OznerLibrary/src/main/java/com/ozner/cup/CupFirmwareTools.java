@@ -20,7 +20,7 @@ public class CupFirmwareTools extends FirmwareTools {
     }
 
     @Override
-    public void loadFile(String path) throws Exception {
+    protected void loadFile(String path) throws Exception {
         File file = new File(path);
         byte[] key = {0x23, 0x23, 0x24, 0x24, 0x40, 0x40, 0x2a, 0x2a, 0x43, 0x75, 0x70, 0x00};
         Size = (int) file.length();
@@ -150,7 +150,7 @@ public class CupFirmwareTools extends FirmwareTools {
     protected boolean startFirmwareUpdate(BaseDeviceIO.DataSendProxy sendHandle) throws InterruptedException {
         try {
             onFirmwareUpdateStart();
-            if (Firmware == deviceIO.Firmware()) {
+            if (Firmware == deviceIO.getFirmware()) {
                 onFirmwareFail();
                 return false;
             }

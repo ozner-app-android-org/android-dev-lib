@@ -56,15 +56,19 @@ public class BluetoothIOMgr extends IOManager {
             BluetoothIO bluetoothIO = null;
             synchronized (devices) {
                 if (!devices.containsKey(device.getAddress())) {
-                    bluetoothIO = new BluetoothIO(context, device, scanRep.Model, scanRep.Firmware.getTime());
+
+                    bluetoothIO = new BluetoothIO(context, device, scanRep.Model, scanRep.Platform, scanRep.Firmware == null ? 0 : scanRep.Firmware.getTime());
                     bluetoothIO.setBackgroundMode(isBackgroundMode());
                     devices.put(device.getAddress(), bluetoothIO);
-                }
+                } else
+                    bluetoothIO = (BluetoothIO) devices.get(device.getAddress());
             }
             if (bluetoothIO != null) {
                 doAvailable(bluetoothIO);
                 bluetoothIO.updateCustomData(scanRep.CustomDataType, scanRep.CustomData);
             }
+
+
         }
     }
 

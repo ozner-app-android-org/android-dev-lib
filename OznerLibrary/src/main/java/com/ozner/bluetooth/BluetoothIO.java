@@ -13,7 +13,7 @@ import android.os.Looper;
 import android.os.Message;
 
 import com.ozner.device.BaseDeviceIO;
-import com.ozner.device.DeviceNotReadlyException;
+import com.ozner.device.DeviceNotReadyException;
 import com.ozner.util.dbg;
 
 import java.nio.ByteBuffer;
@@ -33,7 +33,7 @@ public class BluetoothIO extends BaseDeviceIO {
     /**
      * 设备就绪广播
      */
-    public final static String ACTION_BLUETOOTH_READLY = "com.ozner.bluetooth.readly";
+    public final static String ACTION_BLUETOOTH_READY = "com.ozner.bluetooth.ready";
     /**
      * 设备连接断开广播
      */
@@ -59,13 +59,23 @@ public class BluetoothIO extends BaseDeviceIO {
     Context context;
     BluetoothDevice device;
     BluetoothProxy bluetoothProxy;
+    String Platform = "";
     long Firmware = 0;
 
-    public BluetoothIO(Context context, BluetoothDevice device, String Model, long Firmware) {
+    public long getFirmware() {
+        return Firmware;
+    }
+
+    public String getPlatform() {
+        return Platform;
+    }
+
+    public BluetoothIO(Context context, BluetoothDevice device, String Model, String Platform, long Firmware) {
         super(Model);
         this.context = context;
         this.device = device;
         this.Firmware = Firmware;
+        this.Platform = Platform;
         bluetoothProxy = new BluetoothProxy();
     }
 
@@ -98,9 +108,7 @@ public class BluetoothIO extends BaseDeviceIO {
         return bluetoothProxy.lastRecvPacket;
     }
 
-    public long Firmware() {
-        return Firmware;
-    }
+
 
     @Override
     public boolean send(byte[] bytes) {
@@ -120,7 +128,7 @@ public class BluetoothIO extends BaseDeviceIO {
     }
 
     @Override
-    public void open() throws DeviceNotReadlyException {
+    public void open() throws DeviceNotReadyException {
         bluetoothProxy.start();
     }
 
@@ -150,9 +158,8 @@ public class BluetoothIO extends BaseDeviceIO {
 
     @Override
     protected void doReady() {
-
         Intent intent = new Intent();
-        intent.setAction(ACTION_BLUETOOTH_READLY);
+        intent.setAction(ACTION_BLUETOOTH_READY);
         intent.putExtra("Address", device.getAddress());
         context.sendBroadcast(intent);
         super.doReady();
@@ -184,16 +191,7 @@ public class BluetoothIO extends BaseDeviceIO {
     public class BluetoothSendProxy extends DataSendProxy {
         @Override
         public boolean send(byte[] data) {
-            Looper looper = Looper.myLooper();
-            if (!bluetoothProxy.mLooper.equals(looper)) {
-                return false;
-            }
-            try {
-                return bluetoothProxy.send(data);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-                return false;
-            }
+            return bluetoothProxy.postSend(data);
         }
     }
 
@@ -344,11 +342,11 @@ public class BluetoothIO extends BaseDeviceIO {
             return thread != null && thread.isAlive();
         }
 
-        public void start() throws DeviceNotReadlyException {
+        public void start() throws DeviceNotReadyException {
             if (BluetoothSynchronizedObject.hashBluetoothBusy(device.getAddress()))
-                throw new DeviceNotReadlyException();
+                throw new DeviceNotReadyException();
             if (isRuning()) {
-                throw new DeviceNotReadlyException();
+                throw new DeviceNotReadyException();
             }
             thread = new Thread(this);
             thread.start();
@@ -395,15 +393,17 @@ public class BluetoothIO extends BaseDeviceIO {
                         return;
                     }
                 }
-                doReady();
                 dbg.i("初始化成功:%s", device.getAddress());
+
                 if (!isBackgroundMode()) {
                     //连接完成以后建立一个HANDLE来接受发送的数据
                     Looper.prepare();
                     mLooper = Looper.myLooper();
                     mHandler = new MessageHandler(mLooper);
+                    doReady();
                     Looper.loop();
-                }
+                } else
+                    doReady();
             } catch (InterruptedException ignore) {
                 dbg.i("线程关闭:" + getAddress());
                 ignore.printStackTrace();
@@ -414,6 +414,7 @@ public class BluetoothIO extends BaseDeviceIO {
                     mGatt.close();
                     mGatt = null;
                 }
+
             }
         }
 
@@ -442,11 +443,21 @@ public class BluetoothIO extends BaseDeviceIO {
         }
 
         public boolean postSend(byte[] data) {
-            if (mHandler == null) return false;
-            Message message = new Message();
-            message.what = MSG_SendData;
-            message.obj = data;
-            return mHandler.sendMessage(message);
+
+            if (Thread.currentThread().getId() == thread.getId()) {
+                try {
+                    return send(data);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    return false;
+                }
+            } else {
+                Message message = new Message();
+                message.what = MSG_SendData;
+                message.obj = data;
+                return mHandler.sendMessage(message);
+            }
+
         }
 
         private class MessageHandler extends Handler {

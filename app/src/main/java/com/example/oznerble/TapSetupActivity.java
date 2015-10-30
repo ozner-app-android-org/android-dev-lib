@@ -15,6 +15,7 @@ import android.widget.TimePicker.OnTimeChangedListener;
 import com.example.oznerble.R.id;
 import com.example.oznerble.R.layout;
 import com.ozner.application.OznerBLEService.OznerBLEBinder;
+import com.ozner.tap.Tap;
 import com.ozner.tap.TapSetting;
 
 import java.text.SimpleDateFormat;
