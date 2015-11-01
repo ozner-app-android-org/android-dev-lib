@@ -14,7 +14,10 @@ import android.os.Message;
 
 import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.DeviceNotReadyException;
+import com.ozner.device.OperateCallback;
 import com.ozner.util.dbg;
+
+import org.fusesource.mqtt.client.Callback;
 
 import java.nio.ByteBuffer;
 import java.util.UUID;
@@ -56,12 +59,22 @@ public class BluetoothIO extends BaseDeviceIO {
 //    public final static int STATE_DISCONNECTING = BluetoothGatt.STATE_DISCONNECTING;
     byte[] customData = null;
     int customDataType = 0;
-    Context context;
     BluetoothDevice device;
     BluetoothProxy bluetoothProxy;
     String Platform = "";
     long Firmware = 0;
 
+    class AsyncObject
+    {
+        public byte[] data;
+        public OperateCallback<Void> callback;
+        public AsyncObject(byte[] data,OperateCallback<Void> callback)
+        {
+            this.data=data;
+            this.callback=callback;
+        }
+
+    }
     public long getFirmware() {
         return Firmware;
     }
@@ -71,8 +84,7 @@ public class BluetoothIO extends BaseDeviceIO {
     }
 
     public BluetoothIO(Context context, BluetoothDevice device, String Model, String Platform, long Firmware) {
-        super(Model);
-        this.context = context;
+        super(context,Model);
         this.device = device;
         this.Firmware = Firmware;
         this.Platform = Platform;
@@ -112,7 +124,12 @@ public class BluetoothIO extends BaseDeviceIO {
 
     @Override
     public boolean send(byte[] bytes) {
-        return bluetoothProxy.postSend(bytes);
+        return bluetoothProxy.postSend(bytes,null);
+    }
+
+    @Override
+    public boolean send(byte[] bytes, OperateCallback<Void> callback) {
+        return bluetoothProxy.postSend(bytes,callback);
     }
 
     /**
@@ -152,7 +169,7 @@ public class BluetoothIO extends BaseDeviceIO {
         Intent intent = new Intent();
         intent.setAction(ACTION_BLUETOOTH_CONNECTED);
         intent.putExtra("Address", device.getAddress());
-        context.sendBroadcast(intent);
+        context().sendBroadcast(intent);
         super.doConnected();
     }
 
@@ -161,28 +178,32 @@ public class BluetoothIO extends BaseDeviceIO {
         Intent intent = new Intent();
         intent.setAction(ACTION_BLUETOOTH_READY);
         intent.putExtra("Address", device.getAddress());
-        context.sendBroadcast(intent);
+        context().sendBroadcast(intent);
         super.doReady();
     }
+
+
 
     @Override
     protected void doDisconnected() {
         Intent intent = new Intent();
         intent.setAction(ACTION_BLUETOOTH_DISCONNECTED);
         intent.putExtra("Address", device.getAddress());
-        context.sendBroadcast(intent);
+        context().sendBroadcast(intent);
         super.doDisconnected();
     }
 
     @Override
-    protected void doBackgroundModeChange() {
-        if (isBackgroundMode()) {
+    protected void doChangeRunningMode() {
+        if (getRunningMode()==RunningMode.Background)
+        {
             //如果是后台模式,退出LOOP消息循环
             if (bluetoothProxy.mLooper != null) {
                 bluetoothProxy.mLooper.quitSafely();
             }
         }
     }
+
 
     public interface BluetoothRunnable {
         void run(DataSendProxy sendHandle);
@@ -191,7 +212,7 @@ public class BluetoothIO extends BaseDeviceIO {
     public class BluetoothSendProxy extends DataSendProxy {
         @Override
         public boolean send(byte[] data) {
-            return bluetoothProxy.postSend(data);
+            return bluetoothProxy.postSend(data,null);
         }
     }
 
@@ -215,6 +236,7 @@ public class BluetoothIO extends BaseDeviceIO {
         private int lastStatus = BluetoothGatt.GATT_FAILURE;
 
         private UUID GetUUID(int id) {
+
             return UUID.fromString(String.format(
                     "%1$08x-0000-1000-8000-00805f9b34fb", id));
         }
@@ -239,17 +261,22 @@ public class BluetoothIO extends BaseDeviceIO {
 
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            connectionState = newState;
-            lastStatus = status;
-            if (newState == BluetoothGatt.STATE_CONNECTED) {
-                doConnected();
-            } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
-                doDisconnected();
-                close();
-            }
+            try {
+                connectionState = newState;
+                lastStatus = status;
+                if (newState == BluetoothGatt.STATE_CONNECTED) {
+                    doConnected();
+                } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
+                    doDisconnected();
+                    close();
+                }
 
-            set();
-            super.onConnectionStateChange(gatt, status, newState);
+                set();
+                super.onConnectionStateChange(gatt, status, newState);
+            }catch (Exception e)
+            {
+                e.printStackTrace();
+            }
         }
 
         @Override
@@ -277,14 +304,17 @@ public class BluetoothIO extends BaseDeviceIO {
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicWrite(gatt, characteristic, status);
+            doSend(characteristic.getValue());
             lastStatus = status;
             set();
+
         }
 
 
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
+            doRecv(characteristic.getValue());
             lastRecvPacket = characteristic.getValue();
             doRecvPacket(lastRecvPacket);
             super.onCharacteristicChanged(gatt, characteristic);
@@ -354,7 +384,8 @@ public class BluetoothIO extends BaseDeviceIO {
 
         public void close() {
             if (isRuning()) {
-                mLooper.quit();
+                if (mLooper!=null)
+                    mLooper.quit();
             }
         }
 
@@ -364,7 +395,7 @@ public class BluetoothIO extends BaseDeviceIO {
         @Override
         public void run() {
             if (BluetoothSynchronizedObject.hashBluetoothBusy(device.getAddress())) return;
-            mGatt = device.connectGatt(context, false, this);
+            mGatt = device.connectGatt(context(), false, this);
             if (mGatt == null) return;
             try {
                 BluetoothSynchronizedObject.Busy(device.getAddress());
@@ -395,7 +426,7 @@ public class BluetoothIO extends BaseDeviceIO {
                 }
                 dbg.i("初始化成功:%s", device.getAddress());
 
-                if (!isBackgroundMode()) {
+                if (getRunningMode()==RunningMode.Foreground) {
                     //连接完成以后建立一个HANDLE来接受发送的数据
                     Looper.prepare();
                     mLooper = Looper.myLooper();
@@ -403,16 +434,27 @@ public class BluetoothIO extends BaseDeviceIO {
                     doReady();
                     Looper.loop();
                 } else
+                {
                     doReady();
-            } catch (InterruptedException ignore) {
-                dbg.i("线程关闭:" + getAddress());
-                ignore.printStackTrace();
+                    {
+                        //每次等待5秒
+                        Thread.sleep(5000);
+                    } while (!doCheckTransmissionsComplete());
+                }
+
+            } catch (Exception e) {
+                dbg.i("线程错误:" + getAddress());
+                e.printStackTrace();
             } finally {
                 dbg.i("连接关闭:" + getAddress());
                 BluetoothSynchronizedObject.Idle(device.getAddress());
                 if (mGatt != null) {
+                    mGatt.disconnect();
                     mGatt.close();
-                    mGatt = null;
+                    mLooper=null;
+                    mHandler=null;
+                    doDisconnected();
+                    //mGatt = null;
                 }
 
             }
@@ -442,20 +484,36 @@ public class BluetoothIO extends BaseDeviceIO {
             return mHandler.sendMessage(message);
         }
 
-        public boolean postSend(byte[] data) {
-
+        public boolean postSend(byte[] data,OperateCallback<Void> callback) {
             if (Thread.currentThread().getId() == thread.getId()) {
                 try {
-                    return send(data);
-                } catch (InterruptedException e) {
+                    if (send(data))
+                    {
+                        if (callback!=null) {
+                            callback.onSuccess(null);
+                        }
+                        return true;
+                    }else
+                    {
+                        if (callback!=null) {
+                            callback.onFailure(null);
+                        }
+                        return false;
+                    }
+
+                } catch (Exception e) {
                     e.printStackTrace();
+                    callback.onFailure(e);
                     return false;
                 }
             } else {
-                Message message = new Message();
-                message.what = MSG_SendData;
-                message.obj = data;
-                return mHandler.sendMessage(message);
+                if (mHandler!=null) {
+                    Message message = new Message();
+                    message.what = MSG_SendData;
+                    message.obj = new AsyncObject(data,callback);
+                    return mHandler.sendMessage(message);
+                }else
+                    return false;
             }
 
         }
@@ -469,14 +527,35 @@ public class BluetoothIO extends BaseDeviceIO {
             public void handleMessage(Message msg) {
                 try {
                     if (msg.what == MSG_SendData) {
-                        send((byte[]) msg.obj);
+                        AsyncObject object=(AsyncObject)msg.obj;
+
+                        try
+                        {
+                            if (send(object.data))
+                            {
+                                if (object.callback!=null)
+                                    object.callback.onSuccess(null);
+                            }else
+                            {
+                                if (object.callback!=null)
+                                    object.callback.onFailure(null);
+                            }
+                        }catch (Exception e)
+                        {
+                            if (object.callback!=null)
+                                object.callback.onFailure(e);
+                            throw e;
+                        }
+
+
+
                     } else if (msg.what == MSG_Runnable) {
                         BluetoothRunnable runable = (BluetoothRunnable) msg.obj;
                         runable.run(new BluetoothSendProxy());
                     }
 
                     Thread.sleep(100);
-                } catch (InterruptedException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
                 super.handleMessage(msg);

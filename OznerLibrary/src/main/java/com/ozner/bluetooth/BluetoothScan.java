@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 
+import com.ozner.XObject;
 import com.ozner.util.Helper;
 import com.ozner.util.dbg;
 
@@ -17,7 +18,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 @SuppressLint("NewApi")
-public class BluetoothScan implements LeScanCallback, Runnable {
+public class BluetoothScan extends XObject implements LeScanCallback, Runnable {
     public static final String Extra_Address = "Address";
     public static final String Extra_Model = "getModel";
     public static final String Extra_Firmware = "getFirmware";
@@ -58,6 +59,7 @@ public class BluetoothScan implements LeScanCallback, Runnable {
     private Thread scanThread;
     private boolean isBackground = false;
     public BluetoothScan(Context context) {
+        super(context);
         mContext = context;
         mMonitor = new BluetoothMonitor();
         IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
@@ -133,13 +135,17 @@ public class BluetoothScan implements LeScanCallback, Runnable {
         return scanThread != null && scanThread.isAlive();
     }
 
-    public void setBackgroundMode(boolean isBackground) {
-        if (this.isBackground != isBackground) {
-            this.isBackground = isBackground;
-            scanPeriod = isBackground ? BackgroundPeriod : FrontPeriod;
-            dbg.d("后台模式:" + String.valueOf(isBackground));
-        }
 
+    @Override
+    protected void doChangeRunningMode() {
+        if (getRunningMode()==RunningMode.Background)
+        {
+            scanPeriod=BackgroundPeriod;
+        }else
+            if (getRunningMode()==RunningMode.Foreground)
+            {
+                scanPeriod=FrontPeriod;
+            }
     }
 
     private void onFound(BluetoothDevice device, int rssi, byte[] scanRecord) {

@@ -14,7 +14,7 @@ import java.net.URL;
  */
 public class HttpUtil {
 
-    public static String postJSON(String url, String json) throws IOException {
+    public static String postJSON(String url, String json,String charset) throws IOException {
         URL my_url = new URL(url);
         HttpURLConnection connection = null;
 
@@ -26,11 +26,11 @@ public class HttpUtil {
         connection.setRequestMethod("POST");
         connection.setUseCaches(false);
         //connection.setRequestProperty("Charset", "UTF-8");
-        //connection.setRequestProperty("Content-Type", "application/json");
+        connection.setRequestProperty("Content-Type", "application/json");
         try {
-            connection.connect();
+            //connection.connect();
             OutputStream outputStream = connection.getOutputStream();
-            OutputStreamWriter writer = new OutputStreamWriter(outputStream);
+            OutputStreamWriter writer = new OutputStreamWriter(outputStream,charset);
             try {
                 writer.write(json);
             } finally {

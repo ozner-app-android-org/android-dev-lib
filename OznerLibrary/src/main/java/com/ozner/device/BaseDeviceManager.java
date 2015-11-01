@@ -2,23 +2,19 @@ package com.ozner.device;
 
 import android.content.Context;
 
+import com.ozner.XObject;
+
 /**
  * 设备管理基类
  *
  * @author zhiyongxu
  * @category Device
  */
-public abstract class BaseDeviceManager {
-    Context context;
+public abstract class BaseDeviceManager extends XObject {
 
     public BaseDeviceManager(Context context) {
-        this.context = context;
+        super(context);
         OznerDeviceManager.Instance().registerManager(this);
-    }
-
-
-    protected Context context() {
-        return context;
     }
 
 

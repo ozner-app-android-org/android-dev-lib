@@ -1,5 +1,9 @@
 package com.ozner.device;
 
+import android.content.Context;
+
+import com.ozner.XObject;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -7,19 +11,20 @@ import java.util.HashMap;
  * Created by xzyxd on 2015/10/29.
  * IO管理基类
  */
-public abstract class IOManager {
+public abstract class IOManager extends XObject {
 
     /**
      * 当前设备列表
      */
     protected final HashMap<String, BaseDeviceIO> devices = new HashMap<>();
     IOManagerCallback ioManagerCallback;
-    boolean isBackgroundMode = false;
+
     StatusCallbackImp statusCallback = new StatusCallbackImp();
 
-    public IOManagerCallback getIoManagerCallback() {
-        return ioManagerCallback;
+    public IOManager(Context context) {
+        super(context);
     }
+
 
     /**
      * 设置IO接口状态回调
@@ -42,6 +47,13 @@ public abstract class IOManager {
         }
     }
 
+    public BaseDeviceIO getAvailableDevice(String address)
+    {
+        synchronized (devices)
+        {
+            return devices.get(address);
+        }
+    }
     /**
      * 获取可用的设备列表
      */
@@ -51,14 +63,6 @@ public abstract class IOManager {
         }
     }
 
-    public boolean isBackgroundMode() {
-        return isBackgroundMode;
-    }
-
-    public void setBackgroundMode(boolean isBackground) {
-
-        isBackgroundMode = isBackground;
-    }
 
     /**
      * 开始使用接口

@@ -101,10 +101,9 @@ public class CupVolume {
      *
      * @param items 饮水记录数组
      */
-    public void addRecord(List<CupRecord> items) {
+    public void addRecord(CupRecord[] items) {
         synchronized (this) {
-
-            if (items.size() <= 0) {
+            if (items.length <= 0) {
                 return;
             }
 

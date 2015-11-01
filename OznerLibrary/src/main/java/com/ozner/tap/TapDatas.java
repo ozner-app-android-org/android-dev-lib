@@ -49,8 +49,9 @@ public class TapDatas {
      *
      * @param items TDS记录
      */
-    public void addRecord(List<TapRecord> items) {
+    public void addRecord(TapRecord[] items) {
         if (items == null) return;
+        if (items.length<=0) return;
         synchronized (this) {
             for (TapRecord r : items) {
                 TapRecord record = new TapRecord();

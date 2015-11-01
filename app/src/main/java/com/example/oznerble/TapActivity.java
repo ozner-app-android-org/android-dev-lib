@@ -28,6 +28,7 @@ import com.ozner.device.FirmwareTools;
 import com.ozner.device.OznerDevice;
 import com.ozner.tap.Record;
 import com.ozner.tap.Tap;
+import com.ozner.util.GetPathFromUri4kitkat;
 import com.ozner.util.dbg;
 
 import java.text.SimpleDateFormat;
@@ -223,12 +224,9 @@ public class TapActivity extends Activity implements View.OnClickListener, Firmw
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == FIRMWARE_SELECT_CODE) {
             if (data != null) {
-                Uri uri = data.getData();
-                String[] proj = {MediaStore.Images.Media.DATA};
-                Cursor actualimagecursor = managedQuery(uri, proj, null, null, null);
-                int actual_image_column_index = actualimagecursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-                actualimagecursor.moveToFirst();
-                String path = actualimagecursor.getString(actual_image_column_index);
+
+                String path = GetPathFromUri4kitkat.getPath(this,data.getData());
+
                 Toast.makeText(this, path, Toast.LENGTH_LONG).show();
                 if (mTap.Bluetooth() != null) {
                     mTap.firmwareTools().udateFirmware(path);

@@ -8,6 +8,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 
 import com.ozner.ui.library.RoundDrawable;
+import com.ozner.wifi.mxchip.WifiSearch;
 
 
 public class MainActivity extends ActionBarActivity implements View.OnClickListener {
@@ -25,6 +26,10 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         setSupportActionBar(toolbar);
         toolbar.setNavigationIcon(icon);
         findViewById(R.id.addWifiButton).setOnClickListener(this);
+
+
+
+
     }
 
     @Override

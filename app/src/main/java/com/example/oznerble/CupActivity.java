@@ -10,7 +10,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -28,6 +30,7 @@ import com.ozner.cup.Cup;
 import com.ozner.cup.CupRecord;
 import com.ozner.cup.Record;
 import com.ozner.device.FirmwareTools;
+import com.ozner.util.GetPathFromUri4kitkat;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -197,21 +200,50 @@ public class CupActivity extends Activity implements OnClickListener, FirmwareTo
 					Toast.LENGTH_SHORT).show();
 		}
 	}
+	/**
+	 * Get the value of the data column for this Uri. This is useful for
+	 * MediaStore Uris, and other file-based ContentProviders.
+	 *
+	 * @param context
+	 *            The context.
+	 * @param uri
+	 *            The Uri to query.
+	 * @param selection
+	 *            (Optional) Filter used in the query.
+	 * @param selectionArgs
+	 *            (Optional) Selection arguments used in the query.
+	 * @return The value of the _data column, which is typically a file path.
+	 */
+	public static String getDataColumn(Context context, Uri uri, String selection,
+									   String[] selectionArgs) {
+
+		Cursor cursor = null;
+		final String column = "_data";
+		final String[] projection = { column };
+
+		try {
+			cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs,
+					null);
+			if (cursor != null && cursor.moveToFirst()) {
+				final int column_index = cursor.getColumnIndexOrThrow(column);
+				return cursor.getString(column_index);
+			}
+		} finally {
+			if (cursor != null)
+				cursor.close();
+		}
+		return null;
+	}
+
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (requestCode==FIRMWARE_SELECT_CODE)
 		{
 			if (data!=null)
 			{
-				Uri uri = data.getData();
-				String[] proj = { MediaStore.Images.Media.DATA };
-				Cursor actualimagecursor = managedQuery(uri, proj, null, null, null);
-				int actual_image_column_index = actualimagecursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-				actualimagecursor.moveToFirst();
-				String path = actualimagecursor.getString(actual_image_column_index);
-            	Toast.makeText(this, path, Toast.LENGTH_LONG).show();
+				String path= GetPathFromUri4kitkat.getPath(this,data.getData());
+				Toast.makeText(this, path, Toast.LENGTH_LONG).show();
 				if (mCup.Bluetooth() != null) {
-
 					mCup.firmwareTools().udateFirmware(path);
 				}
 			}

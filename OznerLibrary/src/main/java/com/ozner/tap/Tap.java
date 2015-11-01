@@ -10,20 +10,18 @@ import com.ozner.device.DeviceSetting;
 import com.ozner.device.OznerDevice;
 import com.ozner.util.dbg;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.TreeSet;
 
 /**
  * Created by zhiyongxu on 15/10/28.
  */
-public class Tap extends OznerDevice implements
-        BluetoothIO.OnInitCallback,
-        BluetoothIO.OnRecvPacketCallback,
-        BluetoothIO.StatusCallback {
+public class Tap extends OznerDevice
+{
     /**
      * 收到传感器数据
      */
@@ -66,13 +64,14 @@ public class Tap extends OznerDevice implements
 
 
     final TapSensor mSensor = new TapSensor();
-    final ArrayList<TapRecord> mRecords = new ArrayList<>();
-    TapDatas mDatas;
+    final TreeSet<TapRecord> mRecords = new TreeSet<>();
+    final TapDatas mDatas;
+    final HashSet<String> dataHash = new HashSet<>();
+    final BluetoothIOImp bluetoothIOImp=new BluetoothIOImp();
     Date mLastDataTime = null;
     TapFirmwareTools firmwareTools = new TapFirmwareTools();
     Timer autoUpdateTimer = new Timer();
     int RequestCount = 0;
-    HashSet<String> dataHash = new HashSet<>();
     Bluetooth bluetooth = new Bluetooth();
 
     /**
@@ -107,12 +106,140 @@ public class Tap extends OznerDevice implements
         }
     }
 
+    @Override
+    public Class<?> getIOType() {
+        return BluetoothIO.class;
+    }
+
 
     public Tap(Context context, String Address, String Model, String Setting) {
         super(context, Address, Model, Setting);
         initSetting(Setting);
-        mDatas = new TapDatas(context, address);
+        mDatas = new TapDatas(context, Address());
     }
+
+    class BluetoothIOImp implements
+            BluetoothIO.OnInitCallback,
+            BluetoothIO.OnRecvPacketCallback,
+            BluetoothIO.StatusCallback,
+            BluetoothIO.CheckTransmissionsCompleteCallback
+    {
+        @Override
+        public void onConnected(BaseDeviceIO io) {
+
+        }
+
+        @Override
+        public void onDisconnected(BaseDeviceIO io) {
+            cancelTimer();
+        }
+
+        @Override
+        public void onReady(BaseDeviceIO io) {
+            if (autoUpdateTimer!=null)
+                cancelTimer();
+            autoUpdateTimer=new Timer();
+            autoUpdateTimer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    doTime();
+                }
+            }, 100, 5000);
+        }
+
+        @Override
+        public boolean onIOInit(BaseDeviceIO.DataSendProxy sendHandle) {
+            try {
+                if (!sendTime(sendHandle))
+                    return false;
+                Thread.sleep(100);
+
+                if (!sendSetting(sendHandle))
+                    return false;
+                Thread.sleep(100);
+
+                sendBackground(sendHandle);
+                Thread.sleep(100);
+
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+
+        @Override
+        public void onRecvPacket(byte[] bytes) {
+            if (bytes == null) return;
+            if (bytes.length < 1) return;
+            byte opCode = bytes[0];
+            byte[] data = null;
+            if (bytes.length > 1)
+                data = Arrays.copyOfRange(bytes, 1, bytes.length);
+
+            switch (opCode) {
+                case opCode_ReadSensorRet: {
+                    dbg.i("读传感器完成");
+                    synchronized (this) {
+                        mSensor.FromBytes(data, 0);
+                    }
+                    Intent intent = new Intent(ACTION_BLUETOOTHTAP_SENSOR);
+                    intent.putExtra("Address", IO().getAddress());
+                    intent.putExtra("Sensor", data);
+                    context().sendBroadcast(intent);
+                    break;
+                }
+
+                case opCode_ReadTDSRecordRet: {
+                    if (data != null) {
+                        TapRecord record = new TapRecord();
+                        record.FromBytes(data);
+                        if (record.TDS > 0) {
+                            String hashKey = String.valueOf(record.time.getTime()) + "_" + String.valueOf(record.TDS);
+                            if (dataHash.contains(hashKey)) {
+                                dbg.e("收到水杯重复数据");
+                                break;
+                            } else
+                                dataHash.add(hashKey);
+                            synchronized (mRecords) {
+                                mRecords.add(record);
+                            }
+                            Intent intent = new Intent(ACTION_BLUETOOTHTAP_RECORD);
+                            intent.putExtra("Address", IO().getAddress());
+                            intent.putExtra("Record", data);
+                            context().sendBroadcast(intent);
+
+                        }
+                        mLastDataTime = new Date();
+                        if (record.Index == 0) {
+                            Intent comp_intent = new Intent(ACTION_BLUETOOTHTAP_RECORD_COMPLETE);
+                            comp_intent.putExtra("Address", IO().getAddress());
+                            context().sendBroadcast(comp_intent);
+                            synchronized (mRecords) {
+                                mDatas.addRecord(mRecords.toArray(new TapRecord[mRecords.size()]));
+                                mRecords.clear();
+                                dataHash.clear();
+                            }
+
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+        @Override
+        public boolean CheckTransmissionsComplete(BaseDeviceIO io) {
+            if (mLastDataTime != null) {
+                //如果上几次接收饮水记录的时间小于2秒,不进入定时循环,等待下条饮水记录
+                Date dt = new Date();
+                return (dt.getTime() - mLastDataTime.getTime()) >= 2000;
+            }else
+                return true;
+        }
+
+    }
+
 
     public TapSensor Sensor() {
         return mSensor;
@@ -130,14 +257,25 @@ public class Tap extends OznerDevice implements
         return IO() != null && IO().send(BluetoothIO.makePacket(opCode, data));
     }
 
+    @Override
+    protected void doChangeRunningMode() {
+        sendBackground(null);
+    }
+
     private void sendBackground(BaseDeviceIO.DataSendProxy proxy) {
-        if (!isBackgroundMode()) {
+        if (getRunningMode()==RunningMode.Foreground) {
             if (proxy != null) {
                 proxy.send(BluetoothIO.makePacket(opCode_FrontMode, null));
             } else {
                 send(opCode_FrontMode, null);
             }
         }
+    }
+
+    @Override
+    public void UpdateSetting() {
+        if ((IO()!=null) && (IO().isReady()))
+            sendSetting(null);
     }
 
     public TapSetting Setting() {
@@ -184,7 +322,7 @@ public class Tap extends OznerDevice implements
     }
 
     private boolean sendSetting(BaseDeviceIO.DataSendProxy proxy) {
-        TapSetting setting = (TapSetting) Setting();
+        TapSetting setting =  Setting();
         if (setting == null)
             return false;
         byte[] data = new byte[16];
@@ -233,18 +371,9 @@ public class Tap extends OznerDevice implements
         }
 
         if (proxy != null) {
-            if (proxy.send(BluetoothIO.makePacket(opCode_SetDetectTime, data))) {
-                resetSettingUpdate();
-                return true;
-            } else {
-                return false;
-            }
+            return proxy.send(BluetoothIO.makePacket(opCode_SetDetectTime, data));
         } else {
-            if (send(opCode_SetDetectTime, data)) {
-                resetSettingUpdate();
-                return true;
-            } else
-                return false;
+            return send(opCode_SetDetectTime, data);
         }
 
     }
@@ -252,27 +381,25 @@ public class Tap extends OznerDevice implements
     @Override
     protected void doSetDeviceIO(BaseDeviceIO oldIO, BaseDeviceIO newIO) {
         if (oldIO != null) {
-            IO().setOnInitCallback(null);
-            IO().setRecvPacketCallback(null);
-            IO().unRegisterStatusCallback(this);
+            oldIO.setOnInitCallback(null);
+            oldIO.setRecvPacketCallback(null);
+            oldIO.unRegisterStatusCallback(bluetoothIOImp);
+            newIO.setCheckTransmissionsCompleteCallback(null);
             firmwareTools.bind(null);
         }
+        cancelTimer();
         if (newIO != null) {
-            newIO.setRecvPacketCallback(this);
-            newIO.setOnInitCallback(this);
-            newIO.registerStatusCallback(this);
+            newIO.setRecvPacketCallback(bluetoothIOImp);
+            newIO.setOnInitCallback(bluetoothIOImp);
+            newIO.registerStatusCallback(bluetoothIOImp);
+            newIO.setCheckTransmissionsCompleteCallback(bluetoothIOImp);
             firmwareTools.bind((BluetoothIO) newIO);
         }
     }
 
 
 
-    @Override
-    protected void doBackgroundModeChange() {
-        if (!isBackgroundMode()) {
-            sendBackground(null);
-        }
-    }
+
 
     private void doTime() {
         if (mLastDataTime != null) {
@@ -292,25 +419,6 @@ public class Tap extends OznerDevice implements
 
     }
 
-    @Override
-    public boolean doInit(BaseDeviceIO.DataSendProxy sendHandle) {
-        try {
-            if (!sendTime(sendHandle))
-                return false;
-            Thread.sleep(100);
-
-            if (!sendSetting(sendHandle))
-                return false;
-            Thread.sleep(100);
-
-            sendBackground(sendHandle);
-            Thread.sleep(100);
-
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
 
     private void requestSensor() {
         if (IO() != null) {
@@ -321,98 +429,18 @@ public class Tap extends OznerDevice implements
     private void requestRecord() {
         if (IO() != null) {
             if (IO().send(BluetoothIO.makePacket(opCode_ReadTDSRecord, null))) {
-                mLastDataTime = null;
-                synchronized (mRecords) {
-                    mRecords.clear();
-                }
-            }
-        }
-    }
-
-    @Override
-    public void onRecvPacket(byte[] bytes) {
-        if (bytes == null) return;
-        if (bytes.length < 1) return;
-        byte opCode = bytes[0];
-        byte[] data = null;
-        if (bytes.length > 1)
-            data = Arrays.copyOfRange(bytes, 1, bytes.length);
-
-        switch (opCode) {
-            case opCode_ReadSensorRet: {
-                dbg.i("读传感器完成");
-                synchronized (this) {
-                    mSensor.FromBytes(data, 0);
-                }
-                Intent intent = new Intent(ACTION_BLUETOOTHTAP_SENSOR);
-                intent.putExtra("Address", IO().getAddress());
-                intent.putExtra("Sensor", data);
-                getContext().sendBroadcast(intent);
-                break;
-            }
-
-            case opCode_ReadTDSRecordRet: {
-                if (data != null) {
-                    TapRecord record = new TapRecord();
-                    record.FromBytes(data);
-                    if (record.TDS > 0) {
-                        String hashKey = String.valueOf(record.time.getTime()) + "_" + String.valueOf(record.TDS);
-                        if (dataHash.contains(hashKey)) {
-                            dbg.e("收到水杯重复数据");
-                            break;
-                        } else
-                            dataHash.add(hashKey);
-                        synchronized (mRecords) {
-                            mRecords.add(0, record);
-                        }
-                        Intent intent = new Intent(ACTION_BLUETOOTHTAP_RECORD);
-                        intent.putExtra("Address", IO().getAddress());
-                        intent.putExtra("Record", data);
-                        getContext().sendBroadcast(intent);
-
-                    }
-                    mLastDataTime = new Date();
-                    if (record.Index == 0) {
-                        Intent comp_intent = new Intent(ACTION_BLUETOOTHTAP_RECORD_COMPLETE);
-                        comp_intent.putExtra("Address", IO().getAddress());
-                        getContext().sendBroadcast(comp_intent);
-                        synchronized (mRecords) {
-                            mDatas.addRecord(mRecords);
-                        }
-
-                    }
-                }
-                break;
+                dbg.i("请求记录");
             }
         }
     }
 
 
-    @Override
-    public void onConnected(BaseDeviceIO io) {
-        Intent intent = new Intent();
-        intent.setAction(ACTION_BLUETOOTHTAP_CONNECTED);
-        intent.putExtra("Address", IO().getAddress());
-        getContext().sendBroadcast(intent);
-    }
 
-    @Override
-    public void onDisconnected(BaseDeviceIO io) {
-        autoUpdateTimer.cancel();
-        Intent intent = new Intent();
-        intent.setAction(ACTION_BLUETOOTHTAP_DISCONNECTED);
-        intent.putExtra("Address", IO().getAddress());
-        getContext().sendBroadcast(intent);
-
-    }
-
-    @Override
-    public void onReady(BaseDeviceIO io) {
-        autoUpdateTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                doTime();
-            }
-        }, 1000);
+    private void cancelTimer() {
+        if (autoUpdateTimer!=null) {
+            autoUpdateTimer.cancel();
+            autoUpdateTimer.purge();
+            autoUpdateTimer=null;
+        }
     }
 }

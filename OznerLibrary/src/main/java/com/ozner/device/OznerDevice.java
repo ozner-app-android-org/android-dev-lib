@@ -2,31 +2,32 @@ package com.ozner.device;
 
 import android.content.Context;
 
+import com.ozner.XObject;
+
 /**
  * @author zhiyongxu
  *         浩泽设备基类
- * @category Device
  */
-public abstract class OznerDevice {
-    public String address;
+public abstract class OznerDevice extends XObject {
+    private String address;
     private BaseDeviceIO deviceIO;
-    private Context context;
     private DeviceSetting setting;
     private String Model;
-    private boolean setChanged = false;
-    private boolean isBackgoundMode = false;
+
+
+    public abstract Class<?> getIOType();
 
     public OznerDevice(Context context, String Address, String Model, String Setting) {
+        super(context);
         this.address = Address;
         this.Model = Model;
-        this.context = context;
         this.setting = initSetting(Setting);
+
     }
 
     /**
      * 设备型号
      *
-     * @return
      */
     public String Model() {
         return Model;
@@ -35,7 +36,6 @@ public abstract class OznerDevice {
     /**
      * 设置对象
      *
-     * @return
      */
     public DeviceSetting Setting() {
         return setting;
@@ -45,7 +45,6 @@ public abstract class OznerDevice {
     /**
      * 地址
      *
-     * @return
      */
     public String Address() {
         return address;
@@ -54,15 +53,11 @@ public abstract class OznerDevice {
     /**
      * 名称
      *
-     * @return
      */
     public String getName() {
         return setting.name();
     }
 
-    protected Context getContext() {
-        return context;
-    }
 
     /**
      * 蓝牙控制对象
@@ -76,7 +71,6 @@ public abstract class OznerDevice {
     /**
      * 判断设备是否连接
      *
-     * @return
      */
     public boolean connected() {
         return ((deviceIO != null) && (deviceIO.isReady()));
@@ -92,16 +86,9 @@ public abstract class OznerDevice {
      * 通知设备设置变更
      */
     public void UpdateSetting() {
-        setChanged = true;
     }
 
-    protected void resetSettingUpdate() {
-        setChanged = false;
-    }
 
-    protected boolean isSetChanged() {
-        return setChanged;
-    }
 
     protected abstract void doSetDeviceIO(BaseDeviceIO oldIO, BaseDeviceIO newIO);
 
@@ -117,26 +104,11 @@ public abstract class OznerDevice {
 
         this.deviceIO = deviceIO;
         if (deviceIO != null) {
-            deviceIO.setBackgroundMode(isBackgroundMode());
             deviceIO.open();
         }
 
         return true;
     }
-
-    public void setBackground(boolean isBackground) {
-        if (isBackgoundMode != isBackground) {
-            isBackgoundMode = isBackground;
-            doBackgroundModeChange();
-        }
-        isBackgoundMode = isBackground;
-    }
-
-    public boolean isBackgroundMode() {
-        return isBackgoundMode;
-    }
-
-    protected abstract void doBackgroundModeChange();
 
 
 }

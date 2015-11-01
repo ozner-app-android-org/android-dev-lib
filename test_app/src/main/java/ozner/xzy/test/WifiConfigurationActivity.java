@@ -22,6 +22,7 @@ import android.widget.Toast;
 import com.dd.CircularProgressButton;
 import com.ozner.wifi.mxchip.ConfigurationDevice;
 import com.ozner.wifi.mxchip.WifiConfiguration;
+import com.ozner.wifi.mxchip.WifiSearch;
 
 
 /**
@@ -38,35 +39,10 @@ public class WifiConfigurationActivity extends Activity implements WifiConfigura
     SharedPreferences wifiPreferences;
     Monitor monitor;
     ConfigurationDevice selectionDevice = null;
-    WifiConfiguration wifiConfiguration;
-    Handler handler;
-    private void loadDevice()
-    {
-        if (selectionDevice==null)
-        {
-            findViewById(R.id.deviceInfoPanel).setVisibility(View.INVISIBLE);
-        }else {
-            ((TextView) this.findViewById(R.id.name)).setText("名称:" + selectionDevice.name);
-            ((TextView) this.findViewById(R.id.type)).setText("类型:" + selectionDevice.Type);
-            ((TextView) this.findViewById(R.id.rom)).setText("rom:" + selectionDevice.firmware);
-            ((TextView) this.findViewById(R.id.ip)).setText("IP:" + selectionDevice.localIP);
-            ((TextView) this.findViewById(R.id.connected)).setText("激活:" + selectionDevice.activated);
-            findViewById(R.id.deviceInfoPanel).setVisibility(View.VISIBLE);
-            if ((selectionDevice.activated) && (!selectionDevice.activeDeviceID.isEmpty())) {
-                nextButton.setCompleteText("完成");
-            }
-            nextButton.setProgress(100);
-        }
-    }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        if (selectionDevice!=null) {
-            outState.putString("selectDevice", selectionDevice.toJSON());
-        }else
-        {
-            outState.remove("selectDevice");
-        }
+
         super.onSaveInstanceState(outState);
     }
 
@@ -113,7 +89,23 @@ public class WifiConfigurationActivity extends Activity implements WifiConfigura
                 nextButton.setProgress(100);
             }
         }
+        WifiSearch search=new WifiSearch(this);
+        search.startWifiSearch(new WifiSearch.WifiSearchDeviceListener() {
+            @Override
+            public void onWifiSearchFound(ConfigurationDevice device) {
 
+            }
+
+            @Override
+            public void onWifiSearchStart() {
+
+            }
+
+            @Override
+            public void onWifiSearchStop() {
+
+            }
+        });
         //Intent intent=new Intent(this,WifiActivateActivity.class);
         //intent.putExtra("json", "{\"Type\":\"FOG_HAOZE_AIR\",\"ap\":\"ITDEV\",\"firmware\":\"FOG_HAOZE_AIR@004\",\"devPasswd\":\"12345678\",\"activated\":false,\"localPort\":8000,\"name\":\"EMW3162(C04DF4)\",\"connected\":false,\"localIP\":\"10.203.1.74\",\"loginId\":\"admin\"}");
 

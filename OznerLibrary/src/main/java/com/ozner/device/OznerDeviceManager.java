@@ -3,6 +3,7 @@ package com.ozner.device;
 import android.content.Context;
 import android.content.Intent;
 
+import com.ozner.XObject;
 import com.ozner.bluetooth.BluetoothIOMgr;
 import com.ozner.util.Helper;
 import com.ozner.util.SQLiteDB;
@@ -14,7 +15,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
-public class OznerDeviceManager implements IOManager.IOManagerCallback {
+public class OznerDeviceManager extends XObject {
 
     /**
      * 新增一个配对设备广播
@@ -28,28 +29,64 @@ public class OznerDeviceManager implements IOManager.IOManagerCallback {
      * 修改设备广播
      */
     public final static String ACTION_OZNER_MANAGER_DEVICE_CHANGE = "com.ozner.manager.device.change";
+
+    public final static String ACTION_OZNER_MANAGER_OWNER_CHANGE="com.ozner.manager.owner.change";
+
     static OznerDeviceManager instance;
     final HashMap<String, OznerDevice> devices = new HashMap<>();
     final ArrayList<BaseDeviceManager> mManagers = new ArrayList<>();
+    final IOManagerCallbackImp ioManagerCallbackImp=new IOManagerCallbackImp();
+
     SQLiteDB sqLiteDB;
     String owner = "";
-    boolean isBackground = false;
-    //蓝牙管理器
+
+    class IOManagerCallbackImp implements IOManager.IOManagerCallback
+    {
+        @Override
+        public void onDeviceAvailable(IOManager manager, BaseDeviceIO io) {
+            if (io != null) {
+                OznerDevice device = getDevice(io.getAddress());
+                if (device != null) {
+                    try {
+                        device.Bind(io);
+                    } catch (DeviceNotReadyException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
+        @Override
+        public void onDeviceUnavailable(IOManager manager, BaseDeviceIO io) {
+            if (io != null) {
+                OznerDevice device = getDevice(io.getAddress());
+                if (device != null) {
+                    try {
+                        device.Bind(null);
+                    } catch (DeviceNotReadyException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     *   蓝牙管理器
+     */
     BluetoothIOMgr bluetoothIOMgr;
-    Context context;
 
 
     public OznerDeviceManager(Context context) throws InstantiationException {
+        super(context);
         if (instance != null) {
             throw new InstantiationException();
         }
-
-        this.context = context;
         sqLiteDB = new SQLiteDB(context);
         //导入老表
         importOldDB();
         bluetoothIOMgr = new BluetoothIOMgr(context);
-        bluetoothIOMgr.setIoManagerCallback(this);
+        bluetoothIOMgr.setIoManagerCallback(ioManagerCallbackImp);
         instance = this;
     }
 
@@ -93,7 +130,7 @@ public class OznerDeviceManager implements IOManager.IOManagerCallback {
                 if (!ownerList.contains(owner))
                     ownerList.add(owner);
             }
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
 
 
@@ -107,7 +144,7 @@ public class OznerDeviceManager implements IOManager.IOManagerCallback {
                 if (!ownerList.contains(owner))
                     ownerList.add(owner);
             }
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
 
         for (String owner : ownerList) {
@@ -117,21 +154,21 @@ public class OznerDeviceManager implements IOManager.IOManagerCallback {
             try {
                 String sql = String.format("INSERT INTO %s (Address,getModel,JSON) SELECT Address,'CUP001',JSON from CupSetting where Owner=?", table);
                 sqLiteDB.execSQLNonQuery(sql, new String[]{owner});
-            } catch (Exception e) {
+            } catch (Exception ignored) {
 
             }
 
             try {
                 String sql = String.format("INSERT INTO %s (Address,getModel,JSON) SELECT Address,getModel,JSON from OznerDevices where Owner=?", table);
                 sqLiteDB.execSQLNonQuery(sql, new String[]{owner});
-            } catch (Exception e) {
+            } catch (Exception ignored) {
 
             }
         }
         try {
             sqLiteDB.execSQLNonQuery("DROP TABLE CupSetting", new String[]{});
             sqLiteDB.execSQLNonQuery("DROP TABLE OznerDevices", new String[]{});
-        } catch (Exception e) {
+        } catch (Exception ignored) {
 
         }
     }
@@ -164,6 +201,7 @@ public class OznerDeviceManager implements IOManager.IOManagerCallback {
         CloseAll();
         LoadDevices();
         dbg.i("Set Owner:%s", owner);
+        context().sendBroadcast(new Intent(ACTION_OZNER_MANAGER_OWNER_CHANGE));
     }
 
     protected void CloseAll() {
@@ -181,8 +219,6 @@ public class OznerDeviceManager implements IOManager.IOManagerCallback {
                 if (!devices.containsKey(Address)) {
                     for (BaseDeviceManager mgr : getManagers()) {
                         OznerDevice device = mgr.loadDevice(Address, Model, Json);
-                        device.setBackground(isBackground());
-
                         if (device != null) {
                             devices.put(Address, device);
                             break;
@@ -207,7 +243,7 @@ public class OznerDeviceManager implements IOManager.IOManagerCallback {
             }
             Intent intent = new Intent(ACTION_OZNER_MANAGER_DEVICE_REMOVE);
             intent.putExtra("Address", address);
-            context.sendBroadcast(intent);
+            context().sendBroadcast(intent);
 
             ArrayList<BaseDeviceManager> list = getManagers();
             for (BaseDeviceManager mgr : list) {
@@ -271,7 +307,7 @@ public class OznerDeviceManager implements IOManager.IOManagerCallback {
      * @param io 接口实例
      * @return 返回NULL无对应的设备
      */
-    public OznerDevice getDevice(BaseDeviceIO io) throws NotSupportDeviceException {
+    public OznerDevice                                                                                                                                           getDevice(BaseDeviceIO io) throws NotSupportDeviceException {
         synchronized (mManagers) {
             for (BaseDeviceManager mgr : mManagers) {
                 if (mgr.isMyDevice(io)) {
@@ -316,7 +352,6 @@ public class OznerDeviceManager implements IOManager.IOManagerCallback {
                 isNew = false;
             } else
                 isNew = true;
-            device.setBackground(isBackground());
 
             String sql = String.format("INSERT OR REPLACE INTO %s (Address,getModel,JSON) VALUES (?,?,?);", getOwnerTableName());
 
@@ -328,8 +363,8 @@ public class OznerDeviceManager implements IOManager.IOManagerCallback {
             intent.putExtra("Address", Address);
             intent.setAction(isNew ? ACTION_OZNER_MANAGER_DEVICE_ADD
                     : ACTION_OZNER_MANAGER_DEVICE_CHANGE);
-            context.sendBroadcast(intent);
-            device.resetSettingUpdate(); //刷新设置变更
+            context().sendBroadcast(intent);
+            device.UpdateSetting(); //刷新设置变更
 
             ArrayList<BaseDeviceManager> list = getManagers();
             if (isNew) {
@@ -363,60 +398,16 @@ public class OznerDeviceManager implements IOManager.IOManagerCallback {
         }
     }
 
-    /**
-     * 注销设备管理器
-     */
-    public void unregisterManager(BaseDeviceManager manager) {
-        synchronized (mManagers) {
-            if (mManagers.contains(manager))
-                mManagers.remove(manager);
-        }
-    }
+//    /**
+//     * 注销设备管理器
+//     */
+//    public void unregisterManager(BaseDeviceManager manager) {
+//        synchronized (mManagers) {
+//            if (mManagers.contains(manager))
+//                mManagers.remove(manager);
+//        }
+//    }
 
 
-    public boolean isBackground() {
-        return isBackground;
-    }
 
-    /**
-     * 设置前后台模式
-     */
-    public void setBackgroundMode(boolean isBackground) {
-        if (this.isBackground == isBackground) return;
-        this.isBackground = isBackground;
-        bluetoothIOMgr.setBackgroundMode(isBackground);
-        synchronized (devices) {
-            for (OznerDevice device : devices.values()) {
-                device.setBackground(isBackground);
-            }
-        }
-    }
-
-    @Override
-    public void onDeviceAvailable(IOManager manager, BaseDeviceIO io) {
-        if (io != null) {
-            OznerDevice device = getDevice(io.getAddress());
-            if (device != null) {
-                try {
-                    device.Bind(io);
-                } catch (DeviceNotReadyException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-    @Override
-    public void onDeviceUnavailable(IOManager manager, BaseDeviceIO io) {
-        if (io != null) {
-            OznerDevice device = getDevice(io.getAddress());
-            if (device != null) {
-                try {
-                    device.Bind(null);
-                } catch (DeviceNotReadyException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
 }

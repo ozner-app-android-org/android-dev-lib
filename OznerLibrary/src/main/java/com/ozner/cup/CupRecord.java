@@ -10,7 +10,7 @@ import java.util.Date;
  *
  * @author zhiyongxu
  */
-public class CupRecord {
+public class CupRecord implements Comparable {
     /**
      * 时间
      */
@@ -57,5 +57,16 @@ public class CupRecord {
         Count = ByteUtil.getShort(data, 12);
         Temperature = ByteUtil.getShort(data, 14);
         TDS = ByteUtil.getShort(data, 16);
+    }
+
+    @Override
+    public int hashCode() {
+        return time.hashCode();
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        CupRecord cup = (CupRecord)o;
+        return time.compareTo(cup.time);
     }
 }

@@ -17,7 +17,7 @@ import java.util.Date;
  * @category 水探头
  */
 @SuppressLint("SimpleDateFormat")
-class TapRecord {
+class TapRecord implements Comparable{
     public int id;
     public Date time;
     public int Index = 0;
@@ -70,6 +70,12 @@ class TapRecord {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        TapRecord tap = (TapRecord)o;
+        return time.compareTo(tap.time);
     }
 
 }

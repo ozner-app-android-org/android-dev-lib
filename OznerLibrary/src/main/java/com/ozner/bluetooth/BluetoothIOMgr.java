@@ -15,30 +15,15 @@ import com.ozner.device.IOManager;
  * Created by xzyxd on 2015/10/29.
  */
 public class BluetoothIOMgr extends IOManager {
-    Context context;
     BluetoothScan bluetoothScan;
     ScanCallbackImp scanCallback = new ScanCallbackImp();
 
     public BluetoothIOMgr(Context context) {
-        this.context = context;
+        super(context);
         bluetoothScan = new BluetoothScan(context);
         bluetoothScan.setScanCallback(scanCallback);
     }
 
-    /**
-     * 设置后台运行模式
-     */
-    @Override
-    public void setBackgroundMode(boolean isBackground) {
-        if (isBackgroundMode() == isBackground) return;
-        super.setBackgroundMode(isBackground);
-        bluetoothScan.setBackgroundMode(isBackground);
-        synchronized (devices) {
-            for (BaseDeviceIO io : devices.values()) {
-                io.setBackgroundMode(isBackground);
-            }
-        }
-    }
 
     @Override
     public void Start() {
@@ -56,9 +41,7 @@ public class BluetoothIOMgr extends IOManager {
             BluetoothIO bluetoothIO = null;
             synchronized (devices) {
                 if (!devices.containsKey(device.getAddress())) {
-
-                    bluetoothIO = new BluetoothIO(context, device, scanRep.Model, scanRep.Platform, scanRep.Firmware == null ? 0 : scanRep.Firmware.getTime());
-                    bluetoothIO.setBackgroundMode(isBackgroundMode());
+                    bluetoothIO = new BluetoothIO(context(), device, scanRep.Model, scanRep.Platform, scanRep.Firmware == null ? 0 : scanRep.Firmware.getTime());
                     devices.put(device.getAddress(), bluetoothIO);
                 } else
                     bluetoothIO = (BluetoothIO) devices.get(device.getAddress());
