@@ -15,7 +15,7 @@ public class ServiceThread implements Runnable {
     String data = "";
     String name, model, type, category, uuid, sn, mac, manufacturer, version;
     int count = 0;
-    // ���߳������Socket���Ӧ��������
+
     DataInputStream serverIn = null;
     private FTC_Listener listener = null;
     private OutputStream outputStream = null;
@@ -76,13 +76,22 @@ public class ServiceThread implements Runnable {
                 }
             }
             outputStream = s.getOutputStream();
-            outputStream
-                    .write("HTTP/1.1 202 Accepted\r\nContent-Type: application/json\r\nConnection: keep-alive\r\n\r\n"
-                            .getBytes());
+            String outputData = "{}";
+            StringBuilder output = new StringBuilder();
+            output.append("HTTP/1.1 200 OK\n");
+            output.append("Connection: keep-alive\r\n");
+            output.append("Content-Type: application/json\n");
+            output.append("Connection: keep-alive\n");
+            output.append("Content-Length:" + outputData.length());
+            output.append("\r\n\r\n");
+            output.append(outputData);
+            outputStream.write(output.toString().getBytes());
+
             Log.e("====", "data:" + data.trim());
             data = data.substring(data.indexOf("\r\n\r\n") + 4);
+
             if (null != listener)
-                listener.onFTCfinished(s, data.trim());
+                listener.onFTCfinished(data.trim());
         } catch (IOException e) {
             e.printStackTrace();
         }

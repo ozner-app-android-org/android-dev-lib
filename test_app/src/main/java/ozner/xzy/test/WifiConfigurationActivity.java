@@ -11,6 +11,7 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.text.InputType;
 import android.view.View;
 import android.widget.CheckBox;
@@ -20,38 +21,33 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.dd.CircularProgressButton;
-import com.ozner.wifi.mxchip.ConfigurationDevice;
-import com.ozner.wifi.mxchip.WifiConfiguration;
-import com.ozner.wifi.mxchip.WifiSearch;
+import com.ozner.wifi.mxchip.MXChipIO;
+import com.ozner.wifi.mxchip.MXChipPair;
 
 
 /**
  * A placeholder fragment containing a simple view.
  */
-public class WifiConfigurationActivity extends Activity implements WifiConfiguration.WifiConfigurationListener {
-    public static final String ActivityResultKey="Result";
-
+public class WifiConfigurationActivity extends Activity {
     EditText wifi_ssid;
     EditText wifi_passwd;
     CircularProgressButton nextButton;
     CheckBox showpasswd;
+    TextView status_text;
     WifiManager wifiManager;
     SharedPreferences wifiPreferences;
     Monitor monitor;
-    ConfigurationDevice selectionDevice = null;
+    final MXChipPairImp mxChipPairImp = new MXChipPairImp();
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-
         super.onSaveInstanceState(outState);
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        handler=new Handler();
         setContentView(R.layout.activity_wifi_configuration);
-        wifiConfiguration = new WifiConfiguration(this);
         wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE);
         wifiPreferences = this.getSharedPreferences("WifiPassword", Context.MODE_PRIVATE);
         monitor = new Monitor();
@@ -62,6 +58,7 @@ public class WifiConfigurationActivity extends Activity implements WifiConfigura
 
         wifi_ssid = (EditText) this.findViewById(R.id.wifi_ssid);
         wifi_passwd = (EditText) this.findViewById(R.id.wifi_password);
+        status_text = (TextView) this.findViewById(R.id.statusText);
         nextButton = (CircularProgressButton) this.findViewById(R.id.NextButton);
         nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -83,34 +80,6 @@ public class WifiConfigurationActivity extends Activity implements WifiConfigura
         });
 
         loadWifi();
-        if (savedInstanceState!=null) {
-            if (savedInstanceState.containsKey("selectDevice")) {
-                selectionDevice = ConfigurationDevice.loadByJSON(savedInstanceState.getString("selectDevice"));
-                nextButton.setProgress(100);
-            }
-        }
-        WifiSearch search=new WifiSearch(this);
-        search.startWifiSearch(new WifiSearch.WifiSearchDeviceListener() {
-            @Override
-            public void onWifiSearchFound(ConfigurationDevice device) {
-
-            }
-
-            @Override
-            public void onWifiSearchStart() {
-
-            }
-
-            @Override
-            public void onWifiSearchStop() {
-
-            }
-        });
-        //Intent intent=new Intent(this,WifiActivateActivity.class);
-        //intent.putExtra("json", "{\"Type\":\"FOG_HAOZE_AIR\",\"ap\":\"ITDEV\",\"firmware\":\"FOG_HAOZE_AIR@004\",\"devPasswd\":\"12345678\",\"activated\":false,\"localPort\":8000,\"name\":\"EMW3162(C04DF4)\",\"connected\":false,\"localIP\":\"10.203.1.74\",\"loginId\":\"admin\"}");
-
-
-        //this.startActivityForResult(intent, 0x100);
 
     }
 
@@ -130,31 +99,16 @@ public class WifiConfigurationActivity extends Activity implements WifiConfigura
         }
     }
 
-    @Override
-    public void onWifiConfiguration(ConfigurationDevice device) {
-        selectionDevice=device;
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                loadDevice();
-            }
-        });
-    }
-
-    @Override
-    public void onWifiConfigurationStart() {
-        nextButton.setProgress(0);
-        nextButton.setProgress(50);
-    }
-
-    @Override
-    public void onWifiConfigurationStop() {
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                nextButton.setProgress(selectionDevice==null?-1:100);
-            }
-        });
+    private void loadDevice(MXChipIO io) {
+        if (io == null) {
+            findViewById(R.id.deviceInfoPanel).setVisibility(View.INVISIBLE);
+        } else {
+            ((TextView) this.findViewById(R.id.name)).setText("名称:" + io.getName());
+            ((TextView) this.findViewById(R.id.type)).setText("类型:" + io.getModel());
+            ((TextView) this.findViewById(R.id.deviceId)).setText("设备MAC:" + io.getAddress());
+            findViewById(R.id.deviceInfoPanel).setVisibility(View.VISIBLE);
+            nextButton.setProgress(100);
+        }
     }
 
     class Monitor extends BroadcastReceiver {
@@ -171,45 +125,102 @@ public class WifiConfigurationActivity extends Activity implements WifiConfigura
 
     @Override
     protected void onDestroy() {
-        wifiConfiguration.stopWifiConfiguration();
         super.onDestroy();
     }
 
+    asyHandle handle = new asyHandle();
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if ((requestCode==0x100) && (resultCode==0x100))
-        {
-            Intent intent=new Intent();
-            intent.putExtra(ActivityResultKey,selectionDevice.toJSON());
-            setResult(RESULT_OK, intent);
-            finish();
+    class asyHandle extends Handler {
+
+
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case 0:
+                    status_text.setText(msg.obj.toString());
+                    break;
+                case 1:
+                    loadDevice((MXChipIO) msg.obj);
+                    break;
+            }
+            super.handleMessage(msg);
         }
-        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void setStatusText(final String text) {
+        Message msg = new Message();
+        msg.what = 0;
+        msg.obj = text;
+        handle.sendMessage(msg);
+    }
+
+    class MXChipPairImp implements MXChipPair.MXChipPairCallback {
+
+        @Override
+        public void onSendConfiguration() {
+            setStatusText("发送WIFI配置信息");
+            handle.post(new Runnable() {
+                @Override
+                public void run() {
+                    nextButton.setProgress(50);
+                }
+            });
+
+
+        }
+
+        @Override
+        public void onWaitConnectWifi() {
+            setStatusText("等待设备重启");
+            handle.post(new Runnable() {
+                @Override
+                public void run() {
+                    nextButton.setProgress(70);
+                }
+            });
+
+        }
+
+        @Override
+        public void onActivate() {
+            setStatusText("等待设备激活");
+            handle.post(new Runnable() {
+                @Override
+                public void run() {
+                    nextButton.setProgress(80);
+                }
+            });
+
+        }
+
+        @Override
+        public void onPairComplete(MXChipIO io) {
+            Message msg = new Message();
+            msg.what = 1;
+            msg.obj = io;
+            handle.sendMessage(msg);
+            handle.post(new Runnable() {
+                @Override
+                public void run() {
+                    nextButton.setProgress(100);
+                }
+            });
+        }
+
+        @Override
+        public void onPairFailure(Exception e) {
+            setStatusText("配网错误:" + (e == null ? "" : e.toString()));
+            handle.post(new Runnable() {
+                @Override
+                public void run() {
+                    nextButton.setProgress(-1);
+                }
+            });
+        }
     }
 
     private void onClickStartButton() {
-        if(nextButton.getProgress()==100) {
-            if (selectionDevice!=null) {
-                if ((selectionDevice.activated) && (!selectionDevice.activeDeviceID.isEmpty())) {
-                    Intent intent = new Intent();
-                    intent.putExtra(ActivityResultKey, selectionDevice.toJSON());
-                    setResult(RESULT_OK, intent);
-                    finish();
-                } else {
-                    Intent intent = new Intent(this, WifiActivateActivity.class);
-                    intent.putExtra("json", selectionDevice.toJSON());
-                    this.startActivity(intent);
-                }
-            }
-        }else
-        {
-            if (wifiManager.getConnectionInfo().getSupplicantState()!=SupplicantState.COMPLETED)
-            {
-                Toast toast = Toast.makeText(this, "没有连接WIFI", Toast.LENGTH_LONG);
-                toast.show();
-                return;
-            }
+        try {
             String ssid=wifi_ssid.getText().toString().trim();
             if (ssid.isEmpty())
             {
@@ -223,12 +234,17 @@ public class WifiConfigurationActivity extends Activity implements WifiConfigura
             }finally {
                 editor.commit();
             }
-            wifiConfiguration.startWifiConfiguration(ssid, wifi_passwd.getText().toString(), this);
-        }
-    }
-    private void startConfiguration()
-    {
 
+            MXChipPair.Pair(this, wifi_ssid.getText().toString().trim(),
+                    wifi_passwd.getText().toString(), mxChipPairImp);
+            nextButton.setProgress(0);
+
+            //nextButton.setProgress(10);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            nextButton.setProgress(-1);
+        }
     }
 
 

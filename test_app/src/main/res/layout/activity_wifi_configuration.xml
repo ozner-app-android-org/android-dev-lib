@@ -63,7 +63,7 @@
         android:layout_width="match_parent"
         android:layout_marginTop="10dp"
         android:layout_below="@+id/infoPanel"
-        android:layout_height="100dp"
+        android:layout_height="90dp"
         android:visibility="invisible"
         android:id="@+id/deviceInfoPanel"
         android:orientation="horizontal"
@@ -92,6 +92,7 @@
                 android:orientation="vertical"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -114,46 +115,25 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
-                    android:id="@+id/rom"
+                    android:id="@+id/deviceId"
                     android:textColor="@android:color/secondary_text_dark"
-
-                    android:text="rom:FOG_HAOZE_AIR@004"
+                    android:text="设备MAC:11:22:33:44:55:66"
                     android:textSize="16sp"
                     />
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
 
-                    android:orientation="horizontal"
-                    >
-                    <TextView
-
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:id="@+id/ip"
-                        android:textColor="@android:color/secondary_text_dark"
-
-                        android:text="ip:255.255.255.255"
-                        android:textSize="16sp"
-                        />
-
-                    <TextView
-                        android:layout_marginLeft="10dp"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textColor="@android:color/secondary_text_dark"
-                        android:id="@+id/connected"
-                        android:text="连接:否"
-                        android:textSize="16sp"
-                        />
-                </LinearLayout>
             </LinearLayout>
         </RelativeLayout>
-
-
     </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/statusText"
+        android:text="123456"
+        android:textSize="15sp"
+        android:layout_marginBottom="15dp"
+        android:layout_alignParentBottom="true" />
+
     <com.dd.CircularProgressButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -162,9 +142,7 @@
         android:layout_marginTop="10dp"
         android:layout_marginBottom="5dp"
         app:cpb_textIdle="开始配网"
-
         app:cpb_textComplete="下一步"
         app:cpb_textError="重试"
-
         android:id="@+id/NextButton"/>
 </RelativeLayout>

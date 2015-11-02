@@ -30,7 +30,7 @@ public class HttpUtil {
         try {
             //connection.connect();
             OutputStream outputStream = connection.getOutputStream();
-            OutputStreamWriter writer = new OutputStreamWriter(outputStream,charset);
+            OutputStreamWriter writer = new OutputStreamWriter(outputStream);
             try {
                 writer.write(json);
             } finally {

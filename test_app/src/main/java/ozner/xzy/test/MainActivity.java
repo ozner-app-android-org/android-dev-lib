@@ -1,5 +1,7 @@
 package ozner.xzy.test;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
@@ -7,12 +9,13 @@ import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 
+import com.ozner.application.OznerBLEService;
 import com.ozner.ui.library.RoundDrawable;
-import com.ozner.wifi.mxchip.WifiSearch;
 
 
 public class MainActivity extends ActionBarActivity implements View.OnClickListener {
     private static final int WifiActivityRequestCode = 0x100;
+    final Monitor mMonitor = new Monitor();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -26,10 +29,39 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         setSupportActionBar(toolbar);
         toolbar.setNavigationIcon(icon);
         findViewById(R.id.addWifiButton).setOnClickListener(this);
+        Intent intent = new Intent(this, WifiConfigurationActivity.class);
+        startActivityForResult(intent, WifiActivityRequestCode);
+    }
 
+    private OznerBLEService.OznerBLEBinder getService() {
+        OznerBaseApplication app = (OznerBaseApplication) getApplication();
+        return app.getService();
+    }
 
+    class Monitor extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(OznerApplication.ACTION_ServiceInit)) {
 
+            }
 
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        this.unregisterReceiver(mMonitor);
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
     }
 
     @Override

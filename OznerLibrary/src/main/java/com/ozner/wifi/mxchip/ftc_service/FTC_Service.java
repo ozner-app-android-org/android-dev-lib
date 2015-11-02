@@ -26,16 +26,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FTC_Service {
-    private static final int REQUEST_TIMEOUT = 5 * 1000;// ��������ʱ10����
-    private static final int SO_TIMEOUT = 20 * 1000; // ���õȴ����ݳ�ʱʱ��10����
-    // wifi模块连接FTC的标记，0 未连接，1 已连接
-    public static int ftcConTag = 0;
     private static boolean listening;
     private static ServerSocket server = null;
-    private static ServiceThread service;
-    private static FTC_Service ftc = null;
     private Thread listen;
     private EasyLink_plus easylink_plus;
+    private static ServiceThread service;
+    private static FTC_Service ftc = null;
+    // wifi模块连接FTC的标记，0 未连接，1 已连接
+    public static int ftcConTag = 0;
     private Context ctx;
 
     private FTC_Service() {
@@ -106,103 +104,6 @@ public class FTC_Service {
         }).start();
     }
 
-    public void stopTransmitting() {
-        listening = false;
-        ftcConTag = 0;
-        try {
-            if (null != server) {
-                server.close();
-                server = null;
-            }
-            easylink_plus = EasyLink_plus.getInstence(ctx);
-            easylink_plus.stopTransmitting();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void transmitSettings_softap(final String Ssid, final String Key,
-                                        final SoftAP_Listener listener) {
-        new Thread(new Runnable() {
-
-            @Override
-            public void run() {
-                try {
-                    HttpPostData(Ssid, Key, listener);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
-    }
-
-    /**
-     * �������ʱʱ��͵ȴ�ʱ��
-     *
-     * @return HttpClient����
-     */
-    public HttpClient getHttpClient() {
-        BasicHttpParams httpParams = new BasicHttpParams();
-        HttpConnectionParams.setConnectionTimeout(httpParams, REQUEST_TIMEOUT);
-        HttpConnectionParams.setSoTimeout(httpParams, SO_TIMEOUT);
-        HttpClient client = new DefaultHttpClient(httpParams);
-        return client;
-    }
-
-    private void HttpPostData(String Ssid, String Key, SoftAP_Listener listener) {
-        String configString = null;
-        String IPAddress = "10.10.10.1";
-        String configRequestPort = "8000";
-        String configRequestMethod = "/config-write";
-        try {
-            Log.e("HttpPostData", "HttpPostData...");
-            configString = "{\"SSID\": \"" + Ssid + "\", " + "\"PASSWORD\": \""
-                    + Key + "\"}";
-            HttpClient httpclient = getHttpClient();
-            String urlString = "http://" + IPAddress + ":" + configRequestPort
-                    + configRequestMethod;
-            HttpPost httppost = new HttpPost(urlString);
-            httppost.setEntity(new StringEntity(configString));
-            HttpResponse response;
-            response = httpclient.execute(httppost);
-            // ����״̬�룬����ɹ���������
-            int respCode = response.getStatusLine().getStatusCode();
-            if (respCode == HttpURLConnection.HTTP_OK) {
-                listener.onSoftAPconfigOK(respCode);
-            } else {
-                listener.onSoftAPconfigFail(respCode);
-            }
-
-            BufferedReader in = new BufferedReader(new InputStreamReader(
-                    response.getEntity().getContent()));
-
-            String lineStr = "";
-            while ((lineStr = in.readLine()) != null) {
-                // Log.e("BufferedReader", lineStr);
-                if (lineStr.matches("DeviceRegisterOK")) {
-                    listener.onDeviceRegisterOK();
-                } else if (lineStr.matches("DeviceRegisterFail")) {
-                    listener.onDeviceRegisterFail();
-                } else if (lineStr.matches("APConnectOK")) {
-                    listener.onAPConnectOK();
-                } else if (lineStr.matches("APConnectFail")) {
-                    listener.onAPConnectFail();
-                } else if (lineStr.matches("BindFail")) {
-                    listener.onBindFail();
-                } else if (lineStr.contains("uuid")) {
-                    listener.onBindOK(lineStr);
-                } else {
-                    httpclient.getConnectionManager().shutdown();
-                    in.close();
-                }
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            listener.onSoftAPconfigFail(600);
-        }
-    }
-
     public static class MyService implements Runnable {
         // ���屣�����е�Socket
         public final static List<Socket> socketList = new ArrayList<Socket>();
@@ -242,4 +143,105 @@ public class FTC_Service {
             // }
         }
     }
+
+    public void stopTransmitting() {
+        listening = false;
+        ftcConTag = 0;
+        try {
+            if (null != server) {
+                server.close();
+                server = null;
+            }
+            easylink_plus = EasyLink_plus.getInstence(ctx);
+            easylink_plus.stopTransmitting();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void transmitSettings_softap(final String Ssid, final String Key,
+                                        final SoftAP_Listener listener) {
+        new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    HttpPostData(Ssid, Key, listener);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+    private static final int REQUEST_TIMEOUT = 5 * 1000;// ��������ʱ10����
+    private static final int SO_TIMEOUT = 20 * 1000; // ���õȴ����ݳ�ʱʱ��10����
+
+    /**
+     * �������ʱʱ��͵ȴ�ʱ��
+     *
+     * @return HttpClient����
+     */
+    public HttpClient getHttpClient() {
+        BasicHttpParams httpParams = new BasicHttpParams();
+        HttpConnectionParams.setConnectionTimeout(httpParams, REQUEST_TIMEOUT);
+        HttpConnectionParams.setSoTimeout(httpParams, SO_TIMEOUT);
+        HttpClient client = new DefaultHttpClient(httpParams);
+        return client;
+    }
+
+    private void HttpPostData(String Ssid, String Key, SoftAP_Listener listener) {
+        String configString = null;
+        String IPAddress = "10.10.10.1";
+        String configRequestPort = "8000";
+        String configRequestMethod = "/config-write";
+        try {
+            Log.e("HttpPostData", "HttpPostData...");
+            configString = "{\"SSID\": \"" + Ssid + "\", " + "\"PASSWORD\": \""
+                    + Key + "\"}";
+            HttpClient httpclient = getHttpClient();
+            String urlString = "http://" + IPAddress + ":" + configRequestPort
+                    + configRequestMethod;
+            HttpPost httppost = new HttpPost(urlString);
+            httppost.setEntity(new StringEntity(configString));
+            HttpResponse response;
+            response = httpclient.execute(httppost);
+
+            int respCode = response.getStatusLine().getStatusCode();
+            if (respCode == HttpURLConnection.HTTP_OK) {
+                listener.onSoftAPconfigOK(respCode);
+            } else {
+                listener.onSoftAPconfigFail(respCode);
+            }
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(
+                    response.getEntity().getContent()));
+
+            String lineStr = "";
+            while ((lineStr = in.readLine()) != null) {
+                // Log.e("BufferedReader", lineStr);
+                if (lineStr.matches("DeviceRegisterOK")) {
+                    listener.onDeviceRegisterOK();
+                } else if (lineStr.matches("DeviceRegisterFail")) {
+                    listener.onDeviceRegisterFail();
+                } else if (lineStr.matches("APConnectOK")) {
+                    listener.onAPConnectOK();
+                } else if (lineStr.matches("APConnectFail")) {
+                    listener.onAPConnectFail();
+                } else if (lineStr.matches("BindFail")) {
+                    listener.onBindFail();
+                } else if (lineStr.contains("uuid")) {
+                    listener.onBindOK(lineStr);
+                } else {
+                    httpclient.getConnectionManager().shutdown();
+                    in.close();
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            listener.onSoftAPconfigFail(600);
+        }
+    }
 }
+

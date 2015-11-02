@@ -1,23 +1,15 @@
 package com.ozner.wifi.mxchip;
 
 import android.content.Context;
-import android.net.wifi.WifiManager;
 
-import com.mxchip.jmdns.JmdnsAPI;
 import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.IOManager;
 import com.ozner.device.OznerDevice;
 import com.ozner.device.OznerDeviceManager;
-import com.ozner.util.Helper;
 
-import org.fusesource.hawtbuf.Buffer;
-import org.fusesource.hawtbuf.UTF8Buffer;
-import org.fusesource.mqtt.client.CallbackConnection;
-import org.fusesource.mqtt.client.Listener;
-import org.fusesource.mqtt.client.MQTT;
-
-import java.net.URISyntaxException;
 import java.util.HashMap;
+
+//import com.mxchip.jmdns.JmdnsAPI;
 
 /**
  * Created by xzyxd on 2015/10/31.
@@ -34,11 +26,22 @@ public class MXChipIOManager extends IOManager {
             for (OznerDevice device : list) {
                 if (device.getIOType().equals(MXChipIO.class)) {
                     if (!localList.containsKey(device.Address())) {
-                        MXChipIO io = new MXChipIO(context(),proxy,device.Model(),device.Address());
+                        MXChipIO io = new MXChipIO(context(), proxy, device.getName(), device.Model(), device.Address());
                         localList.put(io.getAddress(), io);
                     }
                 }
             }
+        }
+    }
+
+    public MXChipIO createNewIO(String Name, String address, String Model) throws ClassCastException {
+        synchronized (devices) {
+            if (devices.containsKey(address)) {
+                return (MXChipIO) devices.get(address);
+            }
+            MXChipIO io = new MXChipIO(context(), proxy, Name, Model, address);
+            devices.put(address, io);
+            return io;
         }
     }
 

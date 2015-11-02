@@ -29,7 +29,6 @@ import com.ozner.device.NotSupportDeviceException;
 import com.ozner.device.OznerDevice;
 import com.ozner.tap.Tap;
 import com.ozner.tap.TapManager;
-import com.ozner.wifi.mxchip.MXChip;
 import com.ozner.wifi.mxchip.helper.Helper;
 
 import java.text.SimpleDateFormat;
@@ -45,7 +44,6 @@ public class AddDeviceActivity extends Activity {
 	EditText wifi_passwd;
 	Button wifi_bind;
 	Monitor mMonitor=new Monitor();
-	MXChip mxChip;
 	private void loadWifi() {
 //
 //		WifiManager wifi_service = (WifiManager) getSystemService(WIFI_SERVICE);

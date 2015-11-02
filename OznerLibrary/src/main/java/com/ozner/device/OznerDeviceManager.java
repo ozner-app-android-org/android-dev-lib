@@ -8,6 +8,7 @@ import com.ozner.bluetooth.BluetoothIOMgr;
 import com.ozner.util.Helper;
 import com.ozner.util.SQLiteDB;
 import com.ozner.util.dbg;
+import com.ozner.wifi.mxchip.MXChipIOManager;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,6 +40,12 @@ public class OznerDeviceManager extends XObject {
 
     SQLiteDB sqLiteDB;
     String owner = "";
+    /**
+     * 蓝牙管理器
+     */
+    BluetoothIOMgr bluetoothIOMgr;
+    MXChipIOManager mxChipIOManager;
+    GenIOManager ioManager;
 
     class IOManagerCallbackImp implements IOManager.IOManagerCallback
     {
@@ -71,10 +78,7 @@ public class OznerDeviceManager extends XObject {
         }
     }
 
-    /**
-     *   蓝牙管理器
-     */
-    BluetoothIOMgr bluetoothIOMgr;
+
 
 
     public OznerDeviceManager(Context context) throws InstantiationException {
@@ -85,17 +89,24 @@ public class OznerDeviceManager extends XObject {
         sqLiteDB = new SQLiteDB(context);
         //导入老表
         importOldDB();
+        ioManager = new GenIOManager(context);
+
         bluetoothIOMgr = new BluetoothIOMgr(context);
-        bluetoothIOMgr.setIoManagerCallback(ioManagerCallbackImp);
+        mxChipIOManager = new MXChipIOManager(context);
+
+        ioManager.register(bluetoothIOMgr);
+        ioManager.register(mxChipIOManager);
+        ioManager.setIoManagerCallback(ioManagerCallbackImp);
+
         instance = this;
     }
 
     public void start() {
-        bluetoothIOMgr.Start();
+        ioManager.Start();
     }
 
     public void stop() {
-        bluetoothIOMgr.Stop();
+        ioManager.Stop();
     }
 
     public static OznerDeviceManager Instance() {
@@ -104,6 +115,10 @@ public class OznerDeviceManager extends XObject {
 
     public BluetoothIOMgr bluetoothIOMgr() {
         return bluetoothIOMgr;
+    }
+
+    public MXChipIOManager mxChipIOManager() {
+        return mxChipIOManager;
     }
 
     /**
@@ -205,7 +220,7 @@ public class OznerDeviceManager extends XObject {
     }
 
     protected void CloseAll() {
-        bluetoothIOMgr.closeAll();
+        ioManager.closeAll();
     }
 
     private void LoadDevices() {
@@ -326,7 +341,7 @@ public class OznerDeviceManager extends XObject {
     public BaseDeviceIO[] getNotBindDevices() {
         ArrayList<BaseDeviceIO> list = new ArrayList<>();
         ArrayList<BaseDeviceIO> result = new ArrayList<>();
-        Collections.addAll(list, bluetoothIOMgr.getAvailableDevices());
+        Collections.addAll(list, ioManager.getAvailableDevices());
 
         synchronized (this) {
             for (BaseDeviceIO io : list) {

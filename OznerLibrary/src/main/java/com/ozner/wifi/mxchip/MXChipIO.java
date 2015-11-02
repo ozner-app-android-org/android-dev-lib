@@ -7,21 +7,22 @@ import com.ozner.device.DeviceNotReadyException;
 import com.ozner.device.OperateCallback;
 import com.ozner.util.Helper;
 
-import org.fusesource.mqtt.client.MQTT;
-
 /**
  * Created by xzyxd on 2015/10/31.
  */
 public class MXChipIO extends BaseDeviceIO {
     String address="";
+    String name = "";
     MQTTProxy proxy;
     final MQTTProxy.MQTTListener listener=new MQTTListenerImp();
     String out=null;
     String in=null;
-    public MXChipIO(Context context,MQTTProxy proxy,String Model,String address)
+
+    public MXChipIO(Context context, MQTTProxy proxy, String Name, String Model, String address)
     {
         super(context,Model);
         this.address=address;
+        this.name = name;
         this.proxy=proxy;
         proxy.registerListener(listener);
     }
@@ -102,7 +103,7 @@ public class MXChipIO extends BaseDeviceIO {
 
     @Override
     public String getName() {
-        return "MXChip";
+        return name;
     }
 
     @Override

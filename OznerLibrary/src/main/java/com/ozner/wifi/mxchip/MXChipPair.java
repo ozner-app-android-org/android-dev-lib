@@ -8,7 +8,7 @@ import android.net.wifi.WifiManager;
 import com.alibaba.fastjson.JSON;
 import com.mxchip.jmdns.JmdnsAPI;
 import com.mxchip.jmdns.JmdnsListener;
-import com.ozner.device.OperateCallback;
+import com.ozner.device.OznerDeviceManager;
 import com.ozner.util.Helper;
 import com.ozner.util.HttpUtil;
 import com.ozner.wifi.mxchip.ftc_service.FTC_Listener;
@@ -19,7 +19,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.net.Socket;
 
 /**
  * Created by xzyxd on 2015/11/1.
@@ -71,9 +70,9 @@ public class MXChipPair {
         /**
          * 配网完成
          *
-         * @param DeviceId 收到的设备ID
+         * @param io 配对好的设备IO接口
          */
-        void onPairComplete(String DeviceId);
+        void onPairComplete(MXChipIO io);
 
         /**
          * 配网失败
@@ -102,9 +101,8 @@ public class MXChipPair {
         }
 
         @Override
-        public void onFTCfinished(Socket s, String jsonString) {
+        public void onFTCfinished(String jsonString) {
             device = ConfigurationDevice.loadByFTCJson(jsonString);
-            callback.onWaitConnectWifi();
             set();
         }
 
@@ -129,22 +127,29 @@ public class MXChipPair {
             return ret.getString("device_id");
         }
 
-//        private String CloudReset(ConfigurationDevice device) throws IOException {
-//            com.alibaba.fastjson.JSONObject jsonObject = new com.alibaba.fastjson.JSONObject();
-//            String url = "http://" + device.localIP + ":" + device.localPort + "/dev-cloud_reset";
-//            jsonObject.put("login_id", device.loginId);
-//            jsonObject.put("dev_passwd", device.devPasswd);
-//            jsonObject.put("user_token", getToken());
-//            String retString = HttpUtil.postJSON(url, jsonObject.toJSONString(),"US-ASCII");
-//            com.alibaba.fastjson.JSONObject ret = (com.alibaba.fastjson.JSONObject) JSON.parse(retString);
-//            return ret.getString("device_id");
-//        }
+        private String CloudReset() throws IOException {
+            com.alibaba.fastjson.JSONObject jsonObject = new com.alibaba.fastjson.JSONObject();
+            String url = "http://" + device.localIP + ":" + device.localPort + "/dev-cloud_reset";
+            jsonObject.put("login_id", device.loginId);
+            jsonObject.put("dev_passwd", device.devPasswd);
+            jsonObject.put("user_token", getToken());
+            String retString = HttpUtil.postJSON(url, jsonObject.toJSONString(), "");
+            com.alibaba.fastjson.JSONObject ret = (com.alibaba.fastjson.JSONObject) JSON.parse(retString);
+            return ret.getString("device_id");
+        }
 
         @Override
         public void run() {
             try {
+                device = new ConfigurationDevice();
+                device.localIP = "192.168.1.129";
+                ActiveDevice();
+
                 FTC_Service ftc_service = FTC_Service.getInstence();
+
                 JmdnsAPI mdnsApi = new JmdnsAPI(context);
+                //EasyServer easyServer=new EasyServer(8000);
+                //easyServer.start();
                 device = null;
                 deviceMAC = null;
                 WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
@@ -152,7 +157,9 @@ public class MXChipPair {
 
                 if (info.getSupplicantState() != SupplicantState.COMPLETED) {
                     callback.onPairFailure(new WifiException());
+                    return;
                 }
+
                 callback.onSendConfiguration();
                 ftc_service.transmitSettings(context, SSID.trim(), password, info.getIpAddress(),
                         mxChipPairImp);
@@ -160,14 +167,23 @@ public class MXChipPair {
                 ftc_service.stopTransmitting();
                 if (device == null) {
                     callback.onPairFailure(new TimeoutException());
+                    return;
                 }
                 callback.onWaitConnectWifi();
+                try {
+                    CloudReset();
+                } catch (Exception e) {
+
+                }
+                Thread.sleep(20000);
 
                 mdnsApi.startMdnsService("_easylink._tcp.local.", this);
                 wait(MDNSTimeout);
-                mdnsApi.stopMdnsService();
+
+                //mdnsApi.stopMdnsService();
                 if (Helper.StringIsNullOrEmpty(deviceMAC)) {
                     callback.onPairFailure(new TimeoutException());
+                    return;
                 }
                 callback.onActivate();
 
@@ -175,7 +191,14 @@ public class MXChipPair {
                 if (Helper.StringIsNullOrEmpty(deviceId)) {
                     callback.onPairFailure(null);
                 }
-                callback.onPairComplete(deviceId);
+
+                MXChipIO io = OznerDeviceManager.Instance().mxChipIOManager().
+                        createNewIO(device.name, deviceMAC, device.Type);
+                if (io != null) {
+                    callback.onPairComplete(io);
+                } else
+                    callback.onPairFailure(null);
+
             } catch (Exception e) {
                 callback.onPairFailure(e);
             } finally {
@@ -213,13 +236,14 @@ public class MXChipPair {
      * @param password 密码
      * @param callback 配网回调
      */
-    public static void Pair(Context context, String SSID, String password, OperateCallback<String> callback)
+    public static void Pair(Context context, String SSID, String password, MXChipPairCallback callback)
             throws InstantiationException, NullSSIDException {
         MXChipPair.context = context;
         if (runThread != null) throw new InstantiationException();
         if (Helper.StringIsNullOrEmpty(SSID)) throw new NullSSIDException();
         MXChipPair.SSID = SSID;
         MXChipPair.password = password;
+        MXChipPair.callback = callback;
         runThread = new Thread(mxChipPairImp);
         runThread.start();
     }
