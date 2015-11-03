@@ -1,4 +1,4 @@
-package com.ozner.wifi.mxchip.helper;
+package com.ozner.wifi.mxchip.easylink.helper;
 
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiConfiguration.AuthAlgorithm;

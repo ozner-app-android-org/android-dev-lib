@@ -4,11 +4,9 @@ import android.content.Context;
 import android.content.Intent;
 
 import com.ozner.XObject;
-import com.ozner.bluetooth.BluetoothIOMgr;
 import com.ozner.util.Helper;
 import com.ozner.util.SQLiteDB;
 import com.ozner.util.dbg;
-import com.ozner.wifi.mxchip.MXChipIOManager;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,12 +38,9 @@ public class OznerDeviceManager extends XObject {
 
     SQLiteDB sqLiteDB;
     String owner = "";
-    /**
-     * 蓝牙管理器
-     */
-    BluetoothIOMgr bluetoothIOMgr;
-    MXChipIOManager mxChipIOManager;
-    GenIOManager ioManager;
+
+    IOManagerList ioManagerList;
+    DeviceManagerList deviceManagerList;
 
     class IOManagerCallbackImp implements IOManager.IOManagerCallback
     {
@@ -86,39 +81,35 @@ public class OznerDeviceManager extends XObject {
         if (instance != null) {
             throw new InstantiationException();
         }
+        instance = this;
+
         sqLiteDB = new SQLiteDB(context);
         //导入老表
         importOldDB();
-        ioManager = new GenIOManager(context);
-
-        bluetoothIOMgr = new BluetoothIOMgr(context);
-        mxChipIOManager = new MXChipIOManager(context);
-
-        ioManager.register(bluetoothIOMgr);
-        ioManager.register(mxChipIOManager);
-        ioManager.setIoManagerCallback(ioManagerCallbackImp);
-
-        instance = this;
+        ioManagerList = new IOManagerList(context);
+        ioManagerList.setIoManagerCallback(ioManagerCallbackImp);
+        deviceManagerList =new DeviceManagerList(context);
     }
 
     public void start() {
-        ioManager.Start();
+        ioManagerList.Start();
     }
 
     public void stop() {
-        ioManager.Stop();
+        ioManagerList.Stop();
     }
 
     public static OznerDeviceManager Instance() {
         return instance;
     }
 
-    public BluetoothIOMgr bluetoothIOMgr() {
-        return bluetoothIOMgr;
+    public IOManagerList ioManagerList()
+    {
+        return ioManagerList;
     }
-
-    public MXChipIOManager mxChipIOManager() {
-        return mxChipIOManager;
+    public DeviceManagerList devcieManagerList()
+    {
+        return deviceManagerList;
     }
 
     /**
@@ -220,7 +211,7 @@ public class OznerDeviceManager extends XObject {
     }
 
     protected void CloseAll() {
-        ioManager.closeAll();
+        ioManagerList.closeAll();
     }
 
     private void LoadDevices() {
@@ -236,6 +227,15 @@ public class OznerDeviceManager extends XObject {
                         OznerDevice device = mgr.loadDevice(Address, Model, Json);
                         if (device != null) {
                             devices.put(Address, device);
+                            BaseDeviceIO io=ioManagerList.getAvailableDevice(Address);
+                            if (io!=null)
+                            {
+                                try {
+                                    device.Bind(io);
+                                } catch (DeviceNotReadyException e) {
+                                    e.printStackTrace();
+                                }
+                            }
                             break;
                         }
                     }
@@ -341,7 +341,7 @@ public class OznerDeviceManager extends XObject {
     public BaseDeviceIO[] getNotBindDevices() {
         ArrayList<BaseDeviceIO> list = new ArrayList<>();
         ArrayList<BaseDeviceIO> result = new ArrayList<>();
-        Collections.addAll(list, ioManager.getAvailableDevices());
+        Collections.addAll(list, ioManagerList.getAvailableDevices());
 
         synchronized (this) {
             for (BaseDeviceIO io : list) {

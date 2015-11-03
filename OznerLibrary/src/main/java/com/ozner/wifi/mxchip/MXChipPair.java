@@ -8,15 +8,17 @@ import android.net.wifi.WifiManager;
 import com.alibaba.fastjson.JSON;
 import com.mxchip.jmdns.JmdnsAPI;
 import com.mxchip.jmdns.JmdnsListener;
+import com.ozner.XObject;
 import com.ozner.device.OznerDeviceManager;
 import com.ozner.util.Helper;
 import com.ozner.util.HttpUtil;
-import com.ozner.wifi.mxchip.ftc_service.FTC_Listener;
-import com.ozner.wifi.mxchip.ftc_service.FTC_Service;
+import com.ozner.wifi.mxchip.easylink.ftc_service.FTC_Listener;
+import com.ozner.wifi.mxchip.easylink.ftc_service.FTC_Service;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 
 import java.io.IOException;
 
@@ -24,7 +26,7 @@ import java.io.IOException;
  * Created by xzyxd on 2015/11/1.
  * 庆科配网工具类
  */
-public class MXChipPair {
+public class MXChipPair  {
     /**
      * 默认1分钟配网超时
      */
@@ -38,6 +40,8 @@ public class MXChipPair {
     static String SSID = "";
     static String password = "";
     static String deviceMAC = "";
+
+
 
     /**
      * 无线设备没打开或无连接
@@ -127,26 +131,10 @@ public class MXChipPair {
             return ret.getString("device_id");
         }
 
-        private String CloudReset() throws IOException {
-            com.alibaba.fastjson.JSONObject jsonObject = new com.alibaba.fastjson.JSONObject();
-            String url = "http://" + device.localIP + ":" + device.localPort + "/dev-cloud_reset";
-            jsonObject.put("login_id", device.loginId);
-            jsonObject.put("dev_passwd", device.devPasswd);
-            jsonObject.put("user_token", getToken());
-            String retString = HttpUtil.postJSON(url, jsonObject.toJSONString(), "");
-            com.alibaba.fastjson.JSONObject ret = (com.alibaba.fastjson.JSONObject) JSON.parse(retString);
-            return ret.getString("device_id");
-        }
-
         @Override
         public void run() {
             try {
-                device = new ConfigurationDevice();
-                device.localIP = "192.168.1.129";
-                ActiveDevice();
-
                 FTC_Service ftc_service = FTC_Service.getInstence();
-
                 JmdnsAPI mdnsApi = new JmdnsAPI(context);
                 //EasyServer easyServer=new EasyServer(8000);
                 //easyServer.start();
@@ -170,12 +158,8 @@ public class MXChipPair {
                     return;
                 }
                 callback.onWaitConnectWifi();
-                try {
-                    CloudReset();
-                } catch (Exception e) {
 
-                }
-                Thread.sleep(20000);
+                Thread.sleep(2000);
 
                 mdnsApi.startMdnsService("_easylink._tcp.local.", this);
                 wait(MDNSTimeout);
@@ -192,8 +176,8 @@ public class MXChipPair {
                     callback.onPairFailure(null);
                 }
 
-                MXChipIO io = OznerDeviceManager.Instance().mxChipIOManager().
-                        createNewIO(device.name, deviceMAC, device.Type);
+                MXChipIO io = OznerDeviceManager.Instance().ioManagerList().mxChipIOManager().
+                        createNewIO(device.Type, deviceMAC, device.Type);
                 if (io != null) {
                     callback.onPairComplete(io);
                 } else
@@ -212,9 +196,17 @@ public class MXChipPair {
             for (int i = 0; i < jsonArray.length(); i++) {
                 try {
                     JSONObject object = jsonArray.getJSONObject(i);
-                    if (object.getString("deviceIP").equals(device.localIP)) {
-                        deviceMAC = object.getString("deviceMac");
-                        set();
+                    String name=object.getString("deviceName");
+                    int p =name.indexOf("#");
+                    if (p>0)
+                    {
+                        name=name.substring(p+1);
+                        if (device.name.indexOf(name)>0)
+                        {
+                            deviceMAC = object.getString("deviceMac");
+                            device.localIP=object.getString("deviceIP");
+                            set();
+                        }
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -225,7 +217,6 @@ public class MXChipPair {
     }
 
     private MXChipPair() {
-
     }
 
 

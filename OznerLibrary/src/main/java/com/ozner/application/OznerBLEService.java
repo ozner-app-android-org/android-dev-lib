@@ -13,20 +13,16 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
-import android.util.Log;
 
 import com.ozner.XObject;
 import com.ozner.cup.CupManager;
 import com.ozner.device.OznerDeviceManager;
 import com.ozner.tap.TapManager;
-import com.ozner.util.dbg;
 
 import java.util.List;
 
 public class OznerBLEService extends Service implements ActivityLifecycleCallbacks {
     static OznerDeviceManager mManager;
-    static CupManager mCups;
-    static TapManager mTaps;
     OznerBLEBinder binder = new OznerBLEBinder();
     Handler handler=new Handler();
     public static final String ACTION_ServiceInit = "ozner.service.init";
@@ -93,10 +89,8 @@ public class OznerBLEService extends Service implements ActivityLifecycleCallbac
             e.printStackTrace();
         }
         powerManager= (PowerManager) getSystemService(Context.POWER_SERVICE);
-
-        mCups = new CupManager(getApplicationContext());
-        mTaps = new TapManager(getApplicationContext());
         mManager.start();
+
     }
 
     @Override
@@ -165,7 +159,7 @@ public class OznerBLEService extends Service implements ActivityLifecycleCallbac
          * 获取水杯管理器
          */
         public CupManager getCupManager() {
-            return mCups;
+            return  mManager.devcieManagerList().cupManager();
         }
 
         /**
@@ -174,7 +168,7 @@ public class OznerBLEService extends Service implements ActivityLifecycleCallbac
          * @return
          */
         public TapManager getTapManager() {
-            return mTaps;
+            return mManager.devcieManagerList().tapManager();
         }
 
         /**

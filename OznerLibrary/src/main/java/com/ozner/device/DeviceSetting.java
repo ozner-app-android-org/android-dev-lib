@@ -77,7 +77,7 @@ public class DeviceSetting {
      * @return 设备名称
      */
     public String name() {
-        return get("name", "Ozner Cup").toString();
+        return get("name", "").toString();
     }
 
     /**

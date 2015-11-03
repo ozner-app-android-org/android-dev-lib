@@ -1,4 +1,4 @@
-package com.ozner.wifi.mxchip.udpSearch;
+package com.ozner.wifi.mxchip.easylink.udpSearch;
 
 import java.io.IOException;
 import java.net.DatagramPacket;

@@ -1,10 +1,10 @@
-package com.ozner.wifi.mxchip.ftc_service;
+package com.ozner.wifi.mxchip.easylink.ftc_service;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.Log;
 
-import com.ozner.wifi.mxchip.easylink_plus.EasyLink_plus;
+import com.ozner.wifi.mxchip.easylink.easylink_plus.EasyLink_plus;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;

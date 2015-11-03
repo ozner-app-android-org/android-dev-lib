@@ -1,7 +1,7 @@
 /**
  *
  */
-package com.ozner.wifi.mxchip.easylink_v3;
+package com.ozner.wifi.mxchip.easylink.easylink_v3;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;

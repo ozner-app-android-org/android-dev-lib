@@ -30,14 +30,7 @@ public class Tap extends OznerDevice
      * 收到单条饮水记录
      */
     public final static String ACTION_BLUETOOTHTAP_RECORD = "com.ozner.tap.bluetooth.record";
-    /**
-     * 水探头连接成功
-     */
-    public final static String ACTION_BLUETOOTHTAP_CONNECTED = "com.ozner.tap.bluetooth.connected";
-    /**
-     * 水探头连接断开
-     */
-    public final static String ACTION_BLUETOOTHTAP_DISCONNECTED = "com.ozner.tap.bluetooth.disconnected";
+
 
     /**
      * 水探头自动监测记录接收完成
@@ -120,7 +113,7 @@ public class Tap extends OznerDevice
 
     class BluetoothIOImp implements
             BluetoothIO.OnInitCallback,
-            BluetoothIO.OnRecvPacketCallback,
+            BluetoothIO.OnTransmissionsCallback,
             BluetoothIO.StatusCallback,
             BluetoothIO.CheckTransmissionsCompleteCallback
     {
@@ -145,6 +138,7 @@ public class Tap extends OznerDevice
                     doTime();
                 }
             }, 100, 5000);
+
         }
 
         @Override
@@ -169,7 +163,12 @@ public class Tap extends OznerDevice
 
 
         @Override
-        public void onRecvPacket(byte[] bytes) {
+        public void onIOSend(byte[] bytes) {
+
+        }
+
+        @Override
+        public void onIORecv(byte[] bytes) {
             if (bytes == null) return;
             if (bytes.length < 1) return;
             byte opCode = bytes[0];
@@ -382,14 +381,14 @@ public class Tap extends OznerDevice
     protected void doSetDeviceIO(BaseDeviceIO oldIO, BaseDeviceIO newIO) {
         if (oldIO != null) {
             oldIO.setOnInitCallback(null);
-            oldIO.setRecvPacketCallback(null);
+            oldIO.setOnTransmissionsCallback(null);
             oldIO.unRegisterStatusCallback(bluetoothIOImp);
             newIO.setCheckTransmissionsCompleteCallback(null);
             firmwareTools.bind(null);
         }
         cancelTimer();
         if (newIO != null) {
-            newIO.setRecvPacketCallback(bluetoothIOImp);
+            newIO.setOnTransmissionsCallback(bluetoothIOImp);
             newIO.setOnInitCallback(bluetoothIOImp);
             newIO.registerStatusCallback(bluetoothIOImp);
             newIO.setCheckTransmissionsCompleteCallback(bluetoothIOImp);

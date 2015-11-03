@@ -1,6 +1,7 @@
 package com.ozner.device;
 
 import android.content.Context;
+import android.content.Intent;
 
 import com.ozner.XObject;
 
@@ -16,7 +17,24 @@ public abstract class BaseDeviceIO extends XObject {
     String Model = "";
     boolean isReady = false;
 
-    OnRecvPacketCallback recvPacketCallback;
+
+    /**
+     * 开始连接设备事件
+     */
+    public final static String ACTION_DEVICE_CONNECTING = "com.ozner.device.connecting";
+
+    /**
+     * 设备连接并初始化完成事件
+     */
+    public final static String ACTION_DEVICE_CONNECTED = "com.ozner.device.connected";
+
+
+    /**
+     * 设备连接断开事件
+     */
+    public final static String ACTION_DEVICE_DISCONNECTED = "com.ozner.device.disconnected";
+    public final static String Extra_Address="Address";
+
     OnInitCallback onInitCallback = null;
     CheckTransmissionsCompleteCallback checkTransmissionsCompleteCallback =null;
     OnTransmissionsCallback onTransmissionsCallback=null;
@@ -90,32 +108,26 @@ public abstract class BaseDeviceIO extends XObject {
     /**
      * 调用数据监听回调
      */
-    protected void doSend(byte[] data)
+    protected void doSend(byte[] bytes)
     {
         if (onTransmissionsCallback!=null)
         {
-            onTransmissionsCallback.onIOSend(data);
+            onTransmissionsCallback.onIOSend(bytes);
         }
     }
 
     /**
      * 调用数据监听回调
      */
-    protected void doRecv(byte[] data)
+    protected void doRecv(byte[] bytes)
     {
         if (onTransmissionsCallback!=null)
         {
-            onTransmissionsCallback.onIORecv(data);
+            onTransmissionsCallback.onIORecv(bytes);
         }
     }
 
 
-    /**
-     * 设置数据接收回调
-     */
-    public void setRecvPacketCallback(OnRecvPacketCallback callback) {
-        recvPacketCallback = callback;
-    }
 
     public void registerStatusCallback(StatusCallback callback) {
         synchronized (statusCallback) {
@@ -130,13 +142,20 @@ public abstract class BaseDeviceIO extends XObject {
         }
     }
 
-
+    protected void doConnecting()
+    {
+        Intent intent=new Intent(ACTION_DEVICE_CONNECTING);
+        intent.putExtra(Extra_Address,getAddress());
+        context().sendBroadcast(intent);
+    }
     protected void doConnected() {
         isReady = false;
         synchronized (statusCallback) {
             for (StatusCallback cb : statusCallback)
                 cb.onConnected(this);
         }
+
+
     }
 
     protected void doDisconnected() {
@@ -146,6 +165,9 @@ public abstract class BaseDeviceIO extends XObject {
             for (StatusCallback cb : list)
                 cb.onDisconnected(this);
         }
+        Intent intent=new Intent(ACTION_DEVICE_DISCONNECTED);
+        intent.putExtra(Extra_Address,getAddress());
+        context().sendBroadcast(intent);
     }
 
     protected void doReady() {
@@ -154,6 +176,9 @@ public abstract class BaseDeviceIO extends XObject {
             for (StatusCallback cb : statusCallback)
                 cb.onReady(this);
         }
+        Intent intent=new Intent(ACTION_DEVICE_CONNECTED);
+        intent.putExtra(Extra_Address,getAddress());
+        context().sendBroadcast(intent);
     }
 
 
@@ -171,11 +196,7 @@ public abstract class BaseDeviceIO extends XObject {
         return onInitCallback == null || onInitCallback.onIOInit(handle);
     }
 
-    protected void doRecvPacket(byte[] bytes) {
-        if (recvPacketCallback != null) {
-            recvPacketCallback.onRecvPacket(bytes);
-        }
-    }
+
 
     public abstract String getName();
 
@@ -207,15 +228,15 @@ public abstract class BaseDeviceIO extends XObject {
     {
         /**
          * 接口发送数据时调用该回调
-         * @param data
+         * @param bytes
          */
-        void onIOSend(byte[] data);
+        void onIOSend(byte[] bytes);
 
         /**
          * 接口收到数据时调用
-         * @param data
+         * @param bytes
          */
-        void onIORecv(byte[] data);
+        void onIORecv(byte[] bytes);
     }
 
 
@@ -229,12 +250,12 @@ public abstract class BaseDeviceIO extends XObject {
         boolean onIOInit(DataSendProxy sendHandle);
     }
 
-    public interface OnRecvPacketCallback {
-        void onRecvPacket(byte[] bytes);
-    }
+
 
     public abstract class DataSendProxy {
         public abstract boolean send(byte[] data);
+        public abstract boolean send(byte[] data,OperateCallback<Void> callback);
+
     }
 
 

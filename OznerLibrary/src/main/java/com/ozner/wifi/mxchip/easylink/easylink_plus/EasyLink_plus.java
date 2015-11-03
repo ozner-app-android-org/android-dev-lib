@@ -1,14 +1,14 @@
 /**
  *
  */
-package com.ozner.wifi.mxchip.easylink_plus;
+package com.ozner.wifi.mxchip.easylink.easylink_plus;
 
 import android.content.Context;
 import android.net.wifi.WifiManager;
 
-import com.ozner.wifi.mxchip.easylink_v2.EasyLink_v2;
-import com.ozner.wifi.mxchip.easylink_v3.EasyLink_v3;
-import com.ozner.wifi.mxchip.helper.Helper;
+import com.ozner.wifi.mxchip.easylink.easylink_v2.EasyLink_v2;
+import com.ozner.wifi.mxchip.easylink.easylink_v3.EasyLink_v3;
+import com.ozner.wifi.mxchip.easylink.helper.Helper;
 
 import java.io.UnsupportedEncodingException;
 import java.util.concurrent.ExecutorService;
@@ -19,7 +19,7 @@ import java.util.concurrent.Executors;
  * @date 2014-10-21
  */
 public class EasyLink_plus {
-    private static EasyLink_v2 e2;
+//    private static EasyLink_v2 e2;
     private static EasyLink_v3 e3;
     //        private static EasyLink_minus minus;
     private static EasyLink_plus me;
@@ -30,7 +30,7 @@ public class EasyLink_plus {
     private EasyLink_plus(Context ctx) {
         try {
             wifiManager = (WifiManager) ctx.getSystemService(Context.WIFI_SERVICE);
-            e2 = EasyLink_v2.getInstence();
+//            e2 = EasyLink_v2.getInstence();
             e3 = EasyLink_v3.getInstence();
 //            minus = new EasyLink_minus(ctx);
         } catch (Exception e) {
@@ -78,13 +78,13 @@ public class EasyLink_plus {
                             e3.transmitSettings(ssid_byte, key_byte, ipString, userinfo);
                             // Log.e("minus--->", "sending");
                             try {
-                                Thread.sleep(10 * 1000);
-                                e2.stopTransmitting();
+                                Thread.sleep(5 * 1000);
+//                                e2.stopTransmitting();
                                 e3.stopTransmitting();
 //                                minus.stopTransmitting();
                                 // Log.e("easylink", "STOP!!!!");
                                 //Thread.sleep(3 * 1000);
-                                Thread.sleep(10 * 1000);
+                                Thread.sleep(5 * 1000);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
@@ -102,7 +102,7 @@ public class EasyLink_plus {
     public void stopTransmitting() {
         sending = false;
         singleThreadExecutor.shutdown();
-        e2.stopTransmitting();
+//        e2.stopTransmitting();
         e3.stopTransmitting();
 //        minus.stopTransmitting();
     }

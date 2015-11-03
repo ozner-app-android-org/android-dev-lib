@@ -1,15 +1,15 @@
-package com.ozner.wifi.mxchip.easylink_v4;
+package com.ozner.wifi.mxchip.easylink.easylink_v4;
 
 import android.content.Context;
 import android.net.wifi.WifiManager;
 import android.util.Log;
 
-import com.ozner.wifi.mxchip.easylink_plus.EasyLink_plus;
-import com.ozner.wifi.mxchip.ftc_service.FTC_Listener;
-import com.ozner.wifi.mxchip.ftc_service.ServiceThread;
-import com.ozner.wifi.mxchip.ftc_service.SoftAP_Listener;
-import com.ozner.wifi.mxchip.helper.Helper;
-import com.ozner.wifi.mxchip.helper.WifiAutoConnectManager;
+import com.ozner.wifi.mxchip.easylink.easylink_plus.EasyLink_plus;
+import com.ozner.wifi.mxchip.easylink.ftc_service.FTC_Listener;
+import com.ozner.wifi.mxchip.easylink.ftc_service.ServiceThread;
+import com.ozner.wifi.mxchip.easylink.ftc_service.SoftAP_Listener;
+import com.ozner.wifi.mxchip.easylink.helper.Helper;
+import com.ozner.wifi.mxchip.easylink.helper.WifiAutoConnectManager;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;

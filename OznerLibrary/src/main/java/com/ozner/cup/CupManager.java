@@ -49,7 +49,7 @@ public class CupManager extends BaseBluetoothDeviceManager {
     public BaseDeviceIO[] getNotBindCups() {
         ArrayList<BaseDeviceIO> list = new ArrayList<>();
         OznerDeviceManager mgr = OznerDeviceManager.Instance();
-        for (BaseDeviceIO device : mgr.bluetoothIOMgr().getAvailableDevices()) {
+        for (BaseDeviceIO device : mgr.ioManagerList().bluetoothIOMgr().getAvailableDevices()) {
             if (IsCup(device.getModel())) {
                 if (mgr.getDevice(device.getAddress()) == null) {
                     list.add(device);
@@ -178,7 +178,6 @@ public class CupManager extends BaseBluetoothDeviceManager {
             } else {
                 if (IsCup(io.getModel())) {
                     Cup c = new Cup(context(), address, io.getModel(), "");
-                    c.Setting().name(io.getName());
                     c.Bind(io);
                     return c;
                 }

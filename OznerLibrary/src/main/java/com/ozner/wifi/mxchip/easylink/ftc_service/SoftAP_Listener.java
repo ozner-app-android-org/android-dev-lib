@@ -1,7 +1,7 @@
 /**
  *
  */
-package com.ozner.wifi.mxchip.ftc_service;
+package com.ozner.wifi.mxchip.easylink.ftc_service;
 
 /**
  * @author Perry

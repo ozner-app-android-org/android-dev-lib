@@ -87,7 +87,7 @@ public class CupActivity extends Activity implements OnClickListener, FirmwareTo
 
 	private void load() {
 
-		((TextView) findViewById(id.Device_Name)).setText(mCup.getName()
+		((TextView) findViewById(id.Device_Name)).setText(mCup.Setting().name()
 				+ (mCup.connected() ? "(设备已连接)" : "(设备未连接)"));
 		if (mCup.Bluetooth() != null) {
 			((TextView) findViewById(id.Device_Model)).setText(mCup.Bluetooth()
@@ -167,14 +167,14 @@ public class CupActivity extends Activity implements OnClickListener, FirmwareTo
 			}
 			if (action.equals(BluetoothIO.ACTION_BLUETOOTH_READY)) {
 				((TextView) findViewById(id.Device_Name)).setText(mCup
-						.getName() + "(设备已连接)");
+						.Setting().name() + "(设备已连接)");
 				if (mCup.Bluetooth() != null) {
 					mCup.firmwareTools().setFirmwareUpateInterface(CupActivity.this);
 				}
 			}
 			if (action.equals(BluetoothIO.ACTION_BLUETOOTH_DISCONNECTED)) {
 				((TextView) findViewById(id.Device_Name)).setText(mCup
-						.getName() + "(设备未连接)");
+						.Setting().name() + "(设备未连接)");
 			}
 			if (action.equals(Cup.ACTION_BLUETOOTHCUP_RECORD_COMPLETE)) {
 				load();

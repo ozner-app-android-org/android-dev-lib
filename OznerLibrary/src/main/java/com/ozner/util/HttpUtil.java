@@ -25,14 +25,14 @@ public class HttpUtil {
         connection.setDoInput(true);
         connection.setRequestMethod("POST");
         connection.setUseCaches(false);
+        connection.setRequestProperty("Content-Length", String.valueOf(json.length()));
         //connection.setRequestProperty("Charset", "UTF-8");
         connection.setRequestProperty("Content-Type", "application/json");
         try {
             //connection.connect();
             OutputStream outputStream = connection.getOutputStream();
-            OutputStreamWriter writer = new OutputStreamWriter(outputStream);
             try {
-                writer.write(json);
+                outputStream.write(json.getBytes());
             } finally {
                 outputStream.flush();
                 outputStream.close();

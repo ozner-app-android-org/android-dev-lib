@@ -1,4 +1,4 @@
-package com.ozner.wifi.mxchip.easylink_minus;
+package com.ozner.wifi.mxchip.easylink.easylink_minus;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -10,7 +10,7 @@ import android.net.wifi.WifiManager;
 import android.os.Parcelable;
 import android.util.Log;
 
-import com.ozner.wifi.mxchip.helper.ProbeReqData;
+import com.ozner.wifi.mxchip.easylink.helper.ProbeReqData;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;

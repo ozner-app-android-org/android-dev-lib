@@ -16,6 +16,7 @@ public abstract class XObject {
     public enum RunningMode {Background, Foreground}
     private static RunningMode runningMode=RunningMode.Foreground;
     private Context context;
+
     private final StatusMonitor statusMonitor=new StatusMonitor();
     private class StatusMonitor extends BroadcastReceiver
     {
@@ -70,6 +71,18 @@ public abstract class XObject {
     protected void doChangeRunningMode()
     {
 
+    }
+    private final Object waitObject = new Object();
+    protected void waitObject(int time) throws InterruptedException {
+        synchronized (waitObject) {
+            waitObject.wait(time);
+        }
+    }
+
+    protected void setObject() {
+        synchronized (waitObject) {
+            waitObject.notify();
+        }
     }
 
 

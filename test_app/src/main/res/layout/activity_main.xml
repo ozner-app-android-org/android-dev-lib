@@ -48,4 +48,12 @@
     </com.getbase.floatingactionbutton.FloatingActionsMenu>
 
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="200dp"
+        android:text="power"
+        android:id="@+id/power"
+        />
+
 </RelativeLayout>

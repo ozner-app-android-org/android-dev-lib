@@ -81,7 +81,6 @@ public class TapManager extends BaseBluetoothDeviceManager {
             } else {
                 if (IsTap(io.getModel())) {
                     Tap c = new Tap(context(), address, io.getModel(), "");
-                    c.Setting().name(io.getName());
                     c.Bind(io);
                     return c;
                 }

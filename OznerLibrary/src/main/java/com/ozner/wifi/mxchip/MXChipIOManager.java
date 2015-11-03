@@ -16,25 +16,60 @@ import java.util.HashMap;
  */
 public class MXChipIOManager extends IOManager {
 
-    final HashMap<String,MXChipIO> localList=new HashMap<>();
     MQTTProxy proxy;
+    MXChipIOManager ioManager;
+    final MQTTProxyImp mqttProxyImp=new MQTTProxyImp();
 
-    private void load()
+
+    class MQTTProxyImp implements MQTTProxy.MQTTListener
     {
-        OznerDevice[] list=OznerDeviceManager.Instance().getDevices();
-        synchronized (localList) {
-            for (OznerDevice device : list) {
-                if (device.getIOType().equals(MXChipIO.class)) {
-                    if (!localList.containsKey(device.Address())) {
-                        MXChipIO io = new MXChipIO(context(), proxy, device.getName(), device.Model(), device.Address());
-                        localList.put(io.getAddress(), io);
-                    }
+
+        @Override
+        public void onConnected(MQTTProxy proxy) {
+
+            synchronized (devices)
+            {
+                for (BaseDeviceIO io : devices.values())
+                {
+                    doAvailable(io);
                 }
             }
         }
+
+        @Override
+        public void onDisconnected(MQTTProxy proxy) {
+            synchronized (devices)
+            {
+                for (BaseDeviceIO io : devices.values())
+                {
+                    doUnavailable(io);
+                }
+            }
+        }
+
+        @Override
+        public void onPublish(MQTTProxy proxy, String topic, byte[] data) {
+
+        }
     }
 
+//    private void load()
+//    {
+//        OznerDevice[] list=OznerDeviceManager.Instance().getDevices();
+//        synchronized (localList) {
+//            for (OznerDevice device : list) {
+//                if (device.getIOType().equals(MXChipIO.class)) {
+//                    if (!localList.containsKey(device.Address())) {
+//                        MXChipIO io = new MXChipIO(context(), proxy, device.getName(), device.Model(), device.Address());
+//                        localList.put(io.getAddress(), io);
+//                    }
+//                }
+//            }
+//        }
+//    }
+
     public MXChipIO createNewIO(String Name, String address, String Model) throws ClassCastException {
+
         synchronized (devices) {
             if (devices.containsKey(address)) {
                 return (MXChipIO) devices.get(address);
@@ -67,6 +102,7 @@ public class MXChipIOManager extends IOManager {
     public MXChipIOManager(Context context) {
         super(context);
         proxy=new MQTTProxy(context);
+        proxy.registerListener(mqttProxyImp);
     }
 
 

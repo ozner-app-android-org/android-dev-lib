@@ -5,7 +5,7 @@
 // ARISING FROM THE CONTENT OF SUCH FIRMWARE AND/OR THE USE MADE BY CUSTOMERS 
 // OF THE CODING INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
 
-package com.ozner.wifi.mxchip.helper;
+package com.ozner.wifi.mxchip.easylink.helper;
 
 
 //**** SUMMARY *****

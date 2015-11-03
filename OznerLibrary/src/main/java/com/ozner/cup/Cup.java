@@ -37,21 +37,14 @@ public class Cup extends OznerDevice
      * 饮水记录传输完成
      */
     public final static String ACTION_BLUETOOTHCUP_RECORD_COMPLETE = "com.ozner.cup.bluetooth.record.complete";
-    /**
-     * 水杯连接成功
-     */
-    public final static String ACTION_BLUETOOTHCUP_CONNECTED = "com.ozner.cup.bluetooth.connected";
 
-    /**
-     * 水杯连接断开
-     */
-    public final static String ACTION_BLUETOOTHCUP_DISCONNECTED = "com.ozner.cup.bluetooth.disconnected";
 
 
     /**
      * 收到传感器信息
      */
     public final static String ACTION_BLUETOOTHCUP_SENSOR = "com.ozner.cup.bluetooth.sensor";
+
     public static final byte AD_CustomType_Gravity = 0x1;
     static final byte opCode_SetRemind = 0x11;
     static final byte opCode_ReadSensor = 0x12;
@@ -120,7 +113,7 @@ public class Cup extends OznerDevice
 
     class BluetoothIOImp implements
             BluetoothIO.OnInitCallback,
-            BluetoothIO.OnRecvPacketCallback,
+            BluetoothIO.OnTransmissionsCallback,
             BluetoothIO.StatusCallback,
             BluetoothIO.CheckTransmissionsCompleteCallback
     {
@@ -153,8 +146,14 @@ public class Cup extends OznerDevice
 
 
 
+
         @Override
-        public void onRecvPacket(byte[] bytes) {
+        public void onIOSend(byte[] bytes) {
+
+        }
+
+        @Override
+        public void onIORecv(byte[] bytes) {
             if (bytes == null) return;
             if (bytes.length < 1) return;
             byte opCode = bytes[0];
@@ -251,14 +250,14 @@ public class Cup extends OznerDevice
     protected void doSetDeviceIO(BaseDeviceIO oldIO, BaseDeviceIO newIO) {
         if (oldIO != null) {
             oldIO.setOnInitCallback(null);
-            oldIO.setRecvPacketCallback(null);
             oldIO.unRegisterStatusCallback(bluetoothIOImp);
+            newIO.setOnTransmissionsCallback(null);
             oldIO.setCheckTransmissionsCompleteCallback(null);
             firmwareTools.bind(null);
         }
         cancelTimer();
         if (newIO != null) {
-            newIO.setRecvPacketCallback(bluetoothIOImp);
+            newIO.setOnTransmissionsCallback(bluetoothIOImp);
             newIO.setOnInitCallback(bluetoothIOImp);
             newIO.registerStatusCallback(bluetoothIOImp);
             newIO.setCheckTransmissionsCompleteCallback(bluetoothIOImp);

@@ -1,6 +1,6 @@
-package com.ozner.wifi.mxchip.easylink_v2;
+package com.ozner.wifi.mxchip.easylink.easylink_v2;
 
-import com.ozner.wifi.mxchip.helper.Helper;
+import com.ozner.wifi.mxchip.easylink.helper.Helper;
 
 import java.io.IOException;
 import java.net.DatagramPacket;

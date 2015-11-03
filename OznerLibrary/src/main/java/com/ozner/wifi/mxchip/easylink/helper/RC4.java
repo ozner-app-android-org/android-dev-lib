@@ -1,4 +1,4 @@
-package com.ozner.wifi.mxchip.helper;
+package com.ozner.wifi.mxchip.easylink.helper;
 
 public class RC4 {
     private final byte[] S = new byte[256];

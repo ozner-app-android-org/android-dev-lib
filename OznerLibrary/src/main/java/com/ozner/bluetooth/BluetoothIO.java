@@ -214,6 +214,11 @@ public class BluetoothIO extends BaseDeviceIO {
         public boolean send(byte[] data) {
             return bluetoothProxy.postSend(data,null);
         }
+        @Override
+        public boolean send(byte[] data,OperateCallback<Void> callback) {
+            return bluetoothProxy.postSend(data,callback);
+        }
+
     }
 
     private class BluetoothProxy extends BluetoothGattCallback implements Runnable {
@@ -223,7 +228,7 @@ public class BluetoothIO extends BaseDeviceIO {
         final UUID Characteristic_Input = GetUUID(0xFFF2);
         final UUID Characteristic_Output = GetUUID(0xFFF1);
         final UUID GATT_CLIENT_CHAR_CFG_UUID = GetUUID(0x2902);
-        final Object waitObject = new Object();
+
         Thread thread = null;
         BluetoothGattCharacteristic mInput = null;
         BluetoothGattCharacteristic mOutput = null;
@@ -242,17 +247,6 @@ public class BluetoothIO extends BaseDeviceIO {
         }
 
 
-        private void wait(int time) throws InterruptedException {
-            synchronized (waitObject) {
-                waitObject.wait(time);
-            }
-        }
-
-        private void set() {
-            synchronized (waitObject) {
-                waitObject.notify();
-            }
-        }
 
         private boolean checkStatus() {
             return (connectionState == BluetoothGatt.STATE_CONNECTED) && (lastStatus == BluetoothGatt.GATT_SUCCESS);
@@ -271,7 +265,7 @@ public class BluetoothIO extends BaseDeviceIO {
                     close();
                 }
 
-                set();
+                setObject();
                 super.onConnectionStateChange(gatt, status, newState);
             }catch (Exception e)
             {
@@ -289,7 +283,7 @@ public class BluetoothIO extends BaseDeviceIO {
                 mOutput = mService.getCharacteristic(Characteristic_Output);
                 mInput.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
             }
-            set();
+            setObject();
         }
 
         @Override
@@ -297,7 +291,7 @@ public class BluetoothIO extends BaseDeviceIO {
             super.onDescriptorWrite(gatt, descriptor, status);
             if (descriptor.getUuid().equals(GATT_CLIENT_CHAR_CFG_UUID)) {
                 lastStatus = status;
-                set();
+                setObject();
             }
         }
 
@@ -306,7 +300,7 @@ public class BluetoothIO extends BaseDeviceIO {
             super.onCharacteristicWrite(gatt, characteristic, status);
             doSend(characteristic.getValue());
             lastStatus = status;
-            set();
+            setObject();
 
         }
 
@@ -314,9 +308,8 @@ public class BluetoothIO extends BaseDeviceIO {
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
-            doRecv(characteristic.getValue());
             lastRecvPacket = characteristic.getValue();
-            doRecvPacket(lastRecvPacket);
+            doRecv(characteristic.getValue());
             super.onCharacteristicChanged(gatt, characteristic);
         }
 
@@ -324,7 +317,7 @@ public class BluetoothIO extends BaseDeviceIO {
         private boolean connect() throws InterruptedException {
             dbg.i("开始连接:%s", device.getAddress());
             if (mGatt.connect()) {
-                wait(10000);
+                waitObject(10000);
                 if (connectionState != BluetoothGatt.STATE_CONNECTED) {
                     return false;
                 }
@@ -338,7 +331,7 @@ public class BluetoothIO extends BaseDeviceIO {
             dbg.i("开始发现:%s", device.getAddress());
 
             if (mGatt.discoverServices()) {
-                wait(10000);
+                waitObject(10000);
                 if ((mInput == null) || (mOutput == null) || (!checkStatus())) {
                     return false;
                 }
@@ -357,7 +350,7 @@ public class BluetoothIO extends BaseDeviceIO {
                 if (!mGatt.writeDescriptor(desc)) {
                     return false;
                 }
-                wait(10000);
+                waitObject(10000);
                 if (!checkStatus()) {
                     return false;
                 }
@@ -400,6 +393,7 @@ public class BluetoothIO extends BaseDeviceIO {
             try {
                 BluetoothSynchronizedObject.Busy(device.getAddress());
                 synchronized (BluetoothSynchronizedObject.getLockObject()) {
+                    doConnecting();
                     if (connect()) {
                         dbg.i("连接成功:%s", device.getAddress());
                     } else {
@@ -469,7 +463,7 @@ public class BluetoothIO extends BaseDeviceIO {
                     return false;
                 }
             }
-            wait(10000);
+            waitObject(10000);
             return checkStatus();
         }
 

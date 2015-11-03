@@ -3,6 +3,7 @@ package com.ozner.device;
 import android.content.Context;
 
 import com.ozner.XObject;
+import com.ozner.util.Helper;
 
 /**
  * @author zhiyongxu
@@ -95,6 +96,12 @@ public abstract class OznerDevice extends XObject {
     public boolean Bind(BaseDeviceIO deviceIO) throws DeviceNotReadyException {
         if (this.deviceIO == deviceIO)
             return false;
+
+        if (Helper.StringIsNullOrEmpty(setting.name()))
+        {
+            setting.name(deviceIO.getName());
+        }
+
         doSetDeviceIO(this.deviceIO, deviceIO);
 
         if (this.deviceIO != null) {

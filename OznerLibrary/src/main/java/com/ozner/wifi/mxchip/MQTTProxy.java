@@ -102,13 +102,14 @@ public class MQTTProxy extends XObject{
         connection.disconnect(null);
     }
 
-    public boolean subscribe(String topic)
+    public boolean subscribe(String topic,Callback<byte[]> callback)
     {
         if (!connected)
         {
             return false;
         }else {
-            connection.subscribe(new Topic[]{new Topic(topic, QoS.AT_MOST_ONCE)}, null);
+
+            connection.subscribe(new Topic[]{new Topic(topic, QoS.AT_MOST_ONCE)}, callback);
             return true;
         }
     }
@@ -146,7 +147,7 @@ public class MQTTProxy extends XObject{
 
     public void publish(String topic,byte[] data,OperateCallback<Void> cb)
     {
-        connection.publish(topic, data, QoS.AT_MOST_ONCE, false, new CallbackProxy<>(cb));
+        connection.publish(topic, data, QoS.AT_LEAST_ONCE, false, new CallbackProxy<>(cb));
     }
 
     class MQTTImp implements Listener
