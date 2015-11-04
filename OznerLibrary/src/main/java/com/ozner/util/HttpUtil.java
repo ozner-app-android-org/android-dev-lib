@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -19,8 +18,10 @@ public class HttpUtil {
         HttpURLConnection connection = null;
 
         connection = (HttpURLConnection) my_url.openConnection();
-        connection.setReadTimeout(1000 * 30);
-        connection.setConnectTimeout(1000 * 10);
+        connection.setReadTimeout(1000 * 60);
+
+        connection.setConnectTimeout(1000 * 60);
+
         connection.setDoOutput(true);
         connection.setDoInput(true);
         connection.setRequestMethod("POST");
@@ -35,7 +36,7 @@ public class HttpUtil {
                 outputStream.write(json.getBytes());
             } finally {
                 outputStream.flush();
-                outputStream.close();
+                //outputStream.close();
             }
 
             InputStream inputStream = connection.getInputStream();

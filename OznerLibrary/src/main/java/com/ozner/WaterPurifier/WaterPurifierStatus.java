@@ -1,7 +1,6 @@
-package com.ozner.wifi.mxchip.WaterPurifier;
+package com.ozner.WaterPurifier;
 
 import com.ozner.util.ByteUtil;
-import com.ozner.util.Helper;
 
 /**
  * Created by xzyxd on 2015/11/2.
@@ -41,11 +40,10 @@ public class WaterPurifierStatus {
      {
           this.Hot= bytes[12] != 0;
           this.Cool=bytes[13] != 0;
-          this.Cool=bytes[13] != 0;
           this.Power=bytes[14] != 0;
           this.Sterilization=bytes[15] != 0;
           this.TDS1= ByteUtil.getShort(bytes,16);
-          this.TDS1= ByteUtil.getShort(bytes,18);
+          this.TDS2 = ByteUtil.getShort(bytes, 18);
      }
 
      public byte[] toBytes()

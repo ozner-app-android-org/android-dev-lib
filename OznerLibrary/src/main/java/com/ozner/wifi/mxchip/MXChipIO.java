@@ -8,8 +8,6 @@ import com.ozner.device.OperateCallback;
 import com.ozner.util.Helper;
 
 import org.fusesource.mqtt.client.Callback;
-import org.fusesource.mqtt.client.QoS;
-import org.fusesource.mqtt.client.Topic;
 
 /**
  * Created by xzyxd on 2015/10/31.
@@ -160,9 +158,19 @@ public class MXChipIO extends BaseDeviceIO {
     }
 
     @Override
+    protected void doConnected() {
+        super.doConnected();
+    }
+
+    @Override
+    protected void doReady() {
+        super.doReady();
+    }
+
+    @Override
     public boolean send(byte[] bytes, OperateCallback<Void> callback) {
         if (proxy.isConnected()) {
-            proxy.publish(in, bytes,callback);
+            proxy.publish(in, bytes, callback);
             doSend(bytes);
             return true;
         }else
@@ -197,11 +205,17 @@ public class MXChipIO extends BaseDeviceIO {
         }
     }
 
-
     @Override
-    public boolean connected() {
-        return proxy.isConnected();
+    public ConnectStatus connectStatus() {
+        if (proxy.connected) {
+            if (isReady())
+                return ConnectStatus.Connected;
+            else
+                return ConnectStatus.Connecting;
+        } else
+            return ConnectStatus.Disconnect;
     }
+
 
     @Override
     public String getName() {

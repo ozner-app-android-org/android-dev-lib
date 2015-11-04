@@ -78,7 +78,7 @@ public class WifiAutoConnectManager {
         boolean enabled = wifiManager.enableNetwork(netID, true);
         Log.d(TAG, "enableNetwork status enable=" + enabled);
         boolean connected = wifiManager.reconnect();
-        Log.d(TAG, "enableNetwork connected=" + connected);
+        Log.d(TAG, "enableNetwork connectStatus=" + connected);
 
         // Thread thread = new Thread(new ConnectRunnable(ssid, password,
         // type));
@@ -204,7 +204,7 @@ public class WifiAutoConnectManager {
             boolean enabled = wifiManager.enableNetwork(netID, true);
             Log.d(TAG, "enableNetwork status enable=" + enabled);
             boolean connected = wifiManager.reconnect();
-            Log.d(TAG, "enableNetwork connected=" + connected);
+            Log.d(TAG, "enableNetwork connectStatus=" + connected);
         }
     }
 }

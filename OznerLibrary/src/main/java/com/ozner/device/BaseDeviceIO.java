@@ -26,7 +26,7 @@ public abstract class BaseDeviceIO extends XObject {
     /**
      * 设备连接并初始化完成事件
      */
-    public final static String ACTION_DEVICE_CONNECTED = "com.ozner.device.connected";
+    public final static String ACTION_DEVICE_CONNECTED = "com.ozner.device.connectStatus";
 
 
     /**
@@ -39,6 +39,8 @@ public abstract class BaseDeviceIO extends XObject {
     CheckTransmissionsCompleteCallback checkTransmissionsCompleteCallback =null;
     OnTransmissionsCallback onTransmissionsCallback=null;
     final ArrayList<StatusCallback> statusCallback = new ArrayList<>();
+
+    public enum ConnectStatus {Connecting, Connected, Disconnect}
 
     public BaseDeviceIO(Context context,String Model)
     {
@@ -73,7 +75,7 @@ public abstract class BaseDeviceIO extends XObject {
 
     public abstract void open() throws DeviceNotReadyException;
 
-    public abstract boolean connected();
+    public abstract ConnectStatus connectStatus();
 
 
     /**
@@ -176,6 +178,7 @@ public abstract class BaseDeviceIO extends XObject {
             for (StatusCallback cb : statusCallback)
                 cb.onReady(this);
         }
+
         Intent intent=new Intent(ACTION_DEVICE_CONNECTED);
         intent.putExtra(Extra_Address,getAddress());
         context().sendBroadcast(intent);

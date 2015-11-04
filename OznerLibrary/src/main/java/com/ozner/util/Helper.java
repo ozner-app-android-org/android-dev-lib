@@ -15,8 +15,7 @@ public class Helper {
     /**
      * 将px值转换为dip或dp值，保证尺寸大小不变
      *
-     * @param pxValue
-     * @param scale   （DisplayMetrics类中属性density）
+     * @param pxValue px值
      * @return
      */
     public static int px2dip(Context context, float pxValue) {
@@ -27,8 +26,7 @@ public class Helper {
     /**
      * 将dip或dp值转换为px值，保证尺寸大小不变
      *
-     * @param dipValue
-     * @param scale    （DisplayMetrics类中属性density）
+     * @param dipValue dip
      * @return
      */
     public static int dip2px(Context context, float dipValue) {
@@ -39,8 +37,7 @@ public class Helper {
     /**
      * 将px值转换为sp值，保证文字大小不变
      *
-     * @param pxValue
-     * @param fontScale （DisplayMetrics类中属性scaledDensity）
+     * @param pxValue px
      * @return
      */
     public static int px2sp(Context context, float pxValue) {
@@ -51,8 +48,7 @@ public class Helper {
     /**
      * 将sp值转换为px值，保证文字大小不变
      *
-     * @param spValue
-     * @param fontScale （DisplayMetrics类中属性scaledDensity）
+     * @param spValue sp
      * @return
      */
     public static int sp2px(Context context, float spValue) {

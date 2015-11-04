@@ -7,10 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -24,6 +21,7 @@ import com.example.oznerble.R.id;
 import com.example.oznerble.R.layout;
 import com.ozner.application.OznerBLEService.OznerBLEBinder;
 import com.ozner.bluetooth.BluetoothIO;
+import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.FirmwareTools;
 import com.ozner.device.OznerDevice;
 import com.ozner.tap.Record;
@@ -99,7 +97,7 @@ public class TapActivity extends Activity implements View.OnClickListener, Firmw
     private void load() {
 
         ((TextView) findViewById(id.Device_Name)).setText(mTap.getName() +
-                (mTap.connected() ? "(已连接)" : "(未连接)"));
+                (mTap.connectStatus() == BaseDeviceIO.ConnectStatus.Connected ? "(已连接)" : "(未连接)"));
 
         if (mTap.Bluetooth() != null) {
             ((TextView) findViewById(id.Device_Model)).setText(mTap.Bluetooth()

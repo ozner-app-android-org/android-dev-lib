@@ -10,10 +10,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.provider.DocumentsContract;
-import android.provider.MediaStore;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
@@ -29,6 +26,7 @@ import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.cup.Cup;
 import com.ozner.cup.CupRecord;
 import com.ozner.cup.Record;
+import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.FirmwareTools;
 import com.ozner.util.GetPathFromUri4kitkat;
 
@@ -88,7 +86,7 @@ public class CupActivity extends Activity implements OnClickListener, FirmwareTo
 	private void load() {
 
 		((TextView) findViewById(id.Device_Name)).setText(mCup.Setting().name()
-				+ (mCup.connected() ? "(设备已连接)" : "(设备未连接)"));
+				+ (mCup.connectStatus() == BaseDeviceIO.ConnectStatus.Connected ? "(设备已连接)" : "(设备未连接)"));
 		if (mCup.Bluetooth() != null) {
 			((TextView) findViewById(id.Device_Model)).setText(mCup.Bluetooth()
 					.getModel());

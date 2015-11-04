@@ -206,6 +206,7 @@ public class WifiConfigurationActivity extends Activity {
             handle.post(new Runnable() {
                 @Override
                 public void run() {
+                    setStatusText("配网完成");
                     nextButton.setProgress(100);
                 }
             });
@@ -232,6 +233,7 @@ public class WifiConfigurationActivity extends Activity {
             try {
                 OznerDevice device=OznerDeviceManager.Instance().getDevice(bindIO);
                 OznerDeviceManager.Instance().save(device);
+                finish();
             } catch (NotSupportDeviceException e) {
                 e.printStackTrace();
             }

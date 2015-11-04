@@ -2,10 +2,9 @@ package com.ozner.device;
 
 import android.content.Context;
 
+import com.ozner.WaterPurifier.WaterPurifierManager;
 import com.ozner.cup.CupManager;
 import com.ozner.tap.TapManager;
-import com.ozner.wifi.mxchip.WaterPurifier.WaterPurifier;
-import com.ozner.wifi.mxchip.WaterPurifier.WaterPurifierManager;
 
 /**
  * Created by xzyxd on 2015/11/2.

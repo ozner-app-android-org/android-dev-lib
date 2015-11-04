@@ -17,8 +17,6 @@ import com.ozner.device.DeviceNotReadyException;
 import com.ozner.device.OperateCallback;
 import com.ozner.util.dbg;
 
-import org.fusesource.mqtt.client.Callback;
-
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
@@ -30,7 +28,7 @@ public class BluetoothIO extends BaseDeviceIO {
     /**
      * 设备连接成功广播
      */
-    public final static String ACTION_BLUETOOTH_CONNECTED = "com.ozner.bluetooth.connected";
+    public final static String ACTION_BLUETOOTH_CONNECTED = "com.ozner.bluetooth.connectStatus";
     //public final static String ACTION_BLUETOOTH_ERROR = "com.ozner.bluetooth.error";
 
     /**
@@ -129,7 +127,7 @@ public class BluetoothIO extends BaseDeviceIO {
 
     @Override
     public boolean send(byte[] bytes, OperateCallback<Void> callback) {
-        return bluetoothProxy.postSend(bytes,callback);
+        return bluetoothProxy.postSend(bytes, callback);
     }
 
     /**
@@ -160,9 +158,18 @@ public class BluetoothIO extends BaseDeviceIO {
     }
 
     @Override
-    public boolean connected() {
-        return bluetoothProxy.connectionState == BluetoothGatt.STATE_CONNECTED;
+    public ConnectStatus connectStatus() {
+        if (bluetoothProxy.connectionState == BluetoothGatt.STATE_CONNECTING)
+            return ConnectStatus.Connecting;
+        if (bluetoothProxy.connectionState == BluetoothGatt.STATE_CONNECTED) {
+            if (isReady())
+                return ConnectStatus.Connected;
+            else
+                return ConnectStatus.Connecting;
+        } else
+            return ConnectStatus.Disconnect;
     }
+
 
     @Override
     protected void doConnected() {

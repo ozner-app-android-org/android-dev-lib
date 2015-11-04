@@ -34,7 +34,7 @@ public class ConfigurationDevice {
         device.loginId = jsonObject.getString("loginId");
         device.devPasswd = jsonObject.getString("devPasswd");
         device.activated = jsonObject.getBoolean("activated");
-        device.connected = jsonObject.getBoolean("connected");
+        device.connected = jsonObject.getBoolean("connectStatus");
         device.localPort = jsonObject.getIntValue("localPort");
         device.Type = jsonObject.getString("Type");
         return device;
@@ -82,7 +82,7 @@ public class ConfigurationDevice {
                             device.activated = sub.getBoolean("C");
                             continue;
                         }
-                        if (name.equals("connected")) {
+                        if (name.equals("connectStatus")) {
                             device.connected = sub.getBoolean("C");
                             continue;
                         }
@@ -135,7 +135,7 @@ public class ConfigurationDevice {
         jsonObject.put("loginId", loginId);
         jsonObject.put("devPasswd", devPasswd);
         jsonObject.put("activated", activated);
-        jsonObject.put("connected", connected);
+        jsonObject.put("connectStatus", connected);
         jsonObject.put("localPort", localPort);
         jsonObject.put("Type", Type);
         return jsonObject.toJSONString();

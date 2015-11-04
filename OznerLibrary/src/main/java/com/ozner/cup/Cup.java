@@ -11,15 +11,11 @@ import com.ozner.device.OznerDevice;
 import com.ozner.util.ByteUtil;
 import com.ozner.util.dbg;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.SortedMap;
-import java.util.SortedSet;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.TreeMap;
 import java.util.TreeSet;
 
 /**

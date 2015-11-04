@@ -14,7 +14,7 @@ public abstract class OznerDevice extends XObject {
     private BaseDeviceIO deviceIO;
     private DeviceSetting setting;
     private String Model;
-
+    public final static String Extra_Address = "Address";
 
     public abstract Class<?> getIOType();
 
@@ -69,12 +69,15 @@ public abstract class OznerDevice extends XObject {
         return deviceIO;
     }
 
+
     /**
      * 判断设备是否连接
      *
      */
-    public boolean connected() {
-        return ((deviceIO != null) && (deviceIO.isReady()));
+    public BaseDeviceIO.ConnectStatus connectStatus() {
+        if (deviceIO == null)
+            return BaseDeviceIO.ConnectStatus.Disconnect;
+        return deviceIO.connectStatus();
     }
 
     protected DeviceSetting initSetting(String Setting) {

@@ -320,7 +320,7 @@ public class EasyLink_v4 {
                 try {
                     s = server.accept();
                     if (s != null) {
-                        Log.e("client", "connected!!");
+                        Log.e("client", "connectStatus!!");
                         socketList.add(s);
                         service = new ServiceThread(s, listener);
                         t = new Thread(service);

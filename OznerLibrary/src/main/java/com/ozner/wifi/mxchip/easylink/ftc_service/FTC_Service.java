@@ -123,7 +123,7 @@ public class FTC_Service {
                     s = server.accept();
                     if (s != null) {
                         ftcConTag = 1;
-                        Log.e("client", "connected!!");
+                        Log.e("client", "connectStatus!!");
                         socketList.add(s);
                         service = new ServiceThread(s, listener);
                         t = new Thread(service);

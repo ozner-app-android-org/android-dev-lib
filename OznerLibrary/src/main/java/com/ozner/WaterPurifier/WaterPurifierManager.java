@@ -1,4 +1,4 @@
-package com.ozner.wifi.mxchip.WaterPurifier;
+package com.ozner.WaterPurifier;
 
 import android.content.Context;
 import android.content.Intent;

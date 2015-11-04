@@ -2,7 +2,6 @@ package com.ozner.device;
 
 import android.content.Context;
 
-import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.bluetooth.BluetoothIOMgr;
 import com.ozner.wifi.mxchip.MXChipIOManager;
 

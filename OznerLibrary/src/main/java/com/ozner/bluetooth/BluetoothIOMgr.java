@@ -3,7 +3,6 @@ package com.ozner.bluetooth;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 
-import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.IOManager;
 
 /**

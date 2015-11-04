@@ -8,7 +8,6 @@ import android.net.wifi.WifiManager;
 import com.alibaba.fastjson.JSON;
 import com.mxchip.jmdns.JmdnsAPI;
 import com.mxchip.jmdns.JmdnsListener;
-import com.ozner.XObject;
 import com.ozner.device.OznerDeviceManager;
 import com.ozner.util.Helper;
 import com.ozner.util.HttpUtil;
@@ -18,7 +17,6 @@ import com.ozner.wifi.mxchip.easylink.ftc_service.FTC_Service;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 
 import java.io.IOException;
 
@@ -120,7 +118,6 @@ public class MXChipPair  {
         }
 
         private String ActiveDevice() throws IOException {
-
             com.alibaba.fastjson.JSONObject jsonObject = new com.alibaba.fastjson.JSONObject();
             String url = "http://" + device.localIP + ":" + device.localPort + "/dev-activate";
             jsonObject.put("login_id", device.loginId);
@@ -131,6 +128,16 @@ public class MXChipPair  {
             return ret.getString("device_id");
         }
 
+        private String Authorize() throws IOException {
+            com.alibaba.fastjson.JSONObject jsonObject = new com.alibaba.fastjson.JSONObject();
+            String url = "http://" + device.localIP + ":" + device.localPort + "/dev-authorize";
+            jsonObject.put("login_id", device.loginId);
+            jsonObject.put("dev_passwd", device.devPasswd);
+            jsonObject.put("user_token", getToken());
+            String retString = HttpUtil.postJSON(url, jsonObject.toJSONString(), "US-ASCII");
+            com.alibaba.fastjson.JSONObject ret = (com.alibaba.fastjson.JSONObject) JSON.parse(retString);
+            return ret.getString("device_id");
+        }
         @Override
         public void run() {
             try {
@@ -164,7 +171,7 @@ public class MXChipPair  {
                 mdnsApi.startMdnsService("_easylink._tcp.local.", this);
                 wait(MDNSTimeout);
 
-                //mdnsApi.stopMdnsService();
+                mdnsApi.stopMdnsService();
                 if (Helper.StringIsNullOrEmpty(deviceMAC)) {
                     callback.onPairFailure(new TimeoutException());
                     return;
@@ -172,6 +179,11 @@ public class MXChipPair  {
                 callback.onActivate();
 
                 String deviceId = ActiveDevice();
+                if (Helper.StringIsNullOrEmpty(deviceId)) {
+                    callback.onPairFailure(null);
+                }
+                //Authorize();
+
                 if (Helper.StringIsNullOrEmpty(deviceId)) {
                     callback.onPairFailure(null);
                 }

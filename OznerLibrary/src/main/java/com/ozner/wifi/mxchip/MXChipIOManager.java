@@ -4,10 +4,6 @@ import android.content.Context;
 
 import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.IOManager;
-import com.ozner.device.OznerDevice;
-import com.ozner.device.OznerDeviceManager;
-
-import java.util.HashMap;
 
 //import com.mxchip.jmdns.JmdnsAPI;
 
@@ -79,6 +75,24 @@ public class MXChipIOManager extends IOManager {
             return io;
         }
     }
+//
+//    @Override
+//    protected void doUnavailable(BaseDeviceIO io) {
+//        super.doUnavailable(io);
+//        if (proxy.connected) {
+//            Handler handler = new Handler(Looper.getMainLooper())
+//            {
+//                @Override
+//                public void handleMessage(Message msg) {
+//                    doAvailable((BaseDeviceIO)msg.obj);
+//                }
+//            };
+//            Message msg=new Message();
+//            msg.obj=io;
+//            handler.sendMessageDelayed(msg,1000);
+//
+//        }
+//    }
 
     @Override
     public BaseDeviceIO getAvailableDevice(String address) {
@@ -96,6 +110,7 @@ public class MXChipIOManager extends IOManager {
             return null;
         }else
             return super.getAvailableDevices();
+
     }
 
 

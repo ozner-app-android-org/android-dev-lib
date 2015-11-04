@@ -6,7 +6,6 @@ package com.ozner.wifi.mxchip.easylink.easylink_plus;
 import android.content.Context;
 import android.net.wifi.WifiManager;
 
-import com.ozner.wifi.mxchip.easylink.easylink_v2.EasyLink_v2;
 import com.ozner.wifi.mxchip.easylink.easylink_v3.EasyLink_v3;
 import com.ozner.wifi.mxchip.easylink.helper.Helper;
 

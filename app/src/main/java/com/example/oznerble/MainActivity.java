@@ -22,6 +22,7 @@ import android.widget.TextView;
 import com.ozner.application.OznerBLEService;
 import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.cup.Cup;
+import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.OznerDevice;
 import com.ozner.device.OznerDeviceManager;
 import com.ozner.tap.Tap;
@@ -226,11 +227,11 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 			OznerDevice device=(OznerDevice)getItem(position);
 			convertView.setTag(device);
 			((TextView) convertView.findViewById(R.id.Device_Name)).setText(
-					device.getName()+(device.connected()?"(已连接)":""));
+					device.getName() + (device.connectStatus() == BaseDeviceIO.ConnectStatus.Connected ? "(已连接)" : ""));
 			((TextView) convertView.findViewById(R.id.Device_Address)).setText(
 					device.Address());
 			String msg="";
-			if (device.connected())
+			if (device.connectStatus() == BaseDeviceIO.ConnectStatus.Connected)
 			{
 				if (device instanceof Cup) {
 					Cup cup = (Cup) device;

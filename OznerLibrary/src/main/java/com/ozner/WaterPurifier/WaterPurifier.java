@@ -1,9 +1,8 @@
-package com.ozner.wifi.mxchip.WaterPurifier;
+package com.ozner.WaterPurifier;
 
 import android.content.Context;
-import android.util.Log;
+import android.content.Intent;
 
-import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.OperateCallback;
 import com.ozner.device.OperateCallbackProxy;
@@ -11,12 +10,6 @@ import com.ozner.device.OznerDevice;
 import com.ozner.util.ByteUtil;
 import com.ozner.wifi.mxchip.CRC8;
 import com.ozner.wifi.mxchip.MXChipIO;
-import com.ozner.wifi.mxchip.easylink.helper.Helper;
-
-import org.fusesource.mqtt.client.Callback;
-
-import java.nio.ByteBuffer;
-import java.util.Arrays;
 
 /**
  * Created by xzyxd on 2015/11/2.
@@ -32,11 +25,24 @@ public class WaterPurifier extends OznerDevice {
     private static final byte Opcode_RespondStatus=(byte)0x01;
     private static final byte Opcode_ChangeStatus=(byte)0x02;
     private static final byte Opcode_DeviceInfo=(byte)0x01;
+
+    public static final String ACTION_WATER_PURIFIER_STATUS_CHANGE = "com.ozner.water.purifier.status.change";
+
     final WaterPurifierStatus status=new WaterPurifierStatus();
-    boolean statusInited=false;
+
+    boolean isOffline = true;
     final WaterPurifierImp waterPurifierImp=new WaterPurifierImp();
     public WaterPurifier(Context context, String Address, String Model, String Setting) {
         super(context, Address, Model, Setting);
+    }
+
+
+    @Override
+    public BaseDeviceIO.ConnectStatus connectStatus() {
+        if (isOffline) {
+            return BaseDeviceIO.ConnectStatus.Disconnect;
+        } else
+            return super.connectStatus();
     }
 
     @Override
@@ -91,10 +97,6 @@ public class WaterPurifier extends OznerDevice {
         return bytes;
     }
 
-    @Override
-    public boolean connected() {
-        return IO() != null && IO().isReady();
-    }
 
     public boolean Power()
     {
@@ -136,9 +138,17 @@ public class WaterPurifier extends OznerDevice {
     }
 
 
+    public int TDS1() {
+        return status.TDS1();
+    }
+
+    public int TDS2() {
+        return status.TDS2();
+    }
+
     public boolean Hot()
     {
-        return status.Power;
+        return status.Hot;
     }
     /**
      * 打开加热
@@ -178,7 +188,7 @@ public class WaterPurifier extends OznerDevice {
 
     private void setStatus(OperateCallback<Void> cb)
     {
-        if ((IO()==null) || (!IO().isReady()))
+        if (connectStatus() != BaseDeviceIO.ConnectStatus.Connected)
         {
             if (cb!=null)
                 cb.onFailure(null);
@@ -190,13 +200,12 @@ public class WaterPurifier extends OznerDevice {
                 new OperateCallbackProxy<Void>(cb) {
                     @Override
                     public void onFailure(Throwable var1) { //失败时重新更新状态
-                        updateStatus(null, null);
+                        //updateStatus(null, null);
                         super.onFailure(var1);
                     }
-
                     @Override
                     public void onSuccess(Void var1) {
-
+                        updateStatus(null, null);
                         super.onSuccess(var1);
                     }
                 });
@@ -265,8 +274,10 @@ public class WaterPurifier extends OznerDevice {
                         if (opCode==Opcode_RespondStatus)
                         {
                             status.fromBytes(bytes);
-                            statusInited=true;
-
+                            Intent intent = new Intent(ACTION_WATER_PURIFIER_STATUS_CHANGE);
+                            intent.putExtra(Extra_Address, Address());
+                            context().sendBroadcast(intent);
+                            isOffline = false;
                         }
                         break;
                     case GroupCode_DevceToServer:
@@ -283,7 +294,7 @@ public class WaterPurifier extends OznerDevice {
         @Override
         public boolean onIOInit(BaseDeviceIO.DataSendProxy sendHandle) {
             try {
-                statusInited=false;
+                isOffline = true;
                 updateStatus(sendHandle, new OperateCallback<Void>() {
                     @Override
                     public void onSuccess(Void var1) {
@@ -294,14 +305,7 @@ public class WaterPurifier extends OznerDevice {
                         setObject();
                     }
                 });
-              //  return true;
-                waitObject(5000); //等待5秒接受状态更新
-                if (statusInited)
-                {
-                    return true;
-                }else
-                    return false;
-
+                return true;
             } catch (Exception e) {
                 e.printStackTrace();
                 return false;

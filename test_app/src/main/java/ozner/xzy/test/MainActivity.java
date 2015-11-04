@@ -3,24 +3,25 @@ package ozner.xzy.test;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
-import android.widget.Toast;
+import android.widget.ListView;
 
+import com.ozner.WaterPurifier.WaterPurifier;
 import com.ozner.application.OznerBLEService;
-import com.ozner.device.OperateCallback;
 import com.ozner.device.OznerDeviceManager;
 import com.ozner.ui.library.RoundDrawable;
-import com.ozner.wifi.mxchip.WaterPurifier.WaterPurifier;
 
 
 public class MainActivity extends ActionBarActivity implements View.OnClickListener {
     private static final int WifiActivityRequestCode = 0x100;
     final Monitor mMonitor = new Monitor();
+    ListView listView;
+    DeviceListAdapter adapter;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,39 +35,18 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         setSupportActionBar(toolbar);
         toolbar.setNavigationIcon(icon);
         findViewById(R.id.addWifiButton).setOnClickListener(this);
-        findViewById(R.id.power).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                final WaterPurifier waterPurifier=(WaterPurifier)OznerDeviceManager.Instance().getDevice("C8:93:46:45:33:19");
-                if (waterPurifier!=null)
-                {
-                    waterPurifier.setPower(!waterPurifier.Power(), new OperateCallback<Void>() {
-                        @Override
-                        public void onSuccess(Void var1) {
-                            Handler handler=new Handler(getMainLooper());
-                            handler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Toast.makeText(MainActivity.this, "电源状态:"+(waterPurifier.Power()?"开":"关"),Toast.LENGTH_LONG).show();
-                                }
-                            });
-                        }
-
-                        @Override
-                        public void onFailure(Throwable var1) {
-                            Handler handler=new Handler(getMainLooper());
-                            handler.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Toast.makeText(MainActivity.this, "设置失败",Toast.LENGTH_LONG).show();
-                                }
-                            });
-                        }
-                    });
-                }
-            }
-        });
+        adapter = new DeviceListAdapter(this, WaterPurifier.class);
+        listView = (ListView) findViewById(R.id.devicesList);
+        listView.setAdapter(adapter);
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(OznerApplication.ACTION_ServiceInit);
+        intentFilter.addAction(OznerDeviceManager.ACTION_OZNER_MANAGER_DEVICE_ADD);
+        intentFilter.addAction(OznerDeviceManager.ACTION_OZNER_MANAGER_DEVICE_CHANGE);
+        intentFilter.addAction(OznerDeviceManager.ACTION_OZNER_MANAGER_DEVICE_REMOVE);
+        intentFilter.addAction(OznerDeviceManager.ACTION_OZNER_MANAGER_OWNER_CHANGE);
+        this.registerReceiver(mMonitor, intentFilter);
     }
+
 
     private OznerBLEService.OznerBLEBinder getService() {
         OznerBaseApplication app = (OznerBaseApplication) getApplication();
@@ -76,10 +56,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     class Monitor extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(OznerApplication.ACTION_ServiceInit)) {
-
-            }
-
+            adapter.reload();
         }
     }
 
@@ -96,6 +73,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
     @Override
     protected void onResume() {
+        adapter.reload();
         super.onResume();
     }
 

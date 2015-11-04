@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ozner.xzy.test.WaterPurifierView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="测试水机"
+        android:id="@+id/name"
+        android:textSize="22sp"
+        android:layout_marginLeft="10dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/mac"
+        android:text="10:20:30:40:50:60"
+        android:textSize="18sp"
+        android:layout_marginLeft="10dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        android:layout_marginLeft="10dp"
+        android:id="@+id/status"
+        android:text="设备状态:离线" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:textSize="16sp"
+            android:id="@+id/tds1"
+            android:text="TDS1:100" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:textSize="16sp"
+            android:id="@+id/tds2"
+            android:text="TDS2:100" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:textSize="16sp"
+            android:id="@+id/powerStatus"
+            android:text="电源:" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:textSize="16sp"
+            android:id="@+id/hotStatus"
+            android:text="加热:" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:textSize="16sp"
+            android:id="@+id/coolStatus"
+            android:text="制冷:" />
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal">
+
+        <com.dd.CircularProgressButton
+            android:layout_weight="1"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
+
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="5dp"
+            app:cpb_textIdle="电源"
+            app:cpb_textComplete="电源:完成"
+            app:cpb_textError="电源:失败"
+            app:cpb_cornerRadius="5dp"
+            android:id="@+id/power" />
+
+        <com.dd.CircularProgressButton
+            android:layout_weight="1"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
+
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="5dp"
+            app:cpb_textIdle="加热"
+            app:cpb_textComplete="加热:完成"
+            app:cpb_textError="加热:失败"
+
+            app:cpb_cornerRadius="5dp"
+            android:id="@+id/hot" />
+
+        <com.dd.CircularProgressButton
+            android:layout_weight="1"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
+
+
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="5dp"
+            app:cpb_textIdle="制冷"
+            app:cpb_textComplete="制冷:完成"
+            app:cpb_textError="制冷:失败"
+            app:cpb_cornerRadius="5dp"
+            android:id="@+id/cool" />
+
+
+        <com.dd.CircularProgressButton
+            android:layout_weight="1"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
+
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="5dp"
+            app:cpb_textIdle="解除"
+
+            app:cpb_cornerRadius="5dp"
+            android:id="@+id/delete" />
+
+    </LinearLayout>
+</ozner.xzy.test.WaterPurifierView>
