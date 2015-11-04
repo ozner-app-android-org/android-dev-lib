@@ -77,13 +77,13 @@ public class EasyLink_plus {
                             e3.transmitSettings(ssid_byte, key_byte, ipString, userinfo);
                             // Log.e("minus--->", "sending");
                             try {
-                                Thread.sleep(5 * 1000);
+                                Thread.sleep(10 * 1000);
 //                                e2.stopTransmitting();
                                 e3.stopTransmitting();
 //                                minus.stopTransmitting();
                                 // Log.e("easylink", "STOP!!!!");
                                 //Thread.sleep(3 * 1000);
-                                Thread.sleep(5 * 1000);
+                                Thread.sleep(10 * 1000);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }

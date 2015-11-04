@@ -117,18 +117,15 @@ public class EasyLink_v3 {
                 UDP_SEND(START_FLAG1);
                 UDP_SEND(START_FLAG2);
                 UDP_SEND(START_FLAG3);
-                Thread.sleep(10);
                 for (i = 0, j = 1; i < send_data[0]; i++) {
                     len = (j * 0x100) + (send_data[i] & 0xff);
                     // Log.d("UDP_SEND", "--------" + Integer.toHexString(len)
                     // +"   " + i + "--------" + j);
                     UDP_SEND(len);
-                    Thread.sleep(10);
                     if ((i % 4) == 3) {
                         k++;
                         len = 0x500 + k;
                         UDP_SEND(len);
-                        Thread.sleep(10);
                     }
                     j++;
                     if (j == 5)
@@ -159,7 +156,7 @@ public class EasyLink_v3 {
             udpSocket.send(send_packet);
             // Log.d("UDP_SEND", "--------" + Integer.toHexString(length) +"   "
             // + port + "--------");
-            Thread.sleep(10);
+            Thread.sleep(20);
         } catch (Exception e) {
             e.printStackTrace();
         }
