@@ -212,8 +212,8 @@ public class EasyLink_v4 {
                 server.close();
                 server = null;
             }
-            // easylink_plus = EasyLink_plus.getInstence();
-            // easylink_plus.stopTransmitting();
+            // EasyLink_plus = EasyLink_plus.getInstence();
+            // EasyLink_plus.stopTransmitting();
 
         } catch (Exception e) {
             e.printStackTrace();

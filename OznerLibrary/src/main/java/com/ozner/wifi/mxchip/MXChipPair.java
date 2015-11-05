@@ -138,13 +138,12 @@ public class MXChipPair  {
             com.alibaba.fastjson.JSONObject ret = (com.alibaba.fastjson.JSONObject) JSON.parse(retString);
             return ret.getString("device_id");
         }
+
         @Override
         public void run() {
             try {
-                FTC_Service ftc_service = FTC_Service.getInstence();
+
                 JmdnsAPI mdnsApi = new JmdnsAPI(context);
-                //EasyServer easyServer=new EasyServer(8000);
-                //easyServer.start();
                 device = null;
                 deviceMAC = null;
                 WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
@@ -156,21 +155,46 @@ public class MXChipPair  {
                 }
 
                 callback.onSendConfiguration();
-                ftc_service.transmitSettings(context, SSID.trim(), password, info.getIpAddress(),
-                        mxChipPairImp);
-                wait(ConfigurationTimeout);
-                ftc_service.stopTransmitting();
+
+
+                FTC_Service ftc_service = FTC_Service.getInstence();
+                try {
+                    //ftc_service.transmitSettings();
+                    ftc_service.transmitSettings(context, SSID.trim(), password, info.getIpAddress(),
+                            mxChipPairImp);
+                    wait(ConfigurationTimeout);
+                } finally {
+                    ftc_service.stopTransmitting();
+                }
+
+//                FTC ftc=new FTC(context,this);
+//                try {
+//                    ftc.startListen();
+//                    EasyLinkSender sender=new EasyLinkSender();
+//                    sender.setSettings( SSID.trim(), password,info.getIpAddress());
+//                    int count=0;
+//
+//                    while(device==null)
+//                    {
+//                        sender.send();
+//                        Thread.sleep(100);
+//                        count++;
+//                        if (count>=600) break;
+//                    }
+//                    sender.close();
+//
+//                }finally {
+//                    ftc.stop();
+//                }
                 if (device == null) {
                     callback.onPairFailure(new TimeoutException());
                     return;
                 }
                 callback.onWaitConnectWifi();
 
-                Thread.sleep(2000);
-
+                //Thread.sleep(2000);
                 mdnsApi.startMdnsService("_easylink._tcp.local.", this);
                 wait(MDNSTimeout);
-
                 mdnsApi.stopMdnsService();
                 if (Helper.StringIsNullOrEmpty(deviceMAC)) {
                     callback.onPairFailure(new TimeoutException());

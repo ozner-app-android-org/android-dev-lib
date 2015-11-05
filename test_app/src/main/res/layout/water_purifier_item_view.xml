@@ -106,8 +106,8 @@
             android:layout_marginTop="10dp"
             android:layout_marginBottom="5dp"
             app:cpb_textIdle="电源"
-            app:cpb_textComplete="电源:完成"
-            app:cpb_textError="电源:失败"
+            app:cpb_textComplete="电源"
+            app:cpb_textError="电源"
             app:cpb_cornerRadius="5dp"
             android:id="@+id/power" />
 
@@ -121,8 +121,8 @@
             android:layout_marginTop="10dp"
             android:layout_marginBottom="5dp"
             app:cpb_textIdle="加热"
-            app:cpb_textComplete="加热:完成"
-            app:cpb_textError="加热:失败"
+            app:cpb_textComplete="加热"
+            app:cpb_textError="加热"
 
             app:cpb_cornerRadius="5dp"
             android:id="@+id/hot" />
@@ -139,8 +139,8 @@
             android:layout_marginTop="10dp"
             android:layout_marginBottom="5dp"
             app:cpb_textIdle="制冷"
-            app:cpb_textComplete="制冷:完成"
-            app:cpb_textError="制冷:失败"
+            app:cpb_textComplete="制冷"
+            app:cpb_textError="制冷"
             app:cpb_cornerRadius="5dp"
             android:id="@+id/cool" />
 

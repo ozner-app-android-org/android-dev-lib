@@ -95,7 +95,7 @@ public class WaterPurifierView extends BaseItemView {
 
         name.setText(device.getName());
         mac.setText(device.Address());
-        status.setText("连接状态:" + device.connectStatus().toString());
+        status.setText("连接状态:" + (device.isOffline() ? "离线" : "在线"));
         tds1.setText("TDS1:" + String.valueOf(device.TDS1()));
         tds2.setText("TDS2:" + String.valueOf(device.TDS2()));
         powerStatus.setText("电源:" + (device.Power() ? "开" : "关"));

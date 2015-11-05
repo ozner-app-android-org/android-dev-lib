@@ -1,46 +1,38 @@
-/**
- *
- */
+//
+// Source code recreated from a .class file by IntelliJ IDEA
+// (powered by Fernflower decompiler)
+//
+
 package com.ozner.wifi.mxchip.easylink.easylink_plus;
 
-import android.content.Context;
-import android.net.wifi.WifiManager;
-
+import com.ozner.wifi.mxchip.easylink.easylink_v2.EasyLink_v2;
 import com.ozner.wifi.mxchip.easylink.easylink_v3.EasyLink_v3;
-import com.ozner.wifi.mxchip.easylink.helper.Helper;
 
-import java.io.UnsupportedEncodingException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-/**
- * @author Perry
- * @date 2014-10-21
- */
 public class EasyLink_plus {
-//    private static EasyLink_v2 e2;
+    private static EasyLink_v2 e2;
     private static EasyLink_v3 e3;
-    //        private static EasyLink_minus minus;
     private static EasyLink_plus me;
     boolean sending = true;
     ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
-    private WifiManager wifiManager;
 
-    private EasyLink_plus(Context ctx) {
+    private EasyLink_plus() {
         try {
-            wifiManager = (WifiManager) ctx.getSystemService(Context.WIFI_SERVICE);
-//            e2 = EasyLink_v2.getInstence();
+            e2 = EasyLink_v2.getInstence();
             e3 = EasyLink_v3.getInstence();
-//            minus = new EasyLink_minus(ctx);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception var2) {
+            var2.printStackTrace();
         }
+
     }
 
-    public static EasyLink_plus getInstence(Context ctx) {
+    public static EasyLink_plus getInstence() {
         if (me == null) {
-            me = new EasyLink_plus(ctx);
+            me = new EasyLink_plus();
         }
+
         return me;
     }
 
@@ -48,61 +40,43 @@ public class EasyLink_plus {
         e3.SetSmallMTU(onoff);
     }
 
-    public void transmitSettings(final String ssid, final String key,
-                                 final int ipAddress) {
-        try {
-            final byte[] ssid_byte = ssid.getBytes("UTF-8");
-            final byte[] key_byte = key.getBytes("UTF-8");
-            final byte[] userinfo = new byte[5];
-            userinfo[0] = 0x23; // #
-            String strIP = String.format("%08x", ipAddress);
-            System.arraycopy(Helper.hexStringToBytes(strIP), 0, userinfo, 1, 4);
-            //WifiInfo info= wifiManager.getConnectionInfo();
+    public void transmitSettings(final byte[] ssid, final byte[] key, final byte[] userinfo, final int ipAddress) {
+        this.singleThreadExecutor = Executors.newSingleThreadExecutor();
+        this.sending = true;
+        this.singleThreadExecutor.execute(new Runnable() {
+            public void run() {
+                while (EasyLink_plus.this.sending) {
+                    try {
+                        //int broadcatIp = 0xFF000000 | ipAddress;
 
+                        //String ipString = ((broadcatIp & 0xff) + "." + (broadcatIp >> 8 & 0xff) + "."
+                        //        + (broadcatIp >> 16 & 0xff) + "." + (broadcatIp >> 24 & 0xff));
+                        String ipString = "255.255.255.255";
 
-            singleThreadExecutor = Executors.newSingleThreadExecutor();
-            sending = true;
-            singleThreadExecutor.execute(new Runnable() {
-                @Override
-                public void run() {
-                    while (sending) {
+                        EasyLink_plus.e2.transmitSettings(ssid, key, userinfo);
+                        EasyLink_plus.e3.transmitSettings(ssid, key, ipString, userinfo);
+
                         try {
-                            //minus.transmitSettings(ssid, key, ipAddress);
-                            int broadcatIp = 0xFF000000 | ipAddress;
-
-                            String ipString = ((broadcatIp & 0xff) + "." + (broadcatIp >> 8 & 0xff) + "."
-                                    + (broadcatIp >> 16 & 0xff) + "." + (broadcatIp >> 24 & 0xff));
-                            //ipString="255.255.255.255";
-                            //e2.transmitSettings(ssid_byte, key_byte, userinfo);
-                            e3.transmitSettings(ssid_byte, key_byte, ipString, userinfo);
-                            // Log.e("minus--->", "sending");
-                            try {
-                                Thread.sleep(10 * 1000);
-//                                e2.stopTransmitting();
-                                e3.stopTransmitting();
-//                                minus.stopTransmitting();
-                                // Log.e("easylink", "STOP!!!!");
-                                //Thread.sleep(3 * 1000);
-                                Thread.sleep(10 * 1000);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                            Thread.sleep(10000L);
+                            EasyLink_plus.e2.stopTransmitting();
+                            EasyLink_plus.e3.stopTransmitting();
+                            Thread.sleep(10000L);
+                        } catch (InterruptedException var2) {
+                            var2.printStackTrace();
                         }
+                    } catch (Exception var3) {
+                        var3.printStackTrace();
                     }
                 }
-            });
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+
+            }
+        });
     }
 
     public void stopTransmitting() {
-        sending = false;
-        singleThreadExecutor.shutdown();
-//        e2.stopTransmitting();
+        this.sending = false;
+        this.singleThreadExecutor.shutdown();
+        e2.stopTransmitting();
         e3.stopTransmitting();
-//        minus.stopTransmitting();
     }
 }

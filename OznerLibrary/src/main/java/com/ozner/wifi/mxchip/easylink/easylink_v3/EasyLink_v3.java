@@ -16,7 +16,7 @@ public class EasyLink_v3 {
     private static int START_FLAG1 = 0x5AA;
     private static int START_FLAG2 = 0x5AB;
     private static int START_FLAG3 = 0x5AC;
-    private static int UDP_START_PORT = 50000;
+    private static int UDP_START_PORT = 53;
     private static boolean stopSending;
     private static byte send_data[] = new byte[128];
     private static byte buffer[] = new byte[1500];
@@ -64,7 +64,10 @@ public class EasyLink_v3 {
             short checksum = 0;
             // getBssid();
             udpSocket = new DatagramSocket();
+            //udpSocket.setSendBufferSize(1500);
+
             udpSocket.setBroadcast(true);
+
             send_data[i++] = (byte) (1 + 1 + 1 + ssid.length + key.length
                     + user_info.length + 2); // len(total) + len(ssid) +
             // len(key) + ssid + key +
@@ -110,6 +113,7 @@ public class EasyLink_v3 {
         // WifiManager.MulticastLock lock=
         // wifi.createMulticastLock("easylink v3");
         // lock.acquire();
+
         while (!stopSending) {
             try {
                 port = UDP_START_PORT;
@@ -154,9 +158,10 @@ public class EasyLink_v3 {
             }
             send_packet = new DatagramPacket(buffer, length, address, port);
             udpSocket.send(send_packet);
+
             // Log.d("UDP_SEND", "--------" + Integer.toHexString(length) +"   "
             // + port + "--------");
-            Thread.sleep(20);
+            Thread.sleep(10);
         } catch (Exception e) {
             e.printStackTrace();
         }

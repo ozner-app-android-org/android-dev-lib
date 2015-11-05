@@ -5,6 +5,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.ozner.wifi.mxchip.easylink.easylink_plus.EasyLink_plus;
+import com.ozner.wifi.mxchip.easylink.helper.Helper;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -70,7 +71,7 @@ public class FTC_Service {
             }
         }
         ctx = context;
-        easylink_plus = EasyLink_plus.getInstence(context);
+        easylink_plus = EasyLink_plus.getInstence();
         try {
             NetworkInterface intf = NetworkInterface.getByName("wlan0");
             if (intf.getMTU() < 1500) {
@@ -87,14 +88,16 @@ public class FTC_Service {
                 listen.start();
 
                 int ipAddress = phone_ip;
-                // byte[] userinfo = new byte[5];
-                // userinfo[0] = 0x23; // #
-                // String strIP = String.format("%08x", ipAddress);
-                // System.arraycopy(Helper.hexStringToBytes(strIP), 0, userinfo,
-                // 1, 4);
+                byte[] userinfo = new byte[5];
+                userinfo[0] = 0x23; // #
+                String strIP = String.format("%08x", ipAddress);
+                System.arraycopy(Helper.hexStringToBytes(strIP), 0, userinfo,
+                        1, 4);
+
 
                 try {
-                    easylink_plus.transmitSettings(ssid, key, ipAddress);
+                    easylink_plus.transmitSettings(ssid.getBytes("UTF-8"),
+                            key.getBytes("UTF-8"), userinfo, ipAddress);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -152,7 +155,7 @@ public class FTC_Service {
                 server.close();
                 server = null;
             }
-            easylink_plus = EasyLink_plus.getInstence(ctx);
+            easylink_plus = EasyLink_plus.getInstence();
             easylink_plus.stopTransmitting();
         } catch (Exception e) {
             e.printStackTrace();

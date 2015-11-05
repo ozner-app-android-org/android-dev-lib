@@ -11,6 +11,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.ListView;
 
+import com.getbase.floatingactionbutton.FloatingActionButton;
 import com.ozner.WaterPurifier.WaterPurifier;
 import com.ozner.application.OznerBLEService;
 import com.ozner.device.OznerDeviceManager;
@@ -34,7 +35,13 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         toolbar.setTitle("");
         setSupportActionBar(toolbar);
         toolbar.setNavigationIcon(icon);
-        findViewById(R.id.addWifiButton).setOnClickListener(this);
+        FloatingActionButton wifi = (FloatingActionButton) findViewById(R.id.addWifiButton);
+        wifi.setIcon(R.drawable.ic_settings_wifi);
+        wifi.setOnClickListener(this);
+        FloatingActionButton blue = (FloatingActionButton) findViewById(R.id.addBluetoothButton);
+        blue.setIcon(R.drawable.ic_settings_bluetooth);
+        blue.setOnClickListener(this);
+
         adapter = new DeviceListAdapter(this, WaterPurifier.class);
         listView = (ListView) findViewById(R.id.devicesList);
         listView.setAdapter(adapter);

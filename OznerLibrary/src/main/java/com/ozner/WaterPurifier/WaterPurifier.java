@@ -11,6 +11,9 @@ import com.ozner.util.ByteUtil;
 import com.ozner.wifi.mxchip.CRC8;
 import com.ozner.wifi.mxchip.MXChipIO;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 /**
  * Created by xzyxd on 2015/11/2.
  */
@@ -29,21 +32,19 @@ public class WaterPurifier extends OznerDevice {
     public static final String ACTION_WATER_PURIFIER_STATUS_CHANGE = "com.ozner.water.purifier.status.change";
 
     final WaterPurifierStatus status=new WaterPurifierStatus();
-
     boolean isOffline = true;
+    Timer autoUpdateTimer = null;
+
     final WaterPurifierImp waterPurifierImp=new WaterPurifierImp();
     public WaterPurifier(Context context, String Address, String Model, String Setting) {
         super(context, Address, Model, Setting);
     }
 
-
-    @Override
-    public BaseDeviceIO.ConnectStatus connectStatus() {
-        if (isOffline) {
-            return BaseDeviceIO.ConnectStatus.Disconnect;
-        } else
-            return super.connectStatus();
+    public boolean isOffline() {
+        return isOffline;
     }
+
+
 
     @Override
     public Class<?> getIOType() {
@@ -188,7 +189,7 @@ public class WaterPurifier extends OznerDevice {
 
     private void setStatus(OperateCallback<Void> cb)
     {
-        if (connectStatus() != BaseDeviceIO.ConnectStatus.Connected)
+        if (super.connectStatus() != BaseDeviceIO.ConnectStatus.Connected)
         {
             if (cb!=null)
                 cb.onFailure(null);
@@ -246,15 +247,27 @@ public class WaterPurifier extends OznerDevice {
 
         @Override
         public void onDisconnected(BaseDeviceIO io) {
-
+            cancelTimer();
+            isOffline = true;
         }
 
         @Override
         public void onReady(BaseDeviceIO io) {
-            if (io!=null)
-            {
-
+            if (getRunningMode() == RunningMode.Foreground) {
+                if (autoUpdateTimer != null)
+                    cancelTimer();
+                autoUpdateTimer = new Timer();
+                autoUpdateTimer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        doTime();
+                    }
+                }, 100, 5000);
             }
+        }
+
+        private void doTime() {
+            updateStatus(null, null);
         }
 
         @Override
@@ -311,6 +324,15 @@ public class WaterPurifier extends OznerDevice {
                 return false;
             }
         }
+
+        private void cancelTimer() {
+            if (autoUpdateTimer != null) {
+                autoUpdateTimer.cancel();
+                autoUpdateTimer.purge();
+                autoUpdateTimer = null;
+            }
+        }
+
     }
 
 

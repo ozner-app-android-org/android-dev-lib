@@ -28,6 +28,8 @@ import com.ozner.device.OznerDeviceManager;
 import com.ozner.wifi.mxchip.MXChipIO;
 import com.ozner.wifi.mxchip.MXChipPair;
 
+import java.util.Date;
+
 
 /**
  * A placeholder fragment containing a simple view.
@@ -41,6 +43,7 @@ public class WifiConfigurationActivity extends Activity {
     WifiManager wifiManager;
     SharedPreferences wifiPreferences;
     Monitor monitor;
+    Date time;
     final MXChipPairImp mxChipPairImp = new MXChipPairImp();
     BaseDeviceIO bindIO=null;
     @Override
@@ -162,16 +165,15 @@ public class WifiConfigurationActivity extends Activity {
 
         @Override
         public void onSendConfiguration() {
-            setStatusText("发送WIFI配置信息");
+            setStatusText("正在发送配置信息");
             handle.post(new Runnable() {
                 @Override
                 public void run() {
                     nextButton.setProgress(50);
                 }
             });
-
-
         }
+
 
         @Override
         public void onWaitConnectWifi() {
@@ -199,6 +201,7 @@ public class WifiConfigurationActivity extends Activity {
 
         @Override
         public void onPairComplete(MXChipIO io) {
+
             Message msg = new Message();
             msg.what = 1;
             msg.obj = io;
@@ -206,7 +209,9 @@ public class WifiConfigurationActivity extends Activity {
             handle.post(new Runnable() {
                 @Override
                 public void run() {
-                    setStatusText("配网完成");
+                    Date now = new Date();
+                    String s = String.format("配网完成,耗时:%3.1f秒", (now.getTime() - time.getTime()) / 1000f);
+                    setStatusText(s);
                     nextButton.setProgress(100);
                 }
             });
@@ -251,12 +256,12 @@ public class WifiConfigurationActivity extends Activity {
                 } finally {
                     editor.commit();
                 }
-
+                time = new Date();
                 MXChipPair.Pair(this, wifi_ssid.getText().toString().trim(),
                         wifi_passwd.getText().toString(), mxChipPairImp);
                 nextButton.setProgress(0);
 
-                //nextButton.setProgress(10);
+                nextButton.setProgress(10);
 
             } catch (Exception e) {
                 e.printStackTrace();
