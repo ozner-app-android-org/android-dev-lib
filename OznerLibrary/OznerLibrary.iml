@@ -92,8 +92,8 @@
     <orderEntry type="library" exported="" name="classes.dex.dex2jar" level="project" />
     <orderEntry type="library" exported="" name="jetty-8.1.15" level="project" />
     <orderEntry type="library" exported="" name="support-v13-23.1.0" level="project" />
-    <orderEntry type="library" exported="" name="dd-plist" level="project" />
     <orderEntry type="library" exported="" name="micomdns_out" level="project" />
+    <orderEntry type="library" exported="" name="dd-plist" level="project" />
     <orderEntry type="library" exported="" name="support-v4-23.1.0" level="project" />
     <orderEntry type="library" exported="" name="mqtt-client-1.7-uber" level="project" />
     <orderEntry type="library" exported="" name="fastjson-1.2.7" level="project" />
