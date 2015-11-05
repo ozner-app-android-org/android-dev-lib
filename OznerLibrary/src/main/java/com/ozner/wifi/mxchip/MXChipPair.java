@@ -11,6 +11,7 @@ import com.mxchip.jmdns.JmdnsListener;
 import com.ozner.device.OznerDeviceManager;
 import com.ozner.util.Helper;
 import com.ozner.util.HttpUtil;
+import com.ozner.wifi.mxchip.easylink.EasyLinkSender;
 import com.ozner.wifi.mxchip.easylink.ftc_service.FTC_Listener;
 import com.ozner.wifi.mxchip.easylink.ftc_service.FTC_Service;
 
@@ -19,6 +20,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.Date;
 
 /**
  * Created by xzyxd on 2015/11/1.
@@ -157,35 +159,42 @@ public class MXChipPair  {
                 callback.onSendConfiguration();
 
 
-                FTC_Service ftc_service = FTC_Service.getInstence();
-                try {
-                    //ftc_service.transmitSettings();
-                    ftc_service.transmitSettings(context, SSID.trim(), password, info.getIpAddress(),
-                            mxChipPairImp);
-                    wait(ConfigurationTimeout);
-                } finally {
-                    ftc_service.stopTransmitting();
-                }
-
-//                FTC ftc=new FTC(context,this);
+//                FTC_Service ftc_service = FTC_Service.getInstence();
 //                try {
-//                    ftc.startListen();
-//                    EasyLinkSender sender=new EasyLinkSender();
-//                    sender.setSettings( SSID.trim(), password,info.getIpAddress());
-//                    int count=0;
-//
-//                    while(device==null)
-//                    {
-//                        sender.send();
-//                        Thread.sleep(100);
-//                        count++;
-//                        if (count>=600) break;
-//                    }
-//                    sender.close();
-//
-//                }finally {
-//                    ftc.stop();
+//                    //ftc_service.transmitSettings();
+//                    ftc_service.transmitSettings(context, SSID.trim(), password, info.getIpAddress(),
+//                            mxChipPairImp);
+//                    wait(ConfigurationTimeout);
+//                } finally {
+//                    ftc_service.stopTransmitting();
 //                }
+
+                FTC ftc=new FTC(context,this);
+                try {
+                    ftc.startListen();
+                    EasyLinkSender sender=new EasyLinkSender();
+                    sender.setSettings( SSID.trim(), password,info.getIpAddress());
+                    int count=0;
+                    Date t=new Date();
+
+                    while(device==null)
+                    {
+                        sender.send_easylink_v3();
+                        Thread.sleep(10);
+                        sender.send_easylink_v2();
+                        Thread.sleep(100);
+                        count++;
+                        Date now=new Date();
+                        if ((now.getTime()-t.getTime())>90000)
+                        {
+                            break;
+                        }
+                    }
+                    sender.close();
+
+                }finally {
+                    ftc.stop();
+                }
                 if (device == null) {
                     callback.onPairFailure(new TimeoutException());
                     return;
