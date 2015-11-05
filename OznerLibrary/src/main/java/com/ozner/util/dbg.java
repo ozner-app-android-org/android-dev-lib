@@ -5,7 +5,8 @@ import android.util.Log;
 public class dbg {
 
     static IDbgMessage mMessageListener = null;
-    static String tag="oznerDBG";
+    static String tag = "oznerDBG";
+
     public static void i(String msg) {
         Log.i(tag, msg);
         if (mMessageListener != null) {

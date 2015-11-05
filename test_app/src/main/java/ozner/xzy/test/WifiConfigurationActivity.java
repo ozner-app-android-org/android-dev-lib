@@ -35,6 +35,7 @@ import java.util.Date;
  * A placeholder fragment containing a simple view.
  */
 public class WifiConfigurationActivity extends Activity {
+    final MXChipPairImp mxChipPairImp = new MXChipPairImp();
     EditText wifi_ssid;
     EditText wifi_passwd;
     CircularProgressButton nextButton;
@@ -44,8 +45,9 @@ public class WifiConfigurationActivity extends Activity {
     SharedPreferences wifiPreferences;
     Monitor monitor;
     Date time;
-    final MXChipPairImp mxChipPairImp = new MXChipPairImp();
-    BaseDeviceIO bindIO=null;
+    BaseDeviceIO bindIO = null;
+    asyHandle handle = new asyHandle();
+
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -118,6 +120,55 @@ public class WifiConfigurationActivity extends Activity {
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
+    private void setStatusText(final String text) {
+        Message msg = new Message();
+        msg.what = 0;
+        msg.obj = text;
+        handle.sendMessage(msg);
+    }
+
+    private void onClickStartButton() {
+        if (nextButton.getProgress() == 100) {
+            try {
+                OznerDevice device = OznerDeviceManager.Instance().getDevice(bindIO);
+                OznerDeviceManager.Instance().save(device);
+                finish();
+            } catch (NotSupportDeviceException e) {
+                e.printStackTrace();
+            }
+        } else {
+            try {
+                String ssid = wifi_ssid.getText().toString().trim();
+                if (ssid.isEmpty()) {
+                    Toast toast = Toast.makeText(this, "没有设置SSID", Toast.LENGTH_LONG);
+                    toast.show();
+                }
+
+                SharedPreferences.Editor editor = wifiPreferences.edit();
+                try {
+                    editor.putString("password." + ssid, wifi_passwd.getText().toString());
+                } finally {
+                    editor.commit();
+                }
+                time = new Date();
+                MXChipPair.Pair(this, wifi_ssid.getText().toString().trim(),
+                        wifi_passwd.getText().toString(), mxChipPairImp);
+                nextButton.setProgress(0);
+
+                nextButton.setProgress(10);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                nextButton.setProgress(-1);
+            }
+        }
+    }
+
     class Monitor extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -129,13 +180,6 @@ public class WifiConfigurationActivity extends Activity {
             }
         }
     }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-    }
-
-    asyHandle handle = new asyHandle();
 
     class asyHandle extends Handler {
 
@@ -152,13 +196,6 @@ public class WifiConfigurationActivity extends Activity {
             }
             super.handleMessage(msg);
         }
-    }
-
-    private void setStatusText(final String text) {
-        Message msg = new Message();
-        msg.what = 0;
-        msg.obj = text;
-        handle.sendMessage(msg);
     }
 
     class MXChipPairImp implements MXChipPair.MXChipPairCallback {
@@ -215,7 +252,7 @@ public class WifiConfigurationActivity extends Activity {
                     nextButton.setProgress(100);
                 }
             });
-            bindIO=io;
+            bindIO = io;
 
 
         }
@@ -229,44 +266,6 @@ public class WifiConfigurationActivity extends Activity {
                     nextButton.setProgress(-1);
                 }
             });
-        }
-    }
-
-    private void onClickStartButton() {
-        if (nextButton.getProgress()==100)
-        {
-            try {
-                OznerDevice device=OznerDeviceManager.Instance().getDevice(bindIO);
-                OznerDeviceManager.Instance().save(device);
-                finish();
-            } catch (NotSupportDeviceException e) {
-                e.printStackTrace();
-            }
-        }else {
-            try {
-                String ssid = wifi_ssid.getText().toString().trim();
-                if (ssid.isEmpty()) {
-                    Toast toast = Toast.makeText(this, "没有设置SSID", Toast.LENGTH_LONG);
-                    toast.show();
-                }
-
-                SharedPreferences.Editor editor = wifiPreferences.edit();
-                try {
-                    editor.putString("password." + ssid, wifi_passwd.getText().toString());
-                } finally {
-                    editor.commit();
-                }
-                time = new Date();
-                MXChipPair.Pair(this, wifi_ssid.getText().toString().trim(),
-                        wifi_passwd.getText().toString(), mxChipPairImp);
-                nextButton.setProgress(0);
-
-                nextButton.setProgress(10);
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                nextButton.setProgress(-1);
-            }
         }
     }
 

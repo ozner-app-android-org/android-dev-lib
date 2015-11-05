@@ -23,15 +23,16 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     final Monitor mMonitor = new Monitor();
     ListView listView;
     DeviceListAdapter adapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        BitmapDrawable drawable=(BitmapDrawable)this.getResources().getDrawable(R.drawable.user1);
-        RoundDrawable icon=new RoundDrawable(this);
+        BitmapDrawable drawable = (BitmapDrawable) this.getResources().getDrawable(R.drawable.user1);
+        RoundDrawable icon = new RoundDrawable(this);
         icon.setBitmap(drawable.getBitmap());
         icon.setText("净水家测试");
-        Toolbar toolbar=  (Toolbar)findViewById(R.id.toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setTitle("");
         setSupportActionBar(toolbar);
         toolbar.setNavigationIcon(icon);
@@ -58,13 +59,6 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     private OznerBLEService.OznerBLEBinder getService() {
         OznerBaseApplication app = (OznerBaseApplication) getApplication();
         return app.getService();
-    }
-
-    class Monitor extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            adapter.reload();
-        }
     }
 
     @Override
@@ -103,6 +97,13 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
                 Intent intent = new Intent(this, WifiConfigurationActivity.class);
                 startActivityForResult(intent, WifiActivityRequestCode);
                 break;
+        }
+    }
+
+    class Monitor extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            adapter.reload();
         }
     }
 }

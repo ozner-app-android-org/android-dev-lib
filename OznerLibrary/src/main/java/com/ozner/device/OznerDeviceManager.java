@@ -29,52 +29,18 @@ public class OznerDeviceManager extends XObject {
      */
     public final static String ACTION_OZNER_MANAGER_DEVICE_CHANGE = "com.ozner.manager.device.change";
 
-    public final static String ACTION_OZNER_MANAGER_OWNER_CHANGE="com.ozner.manager.owner.change";
+    public final static String ACTION_OZNER_MANAGER_OWNER_CHANGE = "com.ozner.manager.owner.change";
 
     static OznerDeviceManager instance;
     final HashMap<String, OznerDevice> devices = new HashMap<>();
     final ArrayList<BaseDeviceManager> mManagers = new ArrayList<>();
-    final IOManagerCallbackImp ioManagerCallbackImp=new IOManagerCallbackImp();
+    final IOManagerCallbackImp ioManagerCallbackImp = new IOManagerCallbackImp();
 
     SQLiteDB sqLiteDB;
     String owner = "";
 
     IOManagerList ioManagerList;
     DeviceManagerList deviceManagerList;
-
-    class IOManagerCallbackImp implements IOManager.IOManagerCallback
-    {
-        @Override
-        public void onDeviceAvailable(IOManager manager, BaseDeviceIO io) {
-            if (io != null) {
-                OznerDevice device = getDevice(io.getAddress());
-                if (device != null) {
-                    try {
-                        device.Bind(io);
-                    } catch (DeviceNotReadyException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-
-        @Override
-        public void onDeviceUnavailable(IOManager manager, BaseDeviceIO io) {
-            if (io != null) {
-                OznerDevice device = getDevice(io.getAddress());
-                if (device != null) {
-                    try {
-                        device.Bind(null);
-                    } catch (DeviceNotReadyException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-    }
-
-
-
 
     public OznerDeviceManager(Context context) throws InstantiationException {
         super(context);
@@ -88,7 +54,11 @@ public class OznerDeviceManager extends XObject {
         importOldDB();
         ioManagerList = new IOManagerList(context);
         ioManagerList.setIoManagerCallback(ioManagerCallbackImp);
-        deviceManagerList =new DeviceManagerList(context);
+        deviceManagerList = new DeviceManagerList(context);
+    }
+
+    public static OznerDeviceManager Instance() {
+        return instance;
     }
 
     public void start() {
@@ -99,16 +69,11 @@ public class OznerDeviceManager extends XObject {
         ioManagerList.Stop();
     }
 
-    public static OznerDeviceManager Instance() {
-        return instance;
-    }
-
-    public IOManagerList ioManagerList()
-    {
+    public IOManagerList ioManagerList() {
         return ioManagerList;
     }
-    public DeviceManagerList devcieManagerList()
-    {
+
+    public DeviceManagerList devcieManagerList() {
         return deviceManagerList;
     }
 
@@ -227,9 +192,8 @@ public class OznerDeviceManager extends XObject {
                         OznerDevice device = mgr.loadDevice(Address, Model, Json);
                         if (device != null) {
                             devices.put(Address, device);
-                            BaseDeviceIO io=ioManagerList.getAvailableDevice(Address);
-                            if (io!=null)
-                            {
+                            BaseDeviceIO io = ioManagerList.getAvailableDevice(Address);
+                            if (io != null) {
                                 try {
                                     device.Bind(io);
                                 } catch (DeviceNotReadyException e) {
@@ -276,6 +240,15 @@ public class OznerDeviceManager extends XObject {
         }
     }
 
+    /**
+     * 获取所有设备集合
+     */
+    public OznerDevice[] getDevices() {
+        synchronized (this) {
+            return devices.values().toArray(new OznerDevice[devices.size()]);
+        }
+    }
+
 //	/**
 //	 * 通过蓝牙设备获取一个设备控制对象
 //	 *
@@ -296,15 +269,6 @@ public class OznerDeviceManager extends XObject {
 //	}
 
     /**
-     * 获取所有设备集合
-     */
-    public OznerDevice[] getDevices() {
-        synchronized (this) {
-            return devices.values().toArray(new OznerDevice[devices.size()]);
-        }
-    }
-
-    /**
      * 通过MAC地址获取已经保存的设备
      */
     public OznerDevice getDevice(String address) {
@@ -322,7 +286,7 @@ public class OznerDeviceManager extends XObject {
      * @param io 接口实例
      * @return 返回NULL无对应的设备
      */
-    public OznerDevice                                                                                                                                           getDevice(BaseDeviceIO io) throws NotSupportDeviceException {
+    public OznerDevice getDevice(BaseDeviceIO io) throws NotSupportDeviceException {
         synchronized (mManagers) {
             for (BaseDeviceManager mgr : mManagers) {
                 if (mgr.isMyDevice(io)) {
@@ -351,7 +315,6 @@ public class OznerDeviceManager extends XObject {
         }
         return result.toArray(new BaseDeviceIO[result.size()]);
     }
-
 
     /**
      * 保存并绑定设备设置
@@ -413,6 +376,36 @@ public class OznerDeviceManager extends XObject {
         }
     }
 
+    class IOManagerCallbackImp implements IOManager.IOManagerCallback {
+        @Override
+        public void onDeviceAvailable(IOManager manager, BaseDeviceIO io) {
+            if (io != null) {
+                OznerDevice device = getDevice(io.getAddress());
+                if (device != null) {
+                    try {
+                        device.Bind(io);
+                    } catch (DeviceNotReadyException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
+        @Override
+        public void onDeviceUnavailable(IOManager manager, BaseDeviceIO io) {
+            if (io != null) {
+                OznerDevice device = getDevice(io.getAddress());
+                if (device != null) {
+                    try {
+                        device.Bind(null);
+                    } catch (DeviceNotReadyException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+    }
+
 //    /**
 //     * 注销设备管理器
 //     */
@@ -422,7 +415,6 @@ public class OznerDeviceManager extends XObject {
 //                mManagers.remove(manager);
 //        }
 //    }
-
 
 
 }

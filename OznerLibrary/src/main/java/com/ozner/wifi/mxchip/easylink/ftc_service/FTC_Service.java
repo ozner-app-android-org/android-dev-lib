@@ -27,14 +27,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FTC_Service {
-    private static boolean listening;
-    private static ServerSocket server = null;
-    private Thread listen;
-    private EasyLink_plus easylink_plus;
-    private static ServiceThread service;
-    private static FTC_Service ftc = null;
+    private static final int REQUEST_TIMEOUT = 5 * 1000;// ��������ʱ10����
+    private static final int SO_TIMEOUT = 20 * 1000; // ���õȴ����ݳ�ʱʱ��10����
     // wifi模块连接FTC的标记，0 未连接，1 已连接
     public static int ftcConTag = 0;
+    private static boolean listening;
+    private static ServerSocket server = null;
+    private static ServiceThread service;
+    private static FTC_Service ftc = null;
+    private Thread listen;
+    private EasyLink_plus easylink_plus;
     private Context ctx;
 
     private FTC_Service() {
@@ -107,46 +109,6 @@ public class FTC_Service {
         }).start();
     }
 
-    public static class MyService implements Runnable {
-        // ���屣�����е�Socket
-        public final static List<Socket> socketList = new ArrayList<Socket>();
-        private FTC_Listener listener;
-        private Thread t;
-
-        // private ServiceThread service;
-
-        public MyService(FTC_Listener listener) {
-            this.listener = listener;
-        }
-
-        public void run() {
-            while (listening == true) {
-                Socket s = null;
-                try {
-                    s = server.accept();
-                    if (s != null) {
-                        ftcConTag = 1;
-                        Log.e("client", "connectStatus!!");
-                        socketList.add(s);
-                        service = new ServiceThread(s, listener);
-                        t = new Thread(service);
-                        t.start();
-                    } else
-                        System.out
-                                .println("------------socket s = null--------------");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            // try {
-            // service.recv = false;
-            // server = null;
-            // } catch (Exception e) {
-            // e.printStackTrace();
-            // }
-        }
-    }
-
     public void stopTransmitting() {
         listening = false;
         ftcConTag = 0;
@@ -176,9 +138,6 @@ public class FTC_Service {
             }
         }).start();
     }
-
-    private static final int REQUEST_TIMEOUT = 5 * 1000;// ��������ʱ10����
-    private static final int SO_TIMEOUT = 20 * 1000; // ���õȴ����ݳ�ʱʱ��10����
 
     /**
      * �������ʱʱ��͵ȴ�ʱ��
@@ -244,6 +203,46 @@ public class FTC_Service {
         } catch (Exception e) {
             e.printStackTrace();
             listener.onSoftAPconfigFail(600);
+        }
+    }
+
+    public static class MyService implements Runnable {
+        // ���屣�����е�Socket
+        public final static List<Socket> socketList = new ArrayList<Socket>();
+        private FTC_Listener listener;
+        private Thread t;
+
+        // private ServiceThread service;
+
+        public MyService(FTC_Listener listener) {
+            this.listener = listener;
+        }
+
+        public void run() {
+            while (listening == true) {
+                Socket s = null;
+                try {
+                    s = server.accept();
+                    if (s != null) {
+                        ftcConTag = 1;
+                        Log.e("client", "connectStatus!!");
+                        socketList.add(s);
+                        service = new ServiceThread(s, listener);
+                        t = new Thread(service);
+                        t.start();
+                    } else
+                        System.out
+                                .println("------------socket s = null--------------");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            // try {
+            // service.recv = false;
+            // server = null;
+            // } catch (Exception e) {
+            // e.printStackTrace();
+            // }
         }
     }
 }

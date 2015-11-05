@@ -21,42 +21,13 @@ import java.util.ArrayList;
 /**
  * Created by xzyxd on 2015/11/1.
  */
-public class MQTTProxy extends XObject{
+public class MQTTProxy extends XObject {
     private final static String host = "tcp://api.easylink.io:1883";
     final MQTT mqtt = new MQTT();
-    final MQTTImp mqttImp=new MQTTImp();
+    final MQTTImp mqttImp = new MQTTImp();
+    final ArrayList<MQTTListener> listeners = new ArrayList<>();
     CallbackConnection connection;
-    boolean connected=false;
-    final ArrayList<MQTTListener> listeners=new ArrayList<>();
-
-    public interface MQTTListener
-    {
-        void onConnected(MQTTProxy proxy);
-        void onDisconnected(MQTTProxy proxy);
-        void onPublish(MQTTProxy proxy,String topic,byte[] data);
-    }
-
-    public void registerListener(MQTTListener listener)
-    {
-        synchronized (listeners)
-        {
-            if (!listeners.contains(listener))
-            {
-                listeners.add(listener);
-            }
-        }
-    }
-    public void unregisterListener(MQTTListener listener)
-    {
-        synchronized (listeners)
-        {
-            listeners.remove(listener);
-        }
-    }
-    public boolean isConnected()
-    {
-        return connected;
-    }
+    boolean connected = false;
 
     public MQTTProxy(Context context) {
         super(context);
@@ -93,107 +64,121 @@ public class MQTTProxy extends XObject{
         connection = mqtt.callbackConnection();
         connection.listener(mqttImp);
     }
-    public void start()
-    {
+
+    public void registerListener(MQTTListener listener) {
+        synchronized (listeners) {
+            if (!listeners.contains(listener)) {
+                listeners.add(listener);
+            }
+        }
+    }
+
+    public void unregisterListener(MQTTListener listener) {
+        synchronized (listeners) {
+            listeners.remove(listener);
+        }
+    }
+
+    public boolean isConnected() {
+        return connected;
+    }
+
+    public void start() {
         connection.connect(null);
     }
-    public void stop()
-    {
+
+    public void stop() {
         connection.disconnect(null);
     }
 
-    public boolean subscribe(String topic,Callback<byte[]> callback)
-    {
-        if (!connected)
-        {
+    public boolean subscribe(String topic, Callback<byte[]> callback) {
+        if (!connected) {
             return false;
-        }else {
+        } else {
 
             connection.subscribe(new Topic[]{new Topic(topic, QoS.AT_MOST_ONCE)}, callback);
             return true;
         }
     }
 
-    public boolean unsubscribe(String topic)
-    {
-        if (!connected)
-        {
+    public boolean unsubscribe(String topic) {
+        if (!connected) {
             return false;
-        }else {
+        } else {
             connection.unsubscribe(new UTF8Buffer[]{new UTF8Buffer(topic)}, null);
             return true;
         }
     }
-    class CallbackProxy<T> implements Callback<T>
-    {
+
+    public void publish(String topic, byte[] data, OperateCallback<Void> cb) {
+        connection.publish(topic, data, QoS.AT_LEAST_ONCE, false, new CallbackProxy<>(cb));
+    }
+
+    public interface MQTTListener {
+        void onConnected(MQTTProxy proxy);
+
+        void onDisconnected(MQTTProxy proxy);
+
+        void onPublish(MQTTProxy proxy, String topic, byte[] data);
+    }
+
+    class CallbackProxy<T> implements Callback<T> {
         OperateCallback<T> callback;
-        public CallbackProxy(OperateCallback<T> callback)
-        {
-            this.callback=callback;
+
+        public CallbackProxy(OperateCallback<T> callback) {
+            this.callback = callback;
         }
 
         @Override
         public void onSuccess(T t) {
-            if (callback!=null)
+            if (callback != null)
                 callback.onSuccess(t);
         }
 
         @Override
         public void onFailure(Throwable throwable) {
-            if (callback!=null)
+            if (callback != null)
                 callback.onFailure(throwable);
         }
     }
 
-    public void publish(String topic,byte[] data,OperateCallback<Void> cb)
-    {
-        connection.publish(topic, data, QoS.AT_LEAST_ONCE, false, new CallbackProxy<>(cb));
-    }
-
-    class MQTTImp implements Listener
-    {
+    class MQTTImp implements Listener {
 
         @Override
         public void onConnected() {
-            connected=true;
-            ArrayList<MQTTListener> list=new ArrayList<>();
-            synchronized (listeners)
-            {
+            connected = true;
+            ArrayList<MQTTListener> list = new ArrayList<>();
+            synchronized (listeners) {
                 list.addAll(listeners);
             }
 
-            for (MQTTListener listener : list)
-            {
+            for (MQTTListener listener : list) {
                 listener.onConnected(MQTTProxy.this);
             }
         }
 
         @Override
         public void onDisconnected() {
-            connected=false;
-            ArrayList<MQTTListener> list=new ArrayList<>();
-            synchronized (listeners)
-            {
+            connected = false;
+            ArrayList<MQTTListener> list = new ArrayList<>();
+            synchronized (listeners) {
                 list.addAll(listeners);
             }
 
-            for (MQTTListener listener : list)
-            {
+            for (MQTTListener listener : list) {
                 listener.onDisconnected(MQTTProxy.this);
             }
         }
 
         @Override
         public void onPublish(UTF8Buffer utf8Buffer, Buffer buffer, Runnable runnable) {
-            ArrayList<MQTTListener> list=new ArrayList<>();
-            synchronized (listeners)
-            {
+            ArrayList<MQTTListener> list = new ArrayList<>();
+            synchronized (listeners) {
                 list.addAll(listeners);
             }
 
-            for (MQTTListener listener : list)
-            {
-                listener.onPublish(MQTTProxy.this,utf8Buffer.toString(),buffer.toByteArray());
+            for (MQTTListener listener : list) {
+                listener.onPublish(MQTTProxy.this, utf8Buffer.toString(), buffer.toByteArray());
             }
         }
 

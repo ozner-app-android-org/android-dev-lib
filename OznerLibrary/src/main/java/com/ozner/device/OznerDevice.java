@@ -10,13 +10,11 @@ import com.ozner.util.Helper;
  *         浩泽设备基类
  */
 public abstract class OznerDevice extends XObject {
+    public final static String Extra_Address = "Address";
     private String address;
     private BaseDeviceIO deviceIO;
     private DeviceSetting setting;
     private String Model;
-    public final static String Extra_Address = "Address";
-
-    public abstract Class<?> getIOType();
 
     public OznerDevice(Context context, String Address, String Model, String Setting) {
         super(context);
@@ -26,9 +24,10 @@ public abstract class OznerDevice extends XObject {
 
     }
 
+    public abstract Class<?> getIOType();
+
     /**
      * 设备型号
-     *
      */
     public String Model() {
         return Model;
@@ -36,7 +35,6 @@ public abstract class OznerDevice extends XObject {
 
     /**
      * 设置对象
-     *
      */
     public DeviceSetting Setting() {
         return setting;
@@ -45,7 +43,6 @@ public abstract class OznerDevice extends XObject {
 
     /**
      * 地址
-     *
      */
     public String Address() {
         return address;
@@ -53,7 +50,6 @@ public abstract class OznerDevice extends XObject {
 
     /**
      * 名称
-     *
      */
     public String getName() {
         return setting.name();
@@ -72,7 +68,6 @@ public abstract class OznerDevice extends XObject {
 
     /**
      * 判断设备是否连接
-     *
      */
     public BaseDeviceIO.ConnectStatus connectStatus() {
         if (deviceIO == null)
@@ -93,15 +88,13 @@ public abstract class OznerDevice extends XObject {
     }
 
 
-
     protected abstract void doSetDeviceIO(BaseDeviceIO oldIO, BaseDeviceIO newIO);
 
     public boolean Bind(BaseDeviceIO deviceIO) throws DeviceNotReadyException {
         if (this.deviceIO == deviceIO)
             return false;
 
-        if (Helper.StringIsNullOrEmpty(setting.name()))
-        {
+        if (Helper.StringIsNullOrEmpty(setting.name())) {
             setting.name(deviceIO.getName());
         }
 

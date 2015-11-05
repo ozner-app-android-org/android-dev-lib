@@ -51,7 +51,7 @@ public class TapDatas {
      */
     public void addRecord(TapRecord[] items) {
         if (items == null) return;
-        if (items.length<=0) return;
+        if (items.length <= 0) return;
         synchronized (this) {
             for (TapRecord r : items) {
                 TapRecord record = new TapRecord();

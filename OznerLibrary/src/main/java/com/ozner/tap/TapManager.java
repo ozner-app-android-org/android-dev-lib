@@ -20,7 +20,6 @@ import com.ozner.device.OznerDeviceManager;
  *
  */
 public class TapManager extends BaseBluetoothDeviceManager {
-    final static int AD_CustomType_BindStatus = 0x10;
     /**
      * 新增一个配对的水杯
      */
@@ -33,16 +32,14 @@ public class TapManager extends BaseBluetoothDeviceManager {
      * 更新配对水杯
      */
     public final static String ACTION_MANAGER_TAP_CHANGE = "com.ozner.Tap.Change";
+    final static int AD_CustomType_BindStatus = 0x10;
 
     public TapManager(Context context) {
         super(context);
     }
 
     public static boolean IsTap(String model) {
-        if (model.equals("SC001")) {
-            return true;
-        } else
-            return false;
+        return model.equals("SC001");
     }
 
     /**

@@ -11,9 +11,7 @@ import com.mxchip.jmdns.JmdnsListener;
 import com.ozner.device.OznerDeviceManager;
 import com.ozner.util.Helper;
 import com.ozner.util.HttpUtil;
-import com.ozner.wifi.mxchip.easylink.EasyLinkSender;
 import com.ozner.wifi.mxchip.easylink.ftc_service.FTC_Listener;
-import com.ozner.wifi.mxchip.easylink.ftc_service.FTC_Service;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -26,14 +24,14 @@ import java.util.Date;
  * Created by xzyxd on 2015/11/1.
  * 庆科配网工具类
  */
-public class MXChipPair  {
+public class MXChipPair {
     /**
      * 默认1分钟配网超时
      */
     final static int ConfigurationTimeout = 60000;
     final static int MDNSTimeout = 60000;
-    static Context context;
     static final MXChipPairImp mxChipPairImp = new MXChipPairImp();
+    static Context context;
     static MXChipPairCallback callback;
 
     static Thread runThread = null;
@@ -42,17 +40,26 @@ public class MXChipPair  {
     static String deviceMAC = "";
 
 
+    private MXChipPair() {
+    }
 
     /**
-     * 无线设备没打开或无连接
+     * 开始庆科配网
+     *
+     * @param SSID     ssid
+     * @param password 密码
+     * @param callback 配网回调
      */
-    public static class WifiException extends Exception {
-    }
-
-    public static class NullSSIDException extends Exception {
-    }
-
-    public static class TimeoutException extends Exception {
+    public static void Pair(Context context, String SSID, String password, MXChipPairCallback callback)
+            throws InstantiationException, NullSSIDException {
+        MXChipPair.context = context;
+        if (runThread != null) throw new InstantiationException();
+        if (Helper.StringIsNullOrEmpty(SSID)) throw new NullSSIDException();
+        MXChipPair.SSID = SSID;
+        MXChipPair.password = password;
+        MXChipPair.callback = callback;
+        runThread = new Thread(mxChipPairImp);
+        runThread.start();
     }
 
     public interface MXChipPairCallback {
@@ -86,6 +93,17 @@ public class MXChipPair  {
         void onPairFailure(Exception e);
     }
 
+    /**
+     * 无线设备没打开或无连接
+     */
+    public static class WifiException extends Exception {
+    }
+
+    public static class NullSSIDException extends Exception {
+    }
+
+    public static class TimeoutException extends Exception {
+    }
 
     static class MXChipPairImp implements FTC_Listener, Runnable, JmdnsListener {
 
@@ -169,30 +187,28 @@ public class MXChipPair  {
 //                    ftc_service.stopTransmitting();
 //                }
 
-                FTC ftc=new FTC(context,this);
+                FTC ftc = new FTC(context, this);
                 try {
                     ftc.startListen();
-                    EasyLinkSender sender=new EasyLinkSender();
-                    sender.setSettings( SSID.trim(), password,info.getIpAddress());
-                    int count=0;
-                    Date t=new Date();
+                    EasyLinkSender sender = new EasyLinkSender();
+                    sender.setSettings(SSID.trim(), password, info.getIpAddress());
+                    int count = 0;
+                    Date t = new Date();
 
-                    while(device==null)
-                    {
+                    while (device == null) {
                         sender.send_easylink_v3();
                         Thread.sleep(10);
                         sender.send_easylink_v2();
                         Thread.sleep(100);
                         count++;
-                        Date now=new Date();
-                        if ((now.getTime()-t.getTime())>90000)
-                        {
+                        Date now = new Date();
+                        if ((now.getTime() - t.getTime()) > 90000) {
                             break;
                         }
                     }
                     sender.close();
 
-                }finally {
+                } finally {
                     ftc.stop();
                 }
                 if (device == null) {
@@ -241,15 +257,13 @@ public class MXChipPair  {
             for (int i = 0; i < jsonArray.length(); i++) {
                 try {
                     JSONObject object = jsonArray.getJSONObject(i);
-                    String name=object.getString("deviceName");
-                    int p =name.indexOf("#");
-                    if (p>0)
-                    {
-                        name=name.substring(p+1);
-                        if (device.name.indexOf(name)>0)
-                        {
+                    String name = object.getString("deviceName");
+                    int p = name.indexOf("#");
+                    if (p > 0) {
+                        name = name.substring(p + 1);
+                        if (device.name.indexOf(name) > 0) {
                             deviceMAC = object.getString("deviceMac");
-                            device.localIP=object.getString("deviceIP");
+                            device.localIP = object.getString("deviceIP");
                             set();
                         }
                     }
@@ -259,29 +273,6 @@ public class MXChipPair  {
 
             }
         }
-    }
-
-    private MXChipPair() {
-    }
-
-
-    /**
-     * 开始庆科配网
-     *
-     * @param SSID     ssid
-     * @param password 密码
-     * @param callback 配网回调
-     */
-    public static void Pair(Context context, String SSID, String password, MXChipPairCallback callback)
-            throws InstantiationException, NullSSIDException {
-        MXChipPair.context = context;
-        if (runThread != null) throw new InstantiationException();
-        if (Helper.StringIsNullOrEmpty(SSID)) throw new NullSSIDException();
-        MXChipPair.SSID = SSID;
-        MXChipPair.password = password;
-        MXChipPair.callback = callback;
-        runThread = new Thread(mxChipPairImp);
-        runThread.start();
     }
 
 }

@@ -9,9 +9,9 @@
     android:paddingTop="@dimen/activity_vertical_margin">
 
     <TabHost
+        android:id="@+id/tabHost"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/tabHost"
         android:layout_alignParentStart="true">
 
         <LinearLayout
@@ -34,13 +34,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="vertical">
+
                     <ListView
                         android:id="@+id/deviceList"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_alignParentLeft="true"
-                        android:layout_alignParentTop="true" >
-                    </ListView>
+                        android:layout_alignParentTop="true"></ListView>
 
                 </LinearLayout>
 
@@ -49,26 +49,29 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="vertical">
+
                     <TextView
                         android:id="@+id/messageList"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_alignParentLeft="true"
-                        android:scrollbars="vertical"
+                        android:layout_alignParentTop="true"
 
-                        android:layout_alignParentTop="true" >
-                    </TextView>
+                        android:scrollbars="vertical"></TextView>
                 </LinearLayout>
             </FrameLayout>
         </LinearLayout>
     </TabHost>
+
     <Button
-        android:layout_width="wrap_content"
         android:id="@+id/Device_Bind"
-        android:layout_height="wrap_content" android:text="配对" android:layout_alignParentRight="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_marginRight="@dimen/activity_horizontal_margin"
+        android:layout_alignParentRight="true"
         android:layout_marginBottom="@dimen/activity_vertical_margin"
+        android:layout_marginRight="@dimen/activity_horizontal_margin"
+        android:text="配对"
 
         />
 </RelativeLayout>

@@ -6,17 +6,17 @@
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="14dp"
     android:paddingRight="14dp"
-    android:paddingTop="@dimen/activity_vertical_margin" >
+    android:paddingTop="@dimen/activity_vertical_margin">
 
     <RelativeLayout
         android:id="@+id/Cup_NamePanel"
         android:layout_width="match_parent"
-        android:layout_height="35dp" >
+        android:layout_height="35dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_centerVertical="true" >
+            android:layout_centerVertical="true">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -39,19 +39,18 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_alignParentBottom="true"
-            android:background="@android:color/darker_gray" >
-        </RelativeLayout>
+            android:background="@android:color/darker_gray"></RelativeLayout>
     </RelativeLayout>
 
     <RelativeLayout
         android:id="@+id/Cup_AddressPanel"
         android:layout_width="match_parent"
-        android:layout_height="35dp" >
+        android:layout_height="35dp">
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_centerVertical="true" >
+            android:layout_centerVertical="true">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -78,19 +77,18 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_alignParentBottom="true"
-            android:background="@android:color/darker_gray" >
-        </RelativeLayout>
+            android:background="@android:color/darker_gray"></RelativeLayout>
     </RelativeLayout>
 
     <RelativeLayout
         android:id="@+id/Cup_RemindPanel"
         android:layout_width="match_parent"
-        android:layout_height="35dp" >
+        android:layout_height="35dp">
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_centerVertical="true" >
+            android:layout_centerVertical="true">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -116,19 +114,18 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_alignParentBottom="true"
-            android:background="@android:color/darker_gray" >
-        </RelativeLayout>
+            android:background="@android:color/darker_gray"></RelativeLayout>
     </RelativeLayout>
 
     <RelativeLayout
         android:id="@+id/Cup_RemindStartPanel"
         android:layout_width="match_parent"
-        android:layout_height="35dp" >
+        android:layout_height="35dp">
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_centerVertical="true" >
+            android:layout_centerVertical="true">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -155,19 +152,18 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_alignParentBottom="true"
-            android:background="@android:color/darker_gray" >
-        </RelativeLayout>
+            android:background="@android:color/darker_gray"></RelativeLayout>
     </RelativeLayout>
 
     <RelativeLayout
         android:id="@+id/Cup_RemindEndPanel"
         android:layout_width="match_parent"
-        android:layout_height="35dp" >
+        android:layout_height="35dp">
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_centerVertical="true" >
+            android:layout_centerVertical="true">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -194,19 +190,18 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_alignParentBottom="true"
-            android:background="@android:color/darker_gray" >
-        </RelativeLayout>
+            android:background="@android:color/darker_gray"></RelativeLayout>
     </RelativeLayout>
 
     <RelativeLayout
         android:id="@+id/Cup_RemindIntervalPanel"
         android:layout_width="match_parent"
-        android:layout_height="35dp" >
+        android:layout_height="35dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_centerVertical="true" >
+            android:layout_centerVertical="true">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -230,20 +225,19 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_alignParentBottom="true"
-            android:background="@android:color/darker_gray" >
-        </RelativeLayout>
+            android:background="@android:color/darker_gray"></RelativeLayout>
     </RelativeLayout>
 
     <RelativeLayout
         android:id="@+id/Cup_HaloModePanel"
         android:layout_width="match_parent"
-        android:layout_height="35dp" >
+        android:layout_height="35dp">
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:orientation="horizontal" >
+            android:orientation="horizontal">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -259,7 +253,7 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:orientation="horizontal" >
+                android:orientation="horizontal">
 
                 <RadioButton
                     android:id="@+id/Cup_TDS"
@@ -280,19 +274,18 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_alignParentBottom="true"
-            android:background="@android:color/darker_gray" >
-        </RelativeLayout>
+            android:background="@android:color/darker_gray"></RelativeLayout>
     </RelativeLayout>
 
     <RelativeLayout
         android:id="@+id/Cup_HaloColorPanel"
         android:layout_width="match_parent"
-        android:layout_height="35dp" >
+        android:layout_height="35dp">
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_centerVertical="true" >
+            android:layout_centerVertical="true">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -309,7 +302,7 @@
                 android:layout_height="32dp"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                
+
                 android:textSize="15sp" />
         </RelativeLayout>
 
@@ -317,20 +310,19 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_alignParentBottom="true"
-            android:background="@android:color/darker_gray" >
-        </RelativeLayout>
+            android:background="@android:color/darker_gray"></RelativeLayout>
     </RelativeLayout>
 
     <RelativeLayout
         android:id="@+id/Cup_HaloSpeedPanel"
         android:layout_width="match_parent"
-        android:layout_height="35dp" >
+        android:layout_height="35dp">
 
-    <RelativeLayout
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:orientation="horizontal" >
+            android:orientation="horizontal">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -346,7 +338,7 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:orientation="horizontal" >
+                android:orientation="horizontal">
 
                 <RadioButton
                     android:id="@+id/Cup_Halo_Breathe"
@@ -367,6 +359,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="慢速" />
+
                 <RadioButton
                     android:id="@+id/Cup_Halo_None"
                     android:layout_width="wrap_content"
@@ -379,20 +372,19 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_alignParentBottom="true"
-            android:background="@android:color/darker_gray" >
-        </RelativeLayout>
+            android:background="@android:color/darker_gray"></RelativeLayout>
     </RelativeLayout>
 
     <RelativeLayout
         android:id="@+id/Cup_HaloCounterPanel"
         android:layout_width="match_parent"
-        android:layout_height="35dp" >
+        android:layout_height="35dp">
 
-     
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_centerVertical="true" >
+            android:layout_centerVertical="true">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -411,24 +403,24 @@
                 android:textColor="@color/text_gray"
                 android:textSize="15sp" />
         </LinearLayout>
+
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_alignParentBottom="true"
-            android:background="@android:color/darker_gray" >
-        </RelativeLayout>
+            android:background="@android:color/darker_gray"></RelativeLayout>
     </RelativeLayout>
 
     <RelativeLayout
         android:id="@+id/Cup_BeepModePanel"
         android:layout_width="match_parent"
-        android:layout_height="35dp" >
+        android:layout_height="35dp">
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:orientation="horizontal" >
+            android:orientation="horizontal">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -444,7 +436,7 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:orientation="horizontal" >
+                android:orientation="horizontal">
 
                 <RadioButton
                     android:id="@+id/Cup_BeepNone"
@@ -472,22 +464,24 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_alignParentBottom="true"
-            android:background="@android:color/darker_gray" >
-        </RelativeLayout>
+            android:background="@android:color/darker_gray"></RelativeLayout>
     </RelativeLayout>
+
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
-        <Button
+        android:layout_height="wrap_content">
+
+    <Button
             android:id="@+id/SensorZero"
             android:layout_width="160dp"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:text="传感器置0" />
     </RelativeLayout>
+
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="wrap_content">
 
         <Button
             android:id="@+id/Submit"

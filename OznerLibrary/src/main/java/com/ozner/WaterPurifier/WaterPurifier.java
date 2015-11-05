@@ -18,33 +18,47 @@ import java.util.TimerTask;
  * Created by xzyxd on 2015/11/2.
  */
 public class WaterPurifier extends OznerDevice {
-    private static String SecureCode="16a21bd6";
-
-    private static final byte GroupCode_DeviceToApp=(byte)0xFB;
-    private static final byte GroupCode_AppToDevice=(byte)0xFA;
-    private static final byte GroupCode_DevceToServer=(byte)0xFC;
-
-    private static final byte Opcode_RequestStatus=(byte)0x01;
-    private static final byte Opcode_RespondStatus=(byte)0x01;
-    private static final byte Opcode_ChangeStatus=(byte)0x02;
-    private static final byte Opcode_DeviceInfo=(byte)0x01;
-
     public static final String ACTION_WATER_PURIFIER_STATUS_CHANGE = "com.ozner.water.purifier.status.change";
+    private static final byte GroupCode_DeviceToApp = (byte) 0xFB;
+    private static final byte GroupCode_AppToDevice = (byte) 0xFA;
+    private static final byte GroupCode_DevceToServer = (byte) 0xFC;
 
-    final WaterPurifierStatus status=new WaterPurifierStatus();
+    private static final byte Opcode_RequestStatus = (byte) 0x01;
+    private static final byte Opcode_RespondStatus = (byte) 0x01;
+    private static final byte Opcode_ChangeStatus = (byte) 0x02;
+    private static final byte Opcode_DeviceInfo = (byte) 0x01;
+    private static String SecureCode = "16a21bd6";
+    final WaterPurifierStatus status = new WaterPurifierStatus();
+    final WaterPurifierImp waterPurifierImp = new WaterPurifierImp();
     boolean isOffline = true;
     Timer autoUpdateTimer = null;
 
-    final WaterPurifierImp waterPurifierImp=new WaterPurifierImp();
     public WaterPurifier(Context context, String Address, String Model, String Setting) {
         super(context, Address, Model, Setting);
+    }
+
+    public static byte[] MakeWoodyBytes(byte Group, byte OpCode, String Address, byte[] payload) {
+        int len = 10 + (payload == null ? 3 : payload.length + 3);
+        byte[] bytes = new byte[len];
+        bytes[0] = Group;
+        ByteUtil.putShort(bytes, (short) len, 1);
+        bytes[3] = OpCode;
+
+        byte[] macs = MXChipIO.HexString2Bytes(Address.replace(":", ""));
+        System.arraycopy(macs, 0, bytes, 4, 6);
+
+        bytes[10] = 0;//保留数据
+        bytes[11] = 0;//保留数据
+        if (payload != null)
+            System.arraycopy(payload, 0, bytes, 12, payload.length);
+
+        bytes[len - 1] = CRC8.calcCrc8(bytes, 0, bytes.length - 1);
+        return bytes;
     }
 
     public boolean isOffline() {
         return isOffline;
     }
-
-
 
     @Override
     public Class<?> getIOType() {
@@ -53,15 +67,13 @@ public class WaterPurifier extends OznerDevice {
 
     @Override
     protected void doSetDeviceIO(BaseDeviceIO oldIO, BaseDeviceIO newIO) {
-        if (oldIO!=null)
-        {
+        if (oldIO != null) {
             oldIO.setOnTransmissionsCallback(null);
             oldIO.unRegisterStatusCallback(waterPurifierImp);
             oldIO.setOnInitCallback(null);
         }
-        if (newIO!=null)
-        {
-            MXChipIO io=(MXChipIO)newIO;
+        if (newIO != null) {
+            MXChipIO io = (MXChipIO) newIO;
             io.setSecureCode(SecureCode);
             io.setOnTransmissionsCallback(waterPurifierImp);
             io.registerStatusCallback(waterPurifierImp);
@@ -71,70 +83,46 @@ public class WaterPurifier extends OznerDevice {
 
     @Override
     protected void doChangeRunningMode() {
-        if (getRunningMode()==RunningMode.Foreground)
-        {
+        if (getRunningMode() == RunningMode.Foreground) {
             updateStatus(null, null);
         }
         super.doChangeRunningMode();
     }
 
-    public static byte[] MakeWoodyBytes(byte Group,byte OpCode,String Address,byte[] payload)
-    {
-        int len=10+(payload==null?3:payload.length+3);
-        byte[] bytes=new byte[len];
-        bytes[0]=Group;
-        ByteUtil.putShort(bytes,(short)len,1);
-        bytes[3]=OpCode;
-
-        byte[] macs = MXChipIO.HexString2Bytes(Address.replace(":", ""));
-        System.arraycopy(macs, 0, bytes, 4, 6);
-
-        bytes[10]=0;//保留数据
-        bytes[11]=0;//保留数据
-        if (payload!=null)
-            System.arraycopy(payload, 0, bytes, 12, payload.length);
-
-        bytes[len-1]=CRC8.calcCrc8(bytes, 0, bytes.length-1);
-        return bytes;
-    }
-
-
-    public boolean Power()
-    {
+    public boolean Power() {
         return status.Power;
     }
+
     /**
      * 打开电源
+     *
      * @param Power 开关
-     * @param cb 状态回调
+     * @param cb    状态回调
      */
-    public void setPower(boolean Power,OperateCallback<Void> cb)
-    {
-        if (IO()==null)
-        {
+    public void setPower(boolean Power, OperateCallback<Void> cb) {
+        if (IO() == null) {
             cb.onFailure(null);
         }
-        status.Power=Power;
+        status.Power = Power;
         setStatus(cb);
     }
 
 
-    public boolean Cool()
-    {
+    public boolean Cool() {
         return status.Cool;
     }
+
     /**
      * 打开制冷
+     *
      * @param Cool 开关
-     * @param cb 状态回调
+     * @param cb   状态回调
      */
-    public void setCool(boolean Cool,OperateCallback<Void> cb)
-    {
-        if (IO()==null)
-        {
+    public void setCool(boolean Cool, OperateCallback<Void> cb) {
+        if (IO() == null) {
             cb.onFailure(null);
         }
-        status.Cool=Cool;
+        status.Cool = Cool;
         setStatus(cb);
     }
 
@@ -147,51 +135,46 @@ public class WaterPurifier extends OznerDevice {
         return status.TDS2();
     }
 
-    public boolean Hot()
-    {
+    public boolean Hot() {
         return status.Hot;
     }
+
     /**
      * 打开加热
+     *
      * @param Hot 开关
-     * @param cb 状态回调
+     * @param cb  状态回调
      */
-    public void setHot(boolean Hot,OperateCallback<Void> cb)
-    {
-        if (IO()==null)
-        {
+    public void setHot(boolean Hot, OperateCallback<Void> cb) {
+        if (IO() == null) {
             cb.onFailure(null);
         }
-        status.Hot=Hot;
+        status.Hot = Hot;
         setStatus(cb);
     }
 
-    public boolean Sterilization()
-    {
+    public boolean Sterilization() {
         return status.Sterilization;
     }
 
     /**
      * 打开杀菌
+     *
      * @param Sterilization 开关
-     * @param cb 状态回调
+     * @param cb            状态回调
      */
-    public void setSterilization(boolean Sterilization,OperateCallback<Void> cb)
-    {
-        if (IO()==null)
-        {
+    public void setSterilization(boolean Sterilization, OperateCallback<Void> cb) {
+        if (IO() == null) {
             cb.onFailure(null);
         }
-        status.Sterilization=Sterilization;
+        status.Sterilization = Sterilization;
         setStatus(cb);
     }
 
 
-    private void setStatus(OperateCallback<Void> cb)
-    {
-        if (super.connectStatus() != BaseDeviceIO.ConnectStatus.Connected)
-        {
-            if (cb!=null)
+    private void setStatus(OperateCallback<Void> cb) {
+        if (super.connectStatus() != BaseDeviceIO.ConnectStatus.Connected) {
+            if (cb != null)
                 cb.onFailure(null);
             return;
         }
@@ -204,6 +187,7 @@ public class WaterPurifier extends OznerDevice {
                         //updateStatus(null, null);
                         super.onFailure(var1);
                     }
+
                     @Override
                     public void onSuccess(Void var1) {
                         updateStatus(null, null);
@@ -214,20 +198,15 @@ public class WaterPurifier extends OznerDevice {
     }
 
 
-    private void updateStatus(BaseDeviceIO.DataSendProxy sendHandle,OperateCallback<Void> cb)
-    {
-        if (sendHandle==null)
-        {
-            if (IO()==null)
-            {
-                if (cb!=null)
+    private void updateStatus(BaseDeviceIO.DataSendProxy sendHandle, OperateCallback<Void> cb) {
+        if (sendHandle == null) {
+            if (IO() == null) {
+                if (cb != null)
                     cb.onFailure(null);
-            }else
-            {
+            } else {
                 IO().send(MakeWoodyBytes(GroupCode_AppToDevice, Opcode_RequestStatus, Address(), null), cb);
             }
-        }else
-        {
+        } else {
             sendHandle.send(MakeWoodyBytes(GroupCode_AppToDevice, Opcode_RequestStatus, Address(), null), cb);
         }
 
@@ -237,8 +216,7 @@ public class WaterPurifier extends OznerDevice {
     class WaterPurifierImp implements
             BaseDeviceIO.OnTransmissionsCallback,
             BaseDeviceIO.StatusCallback,
-            BaseDeviceIO.OnInitCallback
-    {
+            BaseDeviceIO.OnInitCallback {
 
         @Override
         public void onConnected(BaseDeviceIO io) {
@@ -278,14 +256,12 @@ public class WaterPurifier extends OznerDevice {
 
         @Override
         public void onIORecv(byte[] bytes) {
-            if ((bytes!=null) && (bytes.length>10)) {
+            if ((bytes != null) && (bytes.length > 10)) {
                 byte group = bytes[0];
                 byte opCode = bytes[3];
-                switch (group)
-                {
+                switch (group) {
                     case GroupCode_DeviceToApp:
-                        if (opCode==Opcode_RespondStatus)
-                        {
+                        if (opCode == Opcode_RespondStatus) {
                             status.fromBytes(bytes);
                             Intent intent = new Intent(ACTION_WATER_PURIFIER_STATUS_CHANGE);
                             intent.putExtra(Extra_Address, Address());
@@ -294,8 +270,7 @@ public class WaterPurifier extends OznerDevice {
                         }
                         break;
                     case GroupCode_DevceToServer:
-                        if (opCode==Opcode_DeviceInfo)
-                        {
+                        if (opCode == Opcode_DeviceInfo) {
 
                         }
                         break;
@@ -334,7 +309,6 @@ public class WaterPurifier extends OznerDevice {
         }
 
     }
-
 
 
 }

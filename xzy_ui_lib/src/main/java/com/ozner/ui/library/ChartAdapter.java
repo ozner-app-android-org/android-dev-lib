@@ -7,15 +7,9 @@ import java.util.Date;
  * Created by zhiyongxu on 15/9/17.
  */
 public abstract class ChartAdapter {
-    public enum ViewMode {Day, Week, Month}
-
-    ;
     private Date viewDate = new Date();
-    private AdapterListener adapterListener;
 
-    public interface AdapterListener {
-        void onUpdate(ChartAdapter adapter);
-    }
+    private AdapterListener adapterListener;
 
     public void setAdapterListener(AdapterListener adapterListener) {
         this.adapterListener = adapterListener;
@@ -97,6 +91,12 @@ public abstract class ChartAdapter {
     }
 
     public abstract ViewMode getViewMode();
+
+    public enum ViewMode {Day, Week, Month}
+
+    public interface AdapterListener {
+        void onUpdate(ChartAdapter adapter);
+    }
 
 
 }

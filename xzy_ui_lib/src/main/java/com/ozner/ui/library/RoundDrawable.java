@@ -27,13 +27,6 @@ public class RoundDrawable extends Drawable {
     float mLeftPadding = 0;
     float mTextPadding = 0;
 
-    public void setText(String text) {
-        mText = text;
-        //paint.setFontFeatureSettings(F);
-        //paint.setFontFeatureSettings(F);
-        mTextWidth = (int) mPaint.measureText(text);
-    }
-
     public RoundDrawable(Context context) {
         mContext = context;
         mImageSize = Screen.dip2px(mContext, 42);
@@ -45,6 +38,13 @@ public class RoundDrawable extends Drawable {
         mPaint.setAntiAlias(true);
         mPaint.setTextAlign(Paint.Align.LEFT);
         mPaint.setColor(Color.WHITE);
+    }
+
+    public void setText(String text) {
+        mText = text;
+        //paint.setFontFeatureSettings(F);
+        //paint.setFontFeatureSettings(F);
+        mTextWidth = (int) mPaint.measureText(text);
     }
 
     public void setBitmap(Bitmap bitmap) {

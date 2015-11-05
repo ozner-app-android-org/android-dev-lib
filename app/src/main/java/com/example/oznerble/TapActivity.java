@@ -33,6 +33,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class TapActivity extends Activity implements View.OnClickListener, FirmwareTools.FirmwareUpateInterface {
+    final static int FIRMWARE_SELECT_CODE = 0x1111;
     Tap mTap;
     OznerBLEBinder service = null;
     Monitr mMonitor = new Monitr();
@@ -41,6 +42,9 @@ public class TapActivity extends Activity implements View.OnClickListener, Firmw
     RadioButton record_now;
     RadioButton record_hour;
     RadioButton record_day;
+    int ConnectCount = 0;
+    int ErrorCount = 0;
+    Date closeTime = new Date();
 
     private void WriteMessage(String message) {
         SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss");
@@ -128,57 +132,6 @@ public class TapActivity extends Activity implements View.OnClickListener, Firmw
         super.onDestroy();
     }
 
-    int ConnectCount = 0;
-    int ErrorCount = 0;
-    Date closeTime = new Date();
-
-    class Monitr extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            String Address = intent.getStringExtra("Address");
-            OznerDevice device = service.getDeviceManager().getDevice(Address);
-            if (device != null)
-                dbg.i("广播:%s Name:%s", Address, device.getName());
-
-            if (!Address.equals(mTap.Address()))
-                return;
-
-            if (action.equals(Tap.ACTION_BLUETOOTHTAP_SENSOR)) {
-                ((TextView) findViewById(id.Device_Message)).setText(mTap
-                        .GetBluetooth().getSensor().toString());
-                return;
-            }
-            if (action.equals(BluetoothIO.ACTION_BLUETOOTH_READY)) {
-                ((TextView) findViewById(id.Device_Name)).setText(mTap.getName() + "(设备已连接)");
-                Date now = new Date();
-                long time = now.getTime() - closeTime.getTime();
-                WriteMessage(String.format("设备就绪 距离上次关闭时间%f秒", time / 1000f));
-                ConnectCount++;
-                WriteMessage(String.format("成功:%d 失败:%d", ConnectCount, ErrorCount));
-            }
-            if (action.equals(BluetoothIO.ACTION_BLUETOOTH_DISCONNECTED)) {
-                ((TextView) findViewById(id.Device_Name)).setText(mTap.getName() + "(设备未连接)");
-                WriteMessage("设备连接断开");
-            }
-
-            if (action.equals(BluetoothIO.ACTION_BLUETOOTH_CONNECTED)) {
-                WriteMessage("设备连接成功");
-
-            }
-
-            if (action.equals(Tap.ACTION_BLUETOOTHTAP_RECORD_COMPLETE)) {
-                load();
-                return;
-            }
-            if (mTap.Bluetooth() != null) {
-                mTap.firmwareTools().setFirmwareUpateInterface(TapActivity.this);
-            }
-        }
-    }
-
-    final static int FIRMWARE_SELECT_CODE = 0x1111;
-
     private void updateFirmware() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("*.bin/getFirmware");
@@ -223,7 +176,7 @@ public class TapActivity extends Activity implements View.OnClickListener, Firmw
         if (requestCode == FIRMWARE_SELECT_CODE) {
             if (data != null) {
 
-                String path = GetPathFromUri4kitkat.getPath(this,data.getData());
+                String path = GetPathFromUri4kitkat.getPath(this, data.getData());
 
                 Toast.makeText(this, path, Toast.LENGTH_LONG).show();
                 if (mTap.Bluetooth() != null) {
@@ -268,6 +221,51 @@ public class TapActivity extends Activity implements View.OnClickListener, Firmw
                 break;
             }
 
+        }
+    }
+
+    class Monitr extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            String Address = intent.getStringExtra("Address");
+            OznerDevice device = service.getDeviceManager().getDevice(Address);
+            if (device != null)
+                dbg.i("广播:%s Name:%s", Address, device.getName());
+
+            if (!Address.equals(mTap.Address()))
+                return;
+
+            if (action.equals(Tap.ACTION_BLUETOOTHTAP_SENSOR)) {
+                ((TextView) findViewById(id.Device_Message)).setText(mTap
+                        .GetBluetooth().getSensor().toString());
+                return;
+            }
+            if (action.equals(BluetoothIO.ACTION_BLUETOOTH_READY)) {
+                ((TextView) findViewById(id.Device_Name)).setText(mTap.getName() + "(设备已连接)");
+                Date now = new Date();
+                long time = now.getTime() - closeTime.getTime();
+                WriteMessage(String.format("设备就绪 距离上次关闭时间%f秒", time / 1000f));
+                ConnectCount++;
+                WriteMessage(String.format("成功:%d 失败:%d", ConnectCount, ErrorCount));
+            }
+            if (action.equals(BluetoothIO.ACTION_BLUETOOTH_DISCONNECTED)) {
+                ((TextView) findViewById(id.Device_Name)).setText(mTap.getName() + "(设备未连接)");
+                WriteMessage("设备连接断开");
+            }
+
+            if (action.equals(BluetoothIO.ACTION_BLUETOOTH_CONNECTED)) {
+                WriteMessage("设备连接成功");
+
+            }
+
+            if (action.equals(Tap.ACTION_BLUETOOTHTAP_RECORD_COMPLETE)) {
+                load();
+                return;
+            }
+            if (mTap.Bluetooth() != null) {
+                mTap.firmwareTools().setFirmwareUpateInterface(TapActivity.this);
+            }
         }
     }
 

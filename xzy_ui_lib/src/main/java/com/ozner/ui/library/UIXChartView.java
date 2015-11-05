@@ -21,13 +21,18 @@ public abstract class UIXChartView extends UIXBaseView {
     private final static int tagColor = 0xff94979a;
     private final static int lineColor = 0xffd7d7d7;
     protected LinkedHashMap<Integer, String> valueTag = new LinkedHashMap<>();
-    private TextPaint tagPaint = new TextPaint();
-    private Paint dayPaint = new Paint();
     protected RectF valueRect = new RectF();
     protected RectF gridRect = new RectF();
     protected float x_rate = 0;
     protected float y_rate = 0;
     ChartAdapter adapter;
+    private TextPaint tagPaint = new TextPaint();
+    private Paint dayPaint = new Paint();
+
+    public UIXChartView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        init();
+    }
 
     public void setAdapter(ChartAdapter adapter) {
         this.adapter = adapter;
@@ -67,16 +72,10 @@ public abstract class UIXChartView extends UIXBaseView {
         this.invalidate();
     }
 
-
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         update();
-    }
-
-    public UIXChartView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init();
     }
 
     @Override

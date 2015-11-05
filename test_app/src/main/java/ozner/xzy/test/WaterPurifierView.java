@@ -37,15 +37,7 @@ public class WaterPurifierView extends BaseItemView {
     CircularProgressButton hot;
     ControlImp controlImp = new ControlImp();
     Monitor monitor = new Monitor();
-
-    class Monitor extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent.getStringExtra(OznerDevice.Extra_Address).equals(device.Address())) {
-                loadStatus();
-            }
-        }
-    }
+    Handler handler = new Handler();
 
     public WaterPurifierView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -86,8 +78,6 @@ public class WaterPurifierView extends BaseItemView {
 
     }
 
-    Handler handler = new Handler();
-
     private void loadStatus() {
         if (device == null) {
             return;
@@ -102,6 +92,24 @@ public class WaterPurifierView extends BaseItemView {
         coolStatus.setText("制冷:" + (device.Cool() ? "开" : "关"));
         hotStatus.setText("加热:" + (device.Hot() ? "开" : "关"));
 
+    }
+
+    @Override
+    public void loadDevice(OznerDevice device) throws ClassCastException {
+        if (!(device instanceof WaterPurifier)) {
+            throw new ClassCastException();
+        }
+        this.device = (WaterPurifier) device;
+        loadStatus();
+    }
+
+    class Monitor extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getStringExtra(OznerDevice.Extra_Address).equals(device.Address())) {
+                loadStatus();
+            }
+        }
     }
 
     class ControlImp implements View.OnClickListener {
@@ -199,15 +207,5 @@ public class WaterPurifierView extends BaseItemView {
             }
 
         }
-    }
-
-
-    @Override
-    public void loadDevice(OznerDevice device) throws ClassCastException {
-        if (!(device instanceof WaterPurifier)) {
-            throw new ClassCastException();
-        }
-        this.device = (WaterPurifier) device;
-        loadStatus();
     }
 }

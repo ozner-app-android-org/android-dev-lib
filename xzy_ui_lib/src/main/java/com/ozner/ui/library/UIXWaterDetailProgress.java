@@ -15,15 +15,6 @@ import android.view.MotionEvent;
  * Created by zhiyongxu on 15/9/15.
  */
 public class UIXWaterDetailProgress extends UIXBaseView {
-    float _lineWidth = 0;
-    float _space;
-
-    private void init() {
-        _lineWidth = dpToPx(12);
-        _space = dpToPx(6);
-
-    }
-
     private final static int lineStartColor1 = 0xfff0a3a6;
     private final static int lineStartColor2 = 0xffab94eb;
     private final static int lineStartColor3 = 0xff94b8f2;
@@ -31,17 +22,56 @@ public class UIXWaterDetailProgress extends UIXBaseView {
     private final static int lineEndColor2 = 0xff6b3ee1;
     private final static int lineEndColor3 = 0xff3677ef;
     private final static int _ani_duration = 300;
-
+    float _lineWidth = 0;
+    float _space;
     private int _bad_progress = 40;
     private int _normal_progress = 35;
     private int _good_progress = 25;
-
     private int _ani_bad_progress = 0;
     private int _ani_normal_progress = 0;
     private int _ani_good_progress = 0;
     private int _ani_bad_alpha = 0;
     private int _ani_normal_alpha = 0;
     private int _ani_good_alpha = 0;
+    ValueAnimator.AnimatorUpdateListener animatorUpdateListener = new ValueAnimator.AnimatorUpdateListener() {
+        @Override
+        public void onAnimationUpdate(ValueAnimator animation) {
+            int value = (Integer) animation.getAnimatedValue();
+            switch (getStep()) {
+                case 0:
+                    _ani_bad_alpha = value;
+                    break;
+                case 1:
+                    _ani_bad_progress = value < _bad_progress ? value : _bad_progress;
+                    break;
+                case 2:
+                    _ani_normal_alpha = value;
+                    break;
+                case 3:
+                    _ani_normal_progress = value < _normal_progress ? value : _normal_progress;
+                    break;
+                case 4:
+                    _ani_good_alpha = value;
+                    break;
+                case 5:
+                    _ani_good_progress = value < _good_progress ? value : _good_progress;
+                    break;
+            }
+
+            invalidate();
+        }
+    };
+
+    public UIXWaterDetailProgress(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        init();
+    }
+
+    private void init() {
+        _lineWidth = dpToPx(12);
+        _space = dpToPx(6);
+
+    }
 
     public int bad_progress() {
         return _bad_progress;
@@ -66,7 +96,6 @@ public class UIXWaterDetailProgress extends UIXBaseView {
     public void set_good_progress(int _good_progress) {
         this._good_progress = _good_progress;
     }
-
 
     public void update(int bad, int normal, int good) {
         _bad_progress = bad;
@@ -115,35 +144,6 @@ public class UIXWaterDetailProgress extends UIXBaseView {
         return new Animator[]{animator};
     }
 
-    ValueAnimator.AnimatorUpdateListener animatorUpdateListener = new ValueAnimator.AnimatorUpdateListener() {
-        @Override
-        public void onAnimationUpdate(ValueAnimator animation) {
-            int value = (Integer) animation.getAnimatedValue();
-            switch (getStep()) {
-                case 0:
-                    _ani_bad_alpha = value;
-                    break;
-                case 1:
-                    _ani_bad_progress = value < _bad_progress ? value : _bad_progress;
-                    break;
-                case 2:
-                    _ani_normal_alpha = value;
-                    break;
-                case 3:
-                    _ani_normal_progress = value < _normal_progress ? value : _normal_progress;
-                    break;
-                case 4:
-                    _ani_good_alpha = value;
-                    break;
-                case 5:
-                    _ani_good_progress = value < _good_progress ? value : _good_progress;
-                    break;
-            }
-
-            invalidate();
-        }
-    };
-
     @Override
     public void onAnimationStart(Animator animation) {
         if (getStep() == 0) {
@@ -157,18 +157,12 @@ public class UIXWaterDetailProgress extends UIXBaseView {
         super.onAnimationStart(animation);
     }
 
-
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             startAnimation();
         }
         return super.onTouchEvent(event);
-    }
-
-    public UIXWaterDetailProgress(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init();
     }
 
     private void drawBackgroundLine(RectF rect, Canvas canvas) {

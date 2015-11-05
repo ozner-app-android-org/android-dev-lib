@@ -62,7 +62,7 @@ public class GetPathFromUri4kitkat {
                 }
 
                 final String selection = "_id=?";
-                final String[] selectionArgs = new String[] { split[1] };
+                final String[] selectionArgs = new String[]{split[1]};
 
                 return getDataColumn(context, contentUri, selection, selectionArgs);
             }
@@ -83,22 +83,18 @@ public class GetPathFromUri4kitkat {
      * Get the value of the data column for this Uri. This is useful for
      * MediaStore Uris, and other file-based ContentProviders.
      *
-     * @param context
-     *            The context.
-     * @param uri
-     *            The Uri to query.
-     * @param selection
-     *            (Optional) Filter used in the query.
-     * @param selectionArgs
-     *            (Optional) Selection arguments used in the query.
+     * @param context       The context.
+     * @param uri           The Uri to query.
+     * @param selection     (Optional) Filter used in the query.
+     * @param selectionArgs (Optional) Selection arguments used in the query.
      * @return The value of the _data column, which is typically a file path.
      */
     private static String getDataColumn(Context context, Uri uri, String selection,
-                                       String[] selectionArgs) {
+                                        String[] selectionArgs) {
 
         Cursor cursor = null;
         final String column = "_data";
-        final String[] projection = { column };
+        final String[] projection = {column};
 
         try {
             cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs,
@@ -115,8 +111,7 @@ public class GetPathFromUri4kitkat {
     }
 
     /**
-     * @param uri
-     *            The Uri to check.
+     * @param uri The Uri to check.
      * @return Whether the Uri authority is ExternalStorageProvider.
      */
     private static boolean isExternalStorageDocument(Uri uri) {
@@ -124,8 +119,7 @@ public class GetPathFromUri4kitkat {
     }
 
     /**
-     * @param uri
-     *            The Uri to check.
+     * @param uri The Uri to check.
      * @return Whether the Uri authority is DownloadsProvider.
      */
     private static boolean isDownloadsDocument(Uri uri) {
@@ -133,8 +127,7 @@ public class GetPathFromUri4kitkat {
     }
 
     /**
-     * @param uri
-     *            The Uri to check.
+     * @param uri The Uri to check.
      * @return Whether the Uri authority is MediaProvider.
      */
     private static boolean isMediaDocument(Uri uri) {

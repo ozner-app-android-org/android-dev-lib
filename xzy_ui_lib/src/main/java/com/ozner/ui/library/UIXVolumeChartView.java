@@ -18,11 +18,11 @@ import java.util.ArrayList;
  */
 public class UIXVolumeChartView extends UIXChartView {
 
+    float ani_value = 0;
+
     public UIXVolumeChartView(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
-
-    float ani_value = 0;
 
     @Override
     protected void init() {

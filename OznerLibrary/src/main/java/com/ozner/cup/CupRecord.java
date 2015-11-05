@@ -66,7 +66,7 @@ public class CupRecord implements Comparable {
 
     @Override
     public int compareTo(Object o) {
-        CupRecord cup = (CupRecord)o;
+        CupRecord cup = (CupRecord) o;
         return time.compareTo(cup.time);
     }
 }

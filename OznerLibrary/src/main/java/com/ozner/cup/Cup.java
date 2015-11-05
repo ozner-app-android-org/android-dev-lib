@@ -22,8 +22,7 @@ import java.util.TreeSet;
  * 水杯对象
  * Created by zhiyongxu on 15/10/28.
  */
-public class Cup extends OznerDevice
-{
+public class Cup extends OznerDevice {
 
     /**
      * 收到单条饮水记录
@@ -33,7 +32,6 @@ public class Cup extends OznerDevice
      * 饮水记录传输完成
      */
     public final static String ACTION_BLUETOOTHCUP_RECORD_COMPLETE = "com.ozner.cup.bluetooth.record.complete";
-
 
 
     /**
@@ -54,14 +52,35 @@ public class Cup extends OznerDevice
     final CupSensor mSensor = new CupSensor();
     final CupFirmwareTools firmwareTools = new CupFirmwareTools();
     final TreeSet<CupRecord> mRecords = new TreeSet<>();
+    final BluetoothIOImp bluetoothIOImp = new BluetoothIOImp();
     CupVolume mCupVolume;
     Date mLastDataTime = new Date();
-    Timer autoUpdateTimer =null;
+    Timer autoUpdateTimer = null;
     int RequestCount = 0;
-    final BluetoothIOImp bluetoothIOImp=new BluetoothIOImp();
-
     HashSet<String> dataHash = new HashSet<>();
     Bluetooth bluetooth = new Bluetooth();
+
+    public Cup(Context context, String Address, String Model, String Setting) {
+        super(context, Address, Model, Setting);
+        initSetting(Setting);
+        mCupVolume = new CupVolume(context, Address);
+    }
+
+    /**
+     * 判断设备是否处于配对状态
+     *
+     * @param io 设备接口
+     * @return true=配对状态
+     */
+    public static boolean isBindMode(BluetoothIO io) {
+        if (!CupManager.IsCup(io.getModel())) return false;
+        if ((io.getCustomDataType() == AD_CustomType_Gravity) && (io.getCustomData() != null)) {
+            CupGravity gravity = new CupGravity();
+            gravity.FromBytes(io.getCustomData(), 0);
+            return gravity.IsHandstand();
+        }
+        return false;
+    }
 
     /**
      * 兼容老的方法
@@ -84,162 +103,9 @@ public class Cup extends OznerDevice
         return (BluetoothIO) IO();
     }
 
-    /**
-     * 兼容老的方法
-     *
-     * @deprecated
-     */
-    public class Bluetooth {
-        public CupSensor getSensor() {
-            return mSensor;
-        }
-    }
-
     @Override
     public Class<?> getIOType() {
         return BluetoothIO.class;
-    }
-
-
-    public Cup(Context context, String Address, String Model, String Setting) {
-        super(context, Address, Model, Setting);
-        initSetting(Setting);
-        mCupVolume = new CupVolume(context, Address);
-    }
-
-    class BluetoothIOImp implements
-            BluetoothIO.OnInitCallback,
-            BluetoothIO.OnTransmissionsCallback,
-            BluetoothIO.StatusCallback,
-            BluetoothIO.CheckTransmissionsCompleteCallback
-    {
-        @Override
-        public void onConnected(BaseDeviceIO io) {
-        }
-
-        @Override
-        public void onDisconnected(BaseDeviceIO io) {
-            cancelTimer();
-        }
-
-        @Override
-        public void onReady(BaseDeviceIO io) {
-            if (getRunningMode()==RunningMode.Foreground) {
-                if (autoUpdateTimer != null)
-                    cancelTimer();
-                autoUpdateTimer = new Timer();
-                autoUpdateTimer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        doTime();
-                    }
-                }, 100, 5000);
-            }else
-            {
-                requestRecord();
-            }
-        }
-
-
-
-
-        @Override
-        public void onIOSend(byte[] bytes) {
-
-        }
-
-        @Override
-        public void onIORecv(byte[] bytes) {
-            if (bytes == null) return;
-            if (bytes.length < 1) return;
-            byte opCode = bytes[0];
-            byte[] data = null;
-            if (bytes.length > 1)
-                data = Arrays.copyOfRange(bytes, 1, bytes.length);
-
-            switch (opCode) {
-                case opCode_ReadSensorRet: {
-                    dbg.i("读传感器完成");
-                    synchronized (this) {
-                        mSensor.FromBytes(data, 0);
-                    }
-                    Intent intent = new Intent(ACTION_BLUETOOTHCUP_SENSOR);
-                    intent.putExtra("Address", IO().getAddress());
-                    intent.putExtra("Sensor", data);
-                    context().sendBroadcast(intent);
-                    break;
-                }
-
-                case opCode_ReadRecordRet: {
-                    if (data != null) {
-                        CupRecord record = new CupRecord();
-                        record.FromBytes(data);
-                        if ((record.Index==record.Count) &&(record.Count==0) && (record.Vol==0))
-                        {
-                            return;
-                        }
-
-                        if (record.Vol > 0) {
-                            String hashKey = String.valueOf(record.time.getTime()) + "_" + String.valueOf(record.Vol);
-                            synchronized (mRecords) {
-                                if (dataHash.contains(hashKey)) {
-                                    dbg.e("收到水杯重复数据");
-                                    break;
-                                } else
-                                    dataHash.add(hashKey);
-                                mRecords.add(record);
-                            }
-                            Intent intent = new Intent(ACTION_BLUETOOTHCUP_RECORD);
-                            intent.putExtra("Address", IO().getAddress());
-                            intent.putExtra("Record", data);
-                            context().sendBroadcast(intent);
-                        }
-
-                        mLastDataTime = new Date();
-                        if (record.Index == record.Count) {
-                            dbg.i("收到记录完成");
-                            synchronized (mRecords) {
-                                mCupVolume.addRecord( mRecords.toArray(new CupRecord[mRecords.size()]));
-                                mRecords.clear();
-                                dataHash.clear();
-                            }
-                            Intent comp_intent = new Intent(ACTION_BLUETOOTHCUP_RECORD_COMPLETE);
-                            comp_intent.putExtra("Address", IO().getAddress());
-                            context().sendBroadcast(comp_intent);
-                        }
-                    }
-                    break;
-                }
-            }
-        }
-        @Override
-        public boolean onIOInit(BaseDeviceIO.DataSendProxy sendHandle) {
-            try {
-                if (!sendTime(sendHandle))
-                    return false;
-                Thread.sleep(100);
-
-                if (!sendSetting(sendHandle))
-                    return false;
-
-                Thread.sleep(100);
-                sendBackground(sendHandle);
-                Thread.sleep(100);
-                return true;
-            } catch (Exception e) {
-                return false;
-            }
-        }
-
-        @Override
-        public boolean CheckTransmissionsComplete(BaseDeviceIO io) {
-            if (mLastDataTime != null) {
-                //如果上几次接收饮水记录的时间小于2秒,不进入定时循环,等待下条饮水记录
-                Date dt = new Date();
-                return (dt.getTime() - mLastDataTime.getTime()) >= 2000;
-            }else
-                return true;
-        }
     }
 
     @Override
@@ -260,26 +126,10 @@ public class Cup extends OznerDevice
             firmwareTools.bind((BluetoothIO) newIO);
         }
     }
-    /**
-     * 判断设备是否处于配对状态
-     *
-     * @param io 设备接口
-     * @return true=配对状态
-     */
-    public static boolean isBindMode(BluetoothIO io) {
-        if (!CupManager.IsCup(io.getModel())) return false;
-        if ((io.getCustomDataType() == AD_CustomType_Gravity) && (io.getCustomData() != null)) {
-            CupGravity gravity = new CupGravity();
-            gravity.FromBytes(io.getCustomData(), 0);
-            return gravity.IsHandstand();
-        }
-        return false;
-    }
 
     public CupSetting Setting() {
         return (CupSetting) super.Setting();
     }
-
 
     public CupSensor Sensor() {
         return mSensor;
@@ -320,7 +170,7 @@ public class Cup extends OznerDevice
     }
 
     private void sendBackground(BaseDeviceIO.DataSendProxy proxy) {
-        if (getRunningMode()==RunningMode.Foreground) {
+        if (getRunningMode() == RunningMode.Foreground) {
             if (proxy != null) {
                 proxy.send(BluetoothIO.makePacket(opCode_FrontMode, null));
             } else {
@@ -363,7 +213,7 @@ public class Cup extends OznerDevice
      * @return True设置成功
      */
     public boolean changeHaloColor(int Color) {
-        CupSetting setting =  Setting();
+        CupSetting setting = Setting();
         if (setting == null)
             return false;
         byte[] data = new byte[19];
@@ -380,9 +230,8 @@ public class Cup extends OznerDevice
         return IO().send(BluetoothIO.makePacket(opCode_SetRemind, data));
     }
 
-
     private void doTime() {
-        if (IO()==null) return;
+        if (IO() == null) return;
         if (mLastDataTime != null) {
             //如果上几次接收饮水记录的时间小于2秒,不进入定时循环,等待下条饮水记录
             Date dt = new Date();
@@ -402,11 +251,10 @@ public class Cup extends OznerDevice
     @Override
     public void UpdateSetting() {
 
-        if ((IO()!=null) && (IO().isReady()))
+        if ((IO() != null) && (IO().isReady()))
             sendSetting(null);
 
     }
-
 
     private void requestSensor() {
         if (IO() != null) {
@@ -423,13 +271,153 @@ public class Cup extends OznerDevice
         }
     }
 
-
-
     private void cancelTimer() {
-        if (autoUpdateTimer!=null) {
+        if (autoUpdateTimer != null) {
             autoUpdateTimer.cancel();
             autoUpdateTimer.purge();
-            autoUpdateTimer=null;
+            autoUpdateTimer = null;
+        }
+    }
+
+    /**
+     * 兼容老的方法
+     *
+     * @deprecated
+     */
+    public class Bluetooth {
+        public CupSensor getSensor() {
+            return mSensor;
+        }
+    }
+
+    class BluetoothIOImp implements
+            BluetoothIO.OnInitCallback,
+            BluetoothIO.OnTransmissionsCallback,
+            BluetoothIO.StatusCallback,
+            BluetoothIO.CheckTransmissionsCompleteCallback {
+        @Override
+        public void onConnected(BaseDeviceIO io) {
+        }
+
+        @Override
+        public void onDisconnected(BaseDeviceIO io) {
+            cancelTimer();
+        }
+
+        @Override
+        public void onReady(BaseDeviceIO io) {
+            if (getRunningMode() == RunningMode.Foreground) {
+                if (autoUpdateTimer != null)
+                    cancelTimer();
+                autoUpdateTimer = new Timer();
+                autoUpdateTimer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        doTime();
+                    }
+                }, 100, 5000);
+            } else {
+                requestRecord();
+            }
+        }
+
+
+        @Override
+        public void onIOSend(byte[] bytes) {
+
+        }
+
+        @Override
+        public void onIORecv(byte[] bytes) {
+            if (bytes == null) return;
+            if (bytes.length < 1) return;
+            byte opCode = bytes[0];
+            byte[] data = null;
+            if (bytes.length > 1)
+                data = Arrays.copyOfRange(bytes, 1, bytes.length);
+
+            switch (opCode) {
+                case opCode_ReadSensorRet: {
+                    dbg.i("读传感器完成");
+                    synchronized (this) {
+                        mSensor.FromBytes(data, 0);
+                    }
+                    Intent intent = new Intent(ACTION_BLUETOOTHCUP_SENSOR);
+                    intent.putExtra("Address", IO().getAddress());
+                    intent.putExtra("Sensor", data);
+                    context().sendBroadcast(intent);
+                    break;
+                }
+
+                case opCode_ReadRecordRet: {
+                    if (data != null) {
+                        CupRecord record = new CupRecord();
+                        record.FromBytes(data);
+                        if ((record.Index == record.Count) && (record.Count == 0) && (record.Vol == 0)) {
+                            return;
+                        }
+
+                        if (record.Vol > 0) {
+                            String hashKey = String.valueOf(record.time.getTime()) + "_" + String.valueOf(record.Vol);
+                            synchronized (mRecords) {
+                                if (dataHash.contains(hashKey)) {
+                                    dbg.e("收到水杯重复数据");
+                                    break;
+                                } else
+                                    dataHash.add(hashKey);
+                                mRecords.add(record);
+                            }
+                            Intent intent = new Intent(ACTION_BLUETOOTHCUP_RECORD);
+                            intent.putExtra("Address", IO().getAddress());
+                            intent.putExtra("Record", data);
+                            context().sendBroadcast(intent);
+                        }
+
+                        mLastDataTime = new Date();
+                        if (record.Index == record.Count) {
+                            dbg.i("收到记录完成");
+                            synchronized (mRecords) {
+                                mCupVolume.addRecord(mRecords.toArray(new CupRecord[mRecords.size()]));
+                                mRecords.clear();
+                                dataHash.clear();
+                            }
+                            Intent comp_intent = new Intent(ACTION_BLUETOOTHCUP_RECORD_COMPLETE);
+                            comp_intent.putExtra("Address", IO().getAddress());
+                            context().sendBroadcast(comp_intent);
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+        @Override
+        public boolean onIOInit(BaseDeviceIO.DataSendProxy sendHandle) {
+            try {
+                if (!sendTime(sendHandle))
+                    return false;
+                Thread.sleep(100);
+
+                if (!sendSetting(sendHandle))
+                    return false;
+
+                Thread.sleep(100);
+                sendBackground(sendHandle);
+                Thread.sleep(100);
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        @Override
+        public boolean CheckTransmissionsComplete(BaseDeviceIO io) {
+            if (mLastDataTime != null) {
+                //如果上几次接收饮水记录的时间小于2秒,不进入定时循环,等待下条饮水记录
+                Date dt = new Date();
+                return (dt.getTime() - mLastDataTime.getTime()) >= 2000;
+            } else
+                return true;
         }
     }
 }

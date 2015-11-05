@@ -62,27 +62,8 @@ public class BluetoothIO extends BaseDeviceIO {
     String Platform = "";
     long Firmware = 0;
 
-    class AsyncObject
-    {
-        public byte[] data;
-        public OperateCallback<Void> callback;
-        public AsyncObject(byte[] data,OperateCallback<Void> callback)
-        {
-            this.data=data;
-            this.callback=callback;
-        }
-
-    }
-    public long getFirmware() {
-        return Firmware;
-    }
-
-    public String getPlatform() {
-        return Platform;
-    }
-
     public BluetoothIO(Context context, BluetoothDevice device, String Model, String Platform, long Firmware) {
-        super(context,Model);
+        super(context, Model);
         this.device = device;
         this.Firmware = Firmware;
         this.Platform = Platform;
@@ -96,6 +77,14 @@ public class BluetoothIO extends BaseDeviceIO {
             buffer.put(data);
         }
         return buffer.array();
+    }
+
+    public long getFirmware() {
+        return Firmware;
+    }
+
+    public String getPlatform() {
+        return Platform;
     }
 
     public void updateCustomData(int customDataType, byte[] customData) {
@@ -118,11 +107,9 @@ public class BluetoothIO extends BaseDeviceIO {
         return bluetoothProxy.lastRecvPacket;
     }
 
-
-
     @Override
     public boolean send(byte[] bytes) {
-        return bluetoothProxy.postSend(bytes,null);
+        return bluetoothProxy.postSend(bytes, null);
     }
 
     @Override
@@ -170,7 +157,6 @@ public class BluetoothIO extends BaseDeviceIO {
             return ConnectStatus.Disconnect;
     }
 
-
     @Override
     protected void doConnected() {
         Intent intent = new Intent();
@@ -189,8 +175,6 @@ public class BluetoothIO extends BaseDeviceIO {
         super.doReady();
     }
 
-
-
     @Override
     protected void doDisconnected() {
         Intent intent = new Intent();
@@ -202,8 +186,7 @@ public class BluetoothIO extends BaseDeviceIO {
 
     @Override
     protected void doChangeRunningMode() {
-        if (getRunningMode()==RunningMode.Background)
-        {
+        if (getRunningMode() == RunningMode.Background) {
             //如果是后台模式,退出LOOP消息循环
             if (bluetoothProxy.mLooper != null) {
                 bluetoothProxy.mLooper.quitSafely();
@@ -211,19 +194,30 @@ public class BluetoothIO extends BaseDeviceIO {
         }
     }
 
-
     public interface BluetoothRunnable {
         void run(DataSendProxy sendHandle);
+    }
+
+    class AsyncObject {
+        public byte[] data;
+        public OperateCallback<Void> callback;
+
+        public AsyncObject(byte[] data, OperateCallback<Void> callback) {
+            this.data = data;
+            this.callback = callback;
+        }
+
     }
 
     public class BluetoothSendProxy extends DataSendProxy {
         @Override
         public boolean send(byte[] data) {
-            return bluetoothProxy.postSend(data,null);
+            return bluetoothProxy.postSend(data, null);
         }
+
         @Override
-        public boolean send(byte[] data,OperateCallback<Void> callback) {
-            return bluetoothProxy.postSend(data,callback);
+        public boolean send(byte[] data, OperateCallback<Void> callback) {
+            return bluetoothProxy.postSend(data, callback);
         }
 
     }
@@ -254,7 +248,6 @@ public class BluetoothIO extends BaseDeviceIO {
         }
 
 
-
         private boolean checkStatus() {
             return (connectionState == BluetoothGatt.STATE_CONNECTED) && (lastStatus == BluetoothGatt.GATT_SUCCESS);
         }
@@ -274,8 +267,7 @@ public class BluetoothIO extends BaseDeviceIO {
 
                 setObject();
                 super.onConnectionStateChange(gatt, status, newState);
-            }catch (Exception e)
-            {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -384,7 +376,7 @@ public class BluetoothIO extends BaseDeviceIO {
 
         public void close() {
             if (isRuning()) {
-                if (mLooper!=null)
+                if (mLooper != null)
                     mLooper.quit();
             }
         }
@@ -427,20 +419,20 @@ public class BluetoothIO extends BaseDeviceIO {
                 }
                 dbg.i("初始化成功:%s", device.getAddress());
 
-                if (getRunningMode()==RunningMode.Foreground) {
+                if (getRunningMode() == RunningMode.Foreground) {
                     //连接完成以后建立一个HANDLE来接受发送的数据
                     Looper.prepare();
                     mLooper = Looper.myLooper();
                     mHandler = new MessageHandler(mLooper);
                     doReady();
                     Looper.loop();
-                } else
-                {
+                } else {
                     doReady();
                     {
                         //每次等待5秒
                         Thread.sleep(5000);
-                    } while (!doCheckTransmissionsComplete());
+                    }
+                    while (!doCheckTransmissionsComplete()) ;
                 }
 
             } catch (Exception e) {
@@ -452,8 +444,8 @@ public class BluetoothIO extends BaseDeviceIO {
                 if (mGatt != null) {
                     mGatt.disconnect();
                     mGatt.close();
-                    mLooper=null;
-                    mHandler=null;
+                    mLooper = null;
+                    mHandler = null;
                     doDisconnected();
                     //mGatt = null;
                 }
@@ -485,18 +477,16 @@ public class BluetoothIO extends BaseDeviceIO {
             return mHandler.sendMessage(message);
         }
 
-        public boolean postSend(byte[] data,OperateCallback<Void> callback) {
+        public boolean postSend(byte[] data, OperateCallback<Void> callback) {
             if (Thread.currentThread().getId() == thread.getId()) {
                 try {
-                    if (send(data))
-                    {
-                        if (callback!=null) {
+                    if (send(data)) {
+                        if (callback != null) {
                             callback.onSuccess(null);
                         }
                         return true;
-                    }else
-                    {
-                        if (callback!=null) {
+                    } else {
+                        if (callback != null) {
                             callback.onFailure(null);
                         }
                         return false;
@@ -508,12 +498,12 @@ public class BluetoothIO extends BaseDeviceIO {
                     return false;
                 }
             } else {
-                if (mHandler!=null) {
+                if (mHandler != null) {
                     Message message = new Message();
                     message.what = MSG_SendData;
-                    message.obj = new AsyncObject(data,callback);
+                    message.obj = new AsyncObject(data, callback);
                     return mHandler.sendMessage(message);
-                }else
+                } else
                     return false;
             }
 
@@ -528,26 +518,21 @@ public class BluetoothIO extends BaseDeviceIO {
             public void handleMessage(Message msg) {
                 try {
                     if (msg.what == MSG_SendData) {
-                        AsyncObject object=(AsyncObject)msg.obj;
+                        AsyncObject object = (AsyncObject) msg.obj;
 
-                        try
-                        {
-                            if (send(object.data))
-                            {
-                                if (object.callback!=null)
+                        try {
+                            if (send(object.data)) {
+                                if (object.callback != null)
                                     object.callback.onSuccess(null);
-                            }else
-                            {
-                                if (object.callback!=null)
+                            } else {
+                                if (object.callback != null)
                                     object.callback.onFailure(null);
                             }
-                        }catch (Exception e)
-                        {
-                            if (object.callback!=null)
+                        } catch (Exception e) {
+                            if (object.callback != null)
                                 object.callback.onFailure(e);
                             throw e;
                         }
-
 
 
                     } else if (msg.what == MSG_Runnable) {

@@ -19,6 +19,16 @@ import java.util.ArrayList;
  */
 public class TDSChartView extends UIXChartView {
 
+    private final static int LineColor50 = 0xff5591fb;
+    private final static int LineColor200 = 0xffa28aea;
+    private final static int LineColor400 = 0xffec4756;
+    private final static int SharpColor50 = Color.WHITE;
+    private final static int SharpColor200 = 0xffeadbf0;
+    private final static int SharpColor400 = 0xfff29599;
+    private final static int SharpAlpha = 180;
+    float ani_y_rate = 0;
+    float ani_x_rate = 0;
+    int ani_sharp_alpha = 0;
     public TDSChartView(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
@@ -30,12 +40,6 @@ public class TDSChartView extends UIXChartView {
         valueTag.put(200, getResources().getString(R.string.normal_water));
         valueTag.put(400, getResources().getString(R.string.bad_water));
     }
-
-    float ani_y_rate = 0;
-    float ani_x_rate = 0;
-
-    int ani_sharp_alpha = 0;
-
 
     @Override
     public void onAnimationStart(Animator animation) {
@@ -101,16 +105,6 @@ public class TDSChartView extends UIXChartView {
         }
         return super.onTouchEvent(event);
     }
-
-
-    private final static int LineColor50 = 0xff5591fb;
-    private final static int LineColor200 = 0xffa28aea;
-    private final static int LineColor400 = 0xffec4756;
-
-    private final static int SharpColor50 = Color.WHITE;
-    private final static int SharpColor200 = 0xffeadbf0;
-    private final static int SharpColor400 = 0xfff29599;
-    private final static int SharpAlpha = 180;
 
     private Shader getLineShare() {
         return new LinearGradient(0, valueRect.bottom, 0, valueRect.top,

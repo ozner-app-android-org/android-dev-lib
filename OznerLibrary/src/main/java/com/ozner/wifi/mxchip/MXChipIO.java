@@ -13,19 +13,28 @@ import org.fusesource.mqtt.client.Callback;
  * Created by xzyxd on 2015/10/31.
  */
 public class MXChipIO extends BaseDeviceIO {
-    String address="";
+    final MQTTProxy.MQTTListener listener = new MQTTListenerImp();
+    String address = "";
     String name = "";
     MQTTProxy proxy;
-    final MQTTProxy.MQTTListener listener=new MQTTListenerImp();
-    String out=null;
-    String in=null;
-    boolean isInited=false;
+    String out = null;
+    String in = null;
+    boolean isInited = false;
+
+    public MXChipIO(Context context, MQTTProxy proxy, String Name, String Model, String address) {
+        super(context, Model);
+        this.address = address;
+        this.name = Name;
+        this.proxy = proxy;
+        proxy.registerListener(listener);
+        doConnecting();
+    }
+
     /**
      * 将指定字符串src，以每两个字符分割转换为16进制形式 如："2B44EFD9" --> byte[]{0x2B, 0x44, 0xEF,
      * 0xD9}
      *
-     * @param src
-     *            String
+     * @param src String
      * @return byte[]
      */
     public static byte[] HexString2Bytes(String src) {
@@ -41,45 +50,21 @@ public class MXChipIO extends BaseDeviceIO {
     /**
      * 将两个ASCII字符合成一个字节； 如："EF"--> 0xEF
      *
-     * @param src0
-     *            byte
-     * @param src1
-     *            byte
+     * @param src0 byte
+     * @param src1 byte
      * @return byte
      */
     public static byte uniteBytes(byte src0, byte src1) {
-        byte _b0 = Byte.decode("0x" + new String(new byte[] { src0 }))
+        byte _b0 = Byte.decode("0x" + new String(new byte[]{src0}))
                 .byteValue();
         _b0 = (byte) (_b0 << 4);
-        byte _b1 = Byte.decode("0x" + new String(new byte[] { src1 }))
+        byte _b1 = Byte.decode("0x" + new String(new byte[]{src1}))
                 .byteValue();
         byte ret = (byte) (_b0 ^ _b1);
         return ret;
     }
 
-    public MXChipIO(Context context, MQTTProxy proxy, String Name, String Model, String address)
-    {
-        super(context,Model);
-        this.address=address;
-        this.name = Name;
-        this.proxy=proxy;
-        proxy.registerListener(listener);
-        doConnecting();
-    }
-    public class MQTTSendProxy extends DataSendProxy
-    {
-        @Override
-        public boolean send(byte[] data) {
-            return MXChipIO.this.send(data);
-        }
-
-        @Override
-        public boolean send(byte[] data, OperateCallback<Void> callback) {
-            return MXChipIO.this.send(data,callback);
-        }
-    }
-    private void doSubscribeComplete(byte[] bytes)
-    {
+    private void doSubscribeComplete(byte[] bytes) {
         synchronized (this) {
             if (isInited) return;
             isInited = true; //防止多次进入
@@ -89,71 +74,35 @@ public class MXChipIO extends BaseDeviceIO {
             public void run() {
                 if (doInit(new MQTTSendProxy())) {
                     doReady();
-                }else
+                } else
                     doDisconnected();
             }
         }).start();
-
 
 
     }
 
     @Override
     protected void doDisconnected() {
-        isInited=false;
+        isInited = false;
         super.doDisconnected();
-    }
-
-    class MQTTListenerImp implements MQTTProxy.MQTTListener
-    {
-        @Override
-        public void onConnected(MQTTProxy proxy) {
-            doConnected();
-            proxy.subscribe(out, new Callback<byte[]>() {
-                @Override
-                public void onSuccess(byte[] bytes) {
-                    doSubscribeComplete(bytes);
-                }
-
-                @Override
-                public void onFailure(Throwable throwable) {
-
-                }
-            });
-        }
-
-
-
-        @Override
-        public void onDisconnected(MQTTProxy proxy) {
-            doDisconnected();
-        }
-
-        @Override
-        public void onPublish(MQTTProxy proxy, String topic, byte[] data) {
-            if (topic.equals(out))
-            {
-                doRecv(data);
-            }
-        }
     }
 
     /**
      * 设置MQTT设备的分类ID,每个庆科设备都有一个"分类ID/MAC"组成的MQTT订阅主题,在订阅消息前调用
      */
-    public void setSecureCode(String secureCode)
-    {
-        in=secureCode+"/"+address.replace(":","").toLowerCase()+"/in";
-        out=secureCode+"/"+address.replace(":","").toLowerCase()+"/out";
+    public void setSecureCode(String secureCode) {
+        in = secureCode + "/" + address.replace(":", "").toLowerCase() + "/in";
+        out = secureCode + "/" + address.replace(":", "").toLowerCase() + "/out";
     }
 
     @Override
     public boolean send(byte[] bytes) {
         if (proxy.isConnected()) {
-            proxy.publish(in, bytes,null);
+            proxy.publish(in, bytes, null);
             doSend(bytes);
             return true;
-        }else
+        } else
             return false;
     }
 
@@ -173,7 +122,7 @@ public class MXChipIO extends BaseDeviceIO {
             proxy.publish(in, bytes, callback);
             doSend(bytes);
             return true;
-        }else
+        } else
             return false;
     }
 
@@ -189,8 +138,7 @@ public class MXChipIO extends BaseDeviceIO {
     public void open() throws DeviceNotReadyException {
         if (Helper.StringIsNullOrEmpty(out))
             throw new DeviceNotReadyException();
-        if (proxy.isConnected())
-        {
+        if (proxy.isConnected()) {
             this.proxy.subscribe(out, new Callback<byte[]>() {
                 @Override
                 public void onSuccess(byte[] bytes) {
@@ -216,7 +164,6 @@ public class MXChipIO extends BaseDeviceIO {
             return ConnectStatus.Disconnect;
     }
 
-
     @Override
     public String getName() {
         return name;
@@ -225,5 +172,48 @@ public class MXChipIO extends BaseDeviceIO {
     @Override
     public String getAddress() {
         return address;
+    }
+
+    public class MQTTSendProxy extends DataSendProxy {
+        @Override
+        public boolean send(byte[] data) {
+            return MXChipIO.this.send(data);
+        }
+
+        @Override
+        public boolean send(byte[] data, OperateCallback<Void> callback) {
+            return MXChipIO.this.send(data, callback);
+        }
+    }
+
+    class MQTTListenerImp implements MQTTProxy.MQTTListener {
+        @Override
+        public void onConnected(MQTTProxy proxy) {
+            doConnected();
+            proxy.subscribe(out, new Callback<byte[]>() {
+                @Override
+                public void onSuccess(byte[] bytes) {
+                    doSubscribeComplete(bytes);
+                }
+
+                @Override
+                public void onFailure(Throwable throwable) {
+
+                }
+            });
+        }
+
+
+        @Override
+        public void onDisconnected(MQTTProxy proxy) {
+            doDisconnected();
+        }
+
+        @Override
+        public void onPublish(MQTTProxy proxy, String topic, byte[] data) {
+            if (topic.equals(out)) {
+                doRecv(data);
+            }
+        }
     }
 }

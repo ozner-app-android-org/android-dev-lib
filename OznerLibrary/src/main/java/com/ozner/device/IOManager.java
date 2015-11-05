@@ -48,13 +48,12 @@ public abstract class IOManager extends XObject {
     }
 
 
-    public BaseDeviceIO getAvailableDevice(String address)
-    {
-        synchronized (devices)
-        {
+    public BaseDeviceIO getAvailableDevice(String address) {
+        synchronized (devices) {
             return devices.get(address);
         }
     }
+
     /**
      * 获取可用的设备列表
      */

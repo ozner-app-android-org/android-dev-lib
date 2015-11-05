@@ -38,13 +38,14 @@ import java.util.Date;
 public class AddDeviceActivity extends Activity {
 
 
-	ListView list;
-	ListAdapter adapter;
-	EditText wifi_ssid;
-	EditText wifi_passwd;
-	Button wifi_bind;
-	Monitor mMonitor=new Monitor();
-	private void loadWifi() {
+    ListView list;
+    ListAdapter adapter;
+    EditText wifi_ssid;
+    EditText wifi_passwd;
+    Button wifi_bind;
+    Monitor mMonitor = new Monitor();
+
+    private void loadWifi() {
 //
 //		WifiManager wifi_service = (WifiManager) getSystemService(WIFI_SERVICE);
 //		wifi_bind.setEnabled(wifi_service.getWifiState() == WifiManager.WIFI_STATE_ENABLED);
@@ -54,43 +55,30 @@ public class AddDeviceActivity extends Activity {
 //		} else {
 //			wifi_ssid.setText("");
 //		}
-	}
+    }
 
-	class Monitor extends BroadcastReceiver
-	{
-		@Override
-		public void onReceive(Context context, Intent intent) {
-			if (intent.getAction().equals(WifiManager.WIFI_STATE_CHANGED_ACTION)) {
-				loadWifi();
-			}
-			if (intent.getAction().equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
-				loadWifi();
-			} else {
-				adapter.Reload();
-			}
-		}
-	}
-	@Override
-	protected void onDestroy() {
-		this.unregisterReceiver(mMonitor);
-		super.onDestroy();
-	}
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		
-		IntentFilter filter=new IntentFilter();
-		filter.addAction(BluetoothScan.ACTION_SCANNER_FOUND);
-		filter.addAction(BaseBluetoothDeviceManager.ACTION_OZNER_BLUETOOTH_BIND_MODE);
-		filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
-		filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
+    @Override
+    protected void onDestroy() {
+        this.unregisterReceiver(mMonitor);
+        super.onDestroy();
+    }
 
-		this.registerReceiver(mMonitor, filter);
-		setTitle("设备配对");
-		setContentView(layout.activity_add);
-		adapter = new ListAdapter(this);
-		list = (ListView) findViewById(R.id.deviceList);
-		list.setAdapter(adapter);
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(BluetoothScan.ACTION_SCANNER_FOUND);
+        filter.addAction(BaseBluetoothDeviceManager.ACTION_OZNER_BLUETOOTH_BIND_MODE);
+        filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
+        filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
+
+        this.registerReceiver(mMonitor, filter);
+        setTitle("设备配对");
+        setContentView(layout.activity_add);
+        adapter = new ListAdapter(this);
+        list = (ListView) findViewById(R.id.deviceList);
+        list.setAdapter(adapter);
 
 //		wifi_ssid = (EditText) findViewById(id.wifi_ssid);
 //		wifi_passwd = (EditText) findViewById(id.wifi_password);
@@ -137,130 +125,139 @@ public class AddDeviceActivity extends Activity {
 //				//mxChip.start(wifi_ssid.getText().toString(), wifi_passwd.getText().toString());
 //			}
 //		});
-		//mxChip = new MXChip(this);
-		//loadWifi();
+        //mxChip = new MXChip(this);
+        //loadWifi();
 
-	}
+    }
 
-	class ListAdapter extends BaseAdapter implements View.OnClickListener
-	{
-		ArrayList<BaseDeviceIO> list = new ArrayList<>();
-		Context mContext;
-		LayoutInflater mInflater;
+    class Monitor extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(WifiManager.WIFI_STATE_CHANGED_ACTION)) {
+                loadWifi();
+            }
+            if (intent.getAction().equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
+                loadWifi();
+            } else {
+                adapter.Reload();
+            }
+        }
+    }
 
-		public ListAdapter(Context context)
-		{
-			mContext=context;
-			mInflater=LayoutInflater.from(context); 
-			this.Reload();
-		}
-		private void Reload()
-		{
-			OznerBLEApplication app=(OznerBLEApplication)getApplication();
-			OznerBLEBinder service=app.getService();
-			if (service==null) return;
-			list.clear();
-			for (BaseDeviceIO device : service.getDeviceManager().getNotBindDevices())
-			{
-				list.add(device);
-			}
-			this.notifyDataSetInvalidated();
-		}
-		@Override
-		public int getCount() {
-			return list.size();
-		}
+    class ListAdapter extends BaseAdapter implements View.OnClickListener {
+        ArrayList<BaseDeviceIO> list = new ArrayList<>();
+        Context mContext;
+        LayoutInflater mInflater;
 
-		@Override
-		public Object getItem(int position) {
-			return list.get(position);
-		}
+        public ListAdapter(Context context) {
+            mContext = context;
+            mInflater = LayoutInflater.from(context);
+            this.Reload();
+        }
 
-		@Override
-		public long getItemId(int position) {
-			return 0;
-		}
+        private void Reload() {
+            OznerBLEApplication app = (OznerBLEApplication) getApplication();
+            OznerBLEBinder service = app.getService();
+            if (service == null) return;
+            list.clear();
+            for (BaseDeviceIO device : service.getDeviceManager().getNotBindDevices()) {
+                list.add(device);
+            }
+            this.notifyDataSetInvalidated();
+        }
 
-		@Override
-		public View getView(int position, View convertView, ViewGroup parent) {
-			if (convertView==null)
-			{
-				convertView=mInflater.inflate(R.layout.add_device_item, null);
-			}
-			BaseDeviceIO device = (BaseDeviceIO) getItem(position);
-			SimpleDateFormat fmt=new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-			if (device!=null)
-			{
-				((TextView) convertView.findViewById(id.Device_Name)).setText(
-						device.getName() + "(" + device.getAddress() + ")");
-				((TextView) convertView.findViewById(id.Device_Model)).setText(
-						device.getModel());
-				if (device instanceof BluetoothIO) {
-					BluetoothIO bluetoothIO = (BluetoothIO) device;
-					((TextView) convertView.findViewById(id.Device_Platfrom)).setText(
-							bluetoothIO.getPlatform());
-					((TextView) convertView.findViewById(id.Device_Firmware)).setText(
-							fmt.format(new Date(bluetoothIO.getFirmware())));
-					((TextView) convertView.findViewById(id.Device_Custom)).setText(
-							((BluetoothIO) device).getCustomData() != null ?
-									Helper.ConvertHexByteArrayToString(((BluetoothIO) device).getCustomData())
-									: "");
-					if (CupManager.IsCup(device.getModel())) {
-						if (Cup.isBindMode(bluetoothIO))
-							convertView.findViewById(id.addDeviceButton).setEnabled(true);
-						else
-							convertView.findViewById(id.addDeviceButton).setEnabled(false);
-					}
-					if (TapManager.IsTap(device.getModel())) {
-						if (Tap.isBindMode(bluetoothIO))
-							convertView.findViewById(id.addDeviceButton).setEnabled(true);
-						else
-							convertView.findViewById(id.addDeviceButton).setEnabled(false);
-					}
+        @Override
+        public int getCount() {
+            return list.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return list.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return 0;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            if (convertView == null) {
+                convertView = mInflater.inflate(R.layout.add_device_item, null);
+            }
+            BaseDeviceIO device = (BaseDeviceIO) getItem(position);
+            SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+            if (device != null) {
+                ((TextView) convertView.findViewById(id.Device_Name)).setText(
+                        device.getName() + "(" + device.getAddress() + ")");
+                ((TextView) convertView.findViewById(id.Device_Model)).setText(
+                        device.getModel());
+                if (device instanceof BluetoothIO) {
+                    BluetoothIO bluetoothIO = (BluetoothIO) device;
+                    ((TextView) convertView.findViewById(id.Device_Platfrom)).setText(
+                            bluetoothIO.getPlatform());
+                    ((TextView) convertView.findViewById(id.Device_Firmware)).setText(
+                            fmt.format(new Date(bluetoothIO.getFirmware())));
+                    ((TextView) convertView.findViewById(id.Device_Custom)).setText(
+                            ((BluetoothIO) device).getCustomData() != null ?
+                                    Helper.ConvertHexByteArrayToString(((BluetoothIO) device).getCustomData())
+                                    : "");
+                    if (CupManager.IsCup(device.getModel())) {
+                        if (Cup.isBindMode(bluetoothIO))
+                            convertView.findViewById(id.addDeviceButton).setEnabled(true);
+                        else
+                            convertView.findViewById(id.addDeviceButton).setEnabled(false);
+                    }
+                    if (TapManager.IsTap(device.getModel())) {
+                        if (Tap.isBindMode(bluetoothIO))
+                            convertView.findViewById(id.addDeviceButton).setEnabled(true);
+                        else
+                            convertView.findViewById(id.addDeviceButton).setEnabled(false);
+                    }
 
 
-				}
-				convertView.findViewById(id.addDeviceButton).setTag(device);
-				convertView.findViewById(id.addDeviceButton).setOnClickListener(this);
+                }
+                convertView.findViewById(id.addDeviceButton).setTag(device);
+                convertView.findViewById(id.addDeviceButton).setOnClickListener(this);
 
-			}
-			
-			return convertView;
-		}
+            }
 
-		@Override
-		public void onClick(View v) {
-			switch (v.getId())
-			{
+            return convertView;
+        }
 
-				case id.addDeviceButton: {
-					//获取点击的蓝牙设备
-					BaseDeviceIO bluetooth = (BaseDeviceIO) v.getTag();
+        @Override
+        public void onClick(View v) {
+            switch (v.getId()) {
 
-					OznerBLEApplication app = (OznerBLEApplication) getApplication();
-					//获取服务
-					OznerBLEBinder service = app.getService();
-					OznerDevice device;
-					try {
-						//通过找到的蓝牙对象控制对象获取设备对象
-						device = service.getDeviceManager().getDevice(bluetooth);
-						//设置设备名称
-						device.Setting().name("test");
-						if (device != null) {
-							//保存设备
-							service.getDeviceManager().save(device);
-							//配对完成,重新加载配对设备列表
-							this.Reload();
-						}
-					} catch (NotSupportDeviceException e) {
-						e.printStackTrace();
-					}
+                case id.addDeviceButton: {
+                    //获取点击的蓝牙设备
+                    BaseDeviceIO bluetooth = (BaseDeviceIO) v.getTag();
 
-				}
-				break;
+                    OznerBLEApplication app = (OznerBLEApplication) getApplication();
+                    //获取服务
+                    OznerBLEBinder service = app.getService();
+                    OznerDevice device;
+                    try {
+                        //通过找到的蓝牙对象控制对象获取设备对象
+                        device = service.getDeviceManager().getDevice(bluetooth);
+                        //设置设备名称
+                        device.Setting().name("test");
+                        if (device != null) {
+                            //保存设备
+                            service.getDeviceManager().save(device);
+                            //配对完成,重新加载配对设备列表
+                            this.Reload();
+                        }
+                    } catch (NotSupportDeviceException e) {
+                        e.printStackTrace();
+                    }
 
-			}
+                }
+                break;
 
-		}
-	}
+            }
+
+        }
+    }
 }

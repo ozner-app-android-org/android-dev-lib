@@ -12,41 +12,15 @@ import com.ozner.device.IOManager;
  */
 public class MXChipIOManager extends IOManager {
 
+    final MQTTProxyImp mqttProxyImp = new MQTTProxyImp();
     MQTTProxy proxy;
     MXChipIOManager ioManager;
-    final MQTTProxyImp mqttProxyImp=new MQTTProxyImp();
 
 
-    class MQTTProxyImp implements MQTTProxy.MQTTListener
-    {
-
-        @Override
-        public void onConnected(MQTTProxy proxy) {
-
-            synchronized (devices)
-            {
-                for (BaseDeviceIO io : devices.values())
-                {
-                    doAvailable(io);
-                }
-            }
-        }
-
-        @Override
-        public void onDisconnected(MQTTProxy proxy) {
-            synchronized (devices)
-            {
-                for (BaseDeviceIO io : devices.values())
-                {
-                    doUnavailable(io);
-                }
-            }
-        }
-
-        @Override
-        public void onPublish(MQTTProxy proxy, String topic, byte[] data) {
-
-        }
+    public MXChipIOManager(Context context) {
+        super(context);
+        proxy = new MQTTProxy(context);
+        proxy.registerListener(mqttProxyImp);
     }
 
 //    private void load()
@@ -96,31 +70,20 @@ public class MXChipIOManager extends IOManager {
 
     @Override
     public BaseDeviceIO getAvailableDevice(String address) {
-        if (!proxy.isConnected())
-        {
+        if (!proxy.isConnected()) {
             return null;
-        }else
+        } else
             return super.getAvailableDevice(address);
     }
 
     @Override
     public BaseDeviceIO[] getAvailableDevices() {
-        if (!proxy.isConnected())
-        {
+        if (!proxy.isConnected()) {
             return null;
-        }else
+        } else
             return super.getAvailableDevices();
 
     }
-
-
-    public MXChipIOManager(Context context) {
-        super(context);
-        proxy=new MQTTProxy(context);
-        proxy.registerListener(mqttProxyImp);
-    }
-
-
 
     @Override
     public void Start() {
@@ -135,6 +98,33 @@ public class MXChipIOManager extends IOManager {
     @Override
     protected void doChangeRunningMode() {
         super.doChangeRunningMode();
+    }
+
+    class MQTTProxyImp implements MQTTProxy.MQTTListener {
+
+        @Override
+        public void onConnected(MQTTProxy proxy) {
+
+            synchronized (devices) {
+                for (BaseDeviceIO io : devices.values()) {
+                    doAvailable(io);
+                }
+            }
+        }
+
+        @Override
+        public void onDisconnected(MQTTProxy proxy) {
+            synchronized (devices) {
+                for (BaseDeviceIO io : devices.values()) {
+                    doUnavailable(io);
+                }
+            }
+        }
+
+        @Override
+        public void onPublish(MQTTProxy proxy, String topic, byte[] data) {
+
+        }
     }
 
 }

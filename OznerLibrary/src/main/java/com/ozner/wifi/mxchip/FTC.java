@@ -17,12 +17,12 @@ import java.util.List;
  */
 public class FTC {
 
-    Context context;
     private static ServiceThread service;
     private static boolean listening;
     private static ServerSocket server = null;
-    private Thread listen;
+    Context context;
     FTC_Listener listener;
+    private Thread listen;
 
 
     public FTC(Context context, FTC_Listener listener) {
@@ -53,6 +53,18 @@ public class FTC {
         return true;
     }
 
+    public void stop() {
+        listening = false;
+        try {
+            if (null != server) {
+                server.close();
+                server = null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public class MyService implements Runnable {
         // ���屣�����е�Socket
         public final List<Socket> socketList = new ArrayList<Socket>();
@@ -80,18 +92,6 @@ public class FTC {
                     e.printStackTrace();
                 }
             }
-        }
-    }
-
-    public void stop() {
-        listening = false;
-        try {
-            if (null != server) {
-                server.close();
-                server = null;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 

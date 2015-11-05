@@ -16,10 +16,10 @@ import java.util.ArrayList;
  * Created by zhiyongxu on 15/11/4.
  */
 public class DeviceListAdapter extends BaseAdapter {
+    final ArrayList<OznerDevice> devices = new ArrayList<>();
     Context context;
     LayoutInflater layoutInflater;
     Class<?> filterClass = null;
-    final ArrayList<OznerDevice> devices = new ArrayList<>();
 
     public DeviceListAdapter(Context context, Class<?> filterClass) {
         this.filterClass = filterClass;

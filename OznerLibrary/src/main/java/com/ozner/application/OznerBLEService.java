@@ -22,11 +22,12 @@ import com.ozner.tap.TapManager;
 import java.util.List;
 
 public class OznerBLEService extends Service implements ActivityLifecycleCallbacks {
+    public static final String ACTION_ServiceInit = "ozner.service.init";
     static OznerDeviceManager mManager;
     OznerBLEBinder binder = new OznerBLEBinder();
-    Handler handler=new Handler();
-    public static final String ACTION_ServiceInit = "ozner.service.init";
+    Handler handler = new Handler();
     PowerManager powerManager;
+
     public OznerBLEService() {
     }
 
@@ -37,26 +38,21 @@ public class OznerBLEService extends Service implements ActivityLifecycleCallbac
         for (ActivityManager.RunningAppProcessInfo appProcess : appProcesses) {
             if (appProcess.processName.equals(getPackageName())) {
                 if (appProcess.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_BACKGROUND) {
-                    if (now)
-                    {
+                    if (now) {
                         XObject.setRunningMode(getApplicationContext(), XObject.RunningMode.Background);
-                    }else {
+                    } else {
                         delayedCheck();
                     }
-                }else{
+                } else {
                     if (powerManager.isScreenOn()) //当屏幕是灭的时延时10秒在判断,如果还是熄灭的进入后台模式
                     {
-                        XObject.setRunningMode(getApplicationContext(),XObject.RunningMode.Foreground);
-                    }else
-                    {
-                        if (now)
-                        {
+                        XObject.setRunningMode(getApplicationContext(), XObject.RunningMode.Foreground);
+                    } else {
+                        if (now) {
                             XObject.setRunningMode(getApplicationContext(),
                                     powerManager.isScreenOn() ?
                                             XObject.RunningMode.Foreground : XObject.RunningMode.Background);
-                        }
-                        else
-                        {
+                        } else {
                             delayedCheck();
                         }
 
@@ -66,7 +62,6 @@ public class OznerBLEService extends Service implements ActivityLifecycleCallbac
                 }
             }
         }
-
 
 
     }
@@ -88,7 +83,7 @@ public class OznerBLEService extends Service implements ActivityLifecycleCallbac
         } catch (InstantiationException e) {
             e.printStackTrace();
         }
-        powerManager= (PowerManager) getSystemService(Context.POWER_SERVICE);
+        powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
         mManager.start();
 
     }
@@ -159,7 +154,7 @@ public class OznerBLEService extends Service implements ActivityLifecycleCallbac
          * 获取水杯管理器
          */
         public CupManager getCupManager() {
-            return  mManager.devcieManagerList().cupManager();
+            return mManager.devcieManagerList().cupManager();
         }
 
         /**
@@ -179,7 +174,6 @@ public class OznerBLEService extends Service implements ActivityLifecycleCallbac
         public OznerDeviceManager getDeviceManager() {
             return mManager;
         }
-
 
 
     }

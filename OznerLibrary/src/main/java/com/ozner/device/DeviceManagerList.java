@@ -13,22 +13,22 @@ public class DeviceManagerList {
     CupManager cupManager;
     TapManager tapManager;
     WaterPurifierManager waterPurifierManager;
-    public DeviceManagerList(Context context)
-    {
-        cupManager=new CupManager(context);
-        tapManager=new TapManager(context);
-        waterPurifierManager=new WaterPurifierManager(context);
+
+    public DeviceManagerList(Context context) {
+        cupManager = new CupManager(context);
+        tapManager = new TapManager(context);
+        waterPurifierManager = new WaterPurifierManager(context);
     }
-    public TapManager tapManager()
-    {
+
+    public TapManager tapManager() {
         return tapManager;
     }
-    public CupManager cupManager()
-    {
+
+    public CupManager cupManager() {
         return cupManager;
     }
-    public WaterPurifierManager waterPurifierManager()
-    {
+
+    public WaterPurifierManager waterPurifierManager() {
         return waterPurifierManager;
     }
 }

@@ -13,7 +13,7 @@ import java.net.URL;
  */
 public class HttpUtil {
 
-    public static String postJSON(String url, String json,String charset) throws IOException {
+    public static String postJSON(String url, String json, String charset) throws IOException {
         URL my_url = new URL(url);
         HttpURLConnection connection = null;
 

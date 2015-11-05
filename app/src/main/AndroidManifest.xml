@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.oznerble"
     android:versionCode="1"
-    android:versionName="1.0" >
+    android:versionName="1.0">
 
     <uses-sdk
         android:minSdkVersion="18"
@@ -21,24 +21,25 @@
 
     <application
         android:name="com.example.oznerble.OznerApplication"
-        android:icon="@mipmap/ic_launcher"
         android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
+        android:theme="@style/AppTheme">
         <activity
             android:name=".MainActivity"
-            android:label="@string/app_name" >
+            android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <activity android:name="com.example.oznerble.AddDeviceActivity"/>
-        <activity android:name="com.example.oznerble.TapActivity"/>
-        <activity android:name="com.example.oznerble.TapSetupActivity"/>
-        <activity android:name="com.example.oznerble.CupActivity"/>
-        <activity android:name="com.example.oznerble.CupSetupActivity"/>
+        <activity android:name="com.example.oznerble.AddDeviceActivity" />
+        <activity android:name="com.example.oznerble.TapActivity" />
+        <activity android:name="com.example.oznerble.TapSetupActivity" />
+        <activity android:name="com.example.oznerble.CupActivity" />
+        <activity android:name="com.example.oznerble.CupSetupActivity" />
+
         <service android:name="com.ozner.application.OznerBLEService" />
     </application>
 

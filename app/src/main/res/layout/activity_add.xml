@@ -43,15 +43,15 @@
                 android:text="Password" />
 
             <EditText
+                android:id="@+id/wifi_ssid"
                 android:layout_width="200dp"
-                android:layout_height="wrap_content"
-                android:id="@+id/wifi_ssid" />
+                android:layout_height="wrap_content" />
 
             <EditText
+                android:id="@+id/wifi_password"
                 android:layout_width="200dp"
                 android:layout_height="wrap_content"
-                android:text="yanfa123"
-                android:id="@+id/wifi_password" />
+                android:text="yanfa123" />
 
         </GridLayout>
 
@@ -59,8 +59,8 @@
             android:id="@+id/wifi_bind"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
             android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
             android:layout_marginBottom="6dp"
             android:text="WIFI配网" />
     </RelativeLayout>

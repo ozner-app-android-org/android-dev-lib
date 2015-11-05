@@ -267,7 +267,7 @@ public class CupSetting extends DeviceSetting {
     }
 
 	/*
-	// 构造方法通过sn来设置,并加载配置
+    // 构造方法通过sn来设置,并加载配置
 	public CupSetting() {
 		super();
 	}

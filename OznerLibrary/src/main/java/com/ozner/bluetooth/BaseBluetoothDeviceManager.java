@@ -14,11 +14,11 @@ import java.util.HashSet;
  * Created by zhiyongxu on 15/10/30.
  */
 public abstract class BaseBluetoothDeviceManager extends BaseDeviceManager {
-    final Monitor monitor = new Monitor();
     /**
      * 配对状态
      */
     public static final String ACTION_OZNER_BLUETOOTH_BIND_MODE = "com.ozner.bluetooth.bind";
+    final Monitor monitor = new Monitor();
     final HashSet<String> bindDevices = new HashSet<>();
 
     public BaseBluetoothDeviceManager(Context context) {

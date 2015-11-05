@@ -34,6 +34,7 @@ public class CupManager extends BaseBluetoothDeviceManager {
      * 更新配对水杯
      */
     public final static String ACTION_MANAGER_CUP_CHANGE = "com.ozner.cup.CupManager.Cup.Change";
+
     public CupManager(Context context) {
         super(context);
     }

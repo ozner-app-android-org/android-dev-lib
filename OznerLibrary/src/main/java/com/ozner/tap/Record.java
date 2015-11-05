@@ -12,7 +12,7 @@ import java.util.Date;
  * @author zhiyongxu
  *         水探头TDS自动监测记录
  */
-public class Record  {
+public class Record {
     public int id;
     /**
      * 监测时间

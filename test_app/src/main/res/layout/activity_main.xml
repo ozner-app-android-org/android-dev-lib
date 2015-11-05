@@ -2,20 +2,20 @@
     xmlns:fab="http://schemas.android.com/apk/res-auto"
     android:id="@+id/FramePanel"
     android:layout_width="match_parent"
-    android:orientation="vertical"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
     <android.support.v7.widget.Toolbar
-        style="@style/ActionBar"
         android:id="@+id/toolbar"
-        
+        style="@style/ActionBar"
+
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-    </android.support.v7.widget.Toolbar>
+        android:layout_height="wrap_content"></android.support.v7.widget.Toolbar>
 
     <ListView
+        android:id="@+id/devicesList"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/devicesList"
         android:layout_below="@+id/toolbar" />
 
     <com.getbase.floatingactionbutton.FloatingActionsMenu
@@ -24,8 +24,8 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-        android:layout_marginRight="16dp"
         android:layout_marginBottom="16dp"
+        android:layout_marginRight="16dp"
         fab:fab_addButtonColorNormal="@color/white"
         fab:fab_addButtonColorPressed="@color/white_pressed"
         fab:fab_addButtonPlusIconColor="@color/half_black"
@@ -35,21 +35,21 @@
         fab:fab_labelsPosition="left">
 
         <com.getbase.floatingactionbutton.FloatingActionButton
+            android:id="@+id/addWifiButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/addWifiButton"
-            fab:fab_size="mini"
             fab:fab_colorNormal="#ff1fa1ee"
-            fab:icon="@drawable/ic_settings_wifi"
-            fab:fab_colorPressed="@color/white_pressed"/>
+            fab:fab_colorPressed="@color/white_pressed"
+            fab:fab_size="mini"
+            fab:icon="@drawable/ic_settings_wifi" />
 
         <com.getbase.floatingactionbutton.FloatingActionButton
+            android:id="@+id/addBluetoothButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/addBluetoothButton"
             fab:fab_colorNormal="#ff1fa1ee"
-            fab:fab_size="mini"
-            fab:fab_colorPressed="@color/white_pressed"/>
+            fab:fab_colorPressed="@color/white_pressed"
+            fab:fab_size="mini" />
 
     </com.getbase.floatingactionbutton.FloatingActionsMenu>
 

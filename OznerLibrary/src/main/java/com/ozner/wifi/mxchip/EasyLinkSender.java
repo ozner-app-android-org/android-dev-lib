@@ -1,7 +1,7 @@
 /**
  *
  */
-package com.ozner.wifi.mxchip.easylink;
+package com.ozner.wifi.mxchip;
 
 import com.ozner.wifi.mxchip.easylink.helper.Helper;
 
@@ -66,7 +66,7 @@ public class EasyLinkSender {
         udpSocket.close();
     }
 
-    public void send_easylink_v2()  {
+    public void send_easylink_v2() {
         try {
             String head = "239.118.0.0";
             String ip;
@@ -140,43 +140,42 @@ public class EasyLinkSender {
                     Thread.sleep(10);
                 }
             }
-        }catch (Exception e)
-        {
+        } catch (Exception e) {
 
         }
     }
 
-    private void make_easylink_v3() throws Exception{
-            short checksum = 0;
-            udpSocket = new DatagramSocket();
-            udpSocket.setBroadcast(true);
-            int i = 1;
-            send_data[0] = (byte) (3 + ssid.length + key.length + user_info.length + 2);
-            send_data[i++] = (byte) ssid.length;
-            send_data[i++] = (byte) key.length;
+    private void make_easylink_v3() throws Exception {
+        short checksum = 0;
+        udpSocket = new DatagramSocket();
+        udpSocket.setBroadcast(true);
+        int i = 1;
+        send_data[0] = (byte) (3 + ssid.length + key.length + user_info.length + 2);
+        send_data[i++] = (byte) ssid.length;
+        send_data[i++] = (byte) key.length;
 
-            int j;
-            for (j = 0; j < ssid.length; ++i) {
-                send_data[i] = ssid[j];
-                ++j;
-            }
+        int j;
+        for (j = 0; j < ssid.length; ++i) {
+            send_data[i] = ssid[j];
+            ++j;
+        }
 
-            for (j = 0; j < key.length; ++i) {
-                send_data[i] = key[j];
-                ++j;
-            }
+        for (j = 0; j < key.length; ++i) {
+            send_data[i] = key[j];
+            ++j;
+        }
 
-            for (j = 0; j < user_info.length; ++i) {
-                send_data[i] = user_info[j];
-                ++j;
-            }
+        for (j = 0; j < user_info.length; ++i) {
+            send_data[i] = user_info[j];
+            ++j;
+        }
 
-            for (j = 0; j < i; ++j) {
-                checksum = (short) (checksum + (send_data[j] & 255));
-            }
+        for (j = 0; j < i; ++j) {
+            checksum = (short) (checksum + (send_data[j] & 255));
+        }
 
-            send_data[i++] = (byte) ((checksum & 0xffff) >> 8);
-            send_data[i++] = (byte) (checksum & 255);
+        send_data[i++] = (byte) ((checksum & 0xffff) >> 8);
+        send_data[i++] = (byte) (checksum & 255);
 
     }
 
@@ -194,8 +193,7 @@ public class EasyLinkSender {
                     + (broadcatIp >> 16 & 0xff) + "." + (broadcatIp >> 24 & 0xff));
             this.address = InetAddress.getByName(ipString);
             make_easylink_v3();
-        }catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
 
         }

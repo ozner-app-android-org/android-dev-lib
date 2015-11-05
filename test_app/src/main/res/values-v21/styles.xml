@@ -1,5 +1,6 @@
 <resources>
-    <style name="AppTheme" parent="BaseTheme">
+
+<style name="AppTheme" parent="BaseTheme">
         <item name="android:colorPrimaryDark">@color/ActionBarColor</item>
         <item name="android:navigationBarColor">@color/ActionBarColor</item>
         <item name="android:colorPrimary">@color/ActionBarColor</item>

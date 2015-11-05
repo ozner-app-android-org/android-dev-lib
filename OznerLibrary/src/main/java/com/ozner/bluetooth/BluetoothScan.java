@@ -58,6 +58,7 @@ public class BluetoothScan extends XObject implements LeScanCallback, Runnable {
     HashMap<String, FoundDevice> mFoundDevice = new HashMap<>();
     private Thread scanThread;
     private boolean isBackground = false;
+
     public BluetoothScan(Context context) {
         super(context);
         mContext = context;
@@ -138,14 +139,11 @@ public class BluetoothScan extends XObject implements LeScanCallback, Runnable {
 
     @Override
     protected void doChangeRunningMode() {
-        if (getRunningMode()==RunningMode.Background)
-        {
-            scanPeriod=BackgroundPeriod;
-        }else
-            if (getRunningMode()==RunningMode.Foreground)
-            {
-                scanPeriod=FrontPeriod;
-            }
+        if (getRunningMode() == RunningMode.Background) {
+            scanPeriod = BackgroundPeriod;
+        } else if (getRunningMode() == RunningMode.Foreground) {
+            scanPeriod = FrontPeriod;
+        }
     }
 
     private void onFound(BluetoothDevice device, int rssi, byte[] scanRecord) {

@@ -37,61 +37,34 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class MainActivity extends Activity implements AdapterView.OnItemClickListener,View.OnClickListener {
-	ListView list;
-	ListAdpater adpater;
-	Monitor mMonitor=new Monitor();
-	TextView mDbgText=null;
-	String Dbg="";
-	DbgHandler handler=new DbgHandler();
+public class MainActivity extends Activity implements AdapterView.OnItemClickListener, View.OnClickListener {
+    ListView list;
+    ListAdpater adpater;
+    Monitor mMonitor = new Monitor();
+    TextView mDbgText = null;
+    String Dbg = "";
+    DbgHandler handler = new DbgHandler();
 
-	class DbgHandler extends Handler
-	{
-		@Override
-		public void handleMessage(Message msg) {
-			String text=msg.obj.toString() + "\n";
-			mDbgText.append(text);
-			if (mDbgText.getScrollY()>=mDbgText.getHeight()) {
-				mDbgText.scrollTo(0, mDbgText.getHeight());
-			}
-			try {
-				File file=new File(Environment.getExternalStorageDirectory(),"Ble.txt");
-				FileOutputStream stream=new FileOutputStream(file,true);
-				OutputStreamWriter writer= new OutputStreamWriter(stream, Charset.forName("UTF-8"));
-				Date time=new Date();
-				SimpleDateFormat fmt=new SimpleDateFormat("hh:mm:ss");
-				writer.write(fmt.format(time)+" "+text);
-				writer.flush();
-				stream.close();
+    @Override
+    protected void onStart() {
+        dbg.setMessageListener(new dbg.IDbgMessage() {
+            @Override
+            public void OnMessage(String message) {
+                Message m = new Message();
+                m.obj = message;
+                handler.sendMessage(m);
+            }
+        });
+        super.onStart();
+    }
 
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+    @Override
+    protected void onStop() {
+        dbg.setMessageListener(null);
+        super.onStop();
+    }
 
-			super.handleMessage(msg);
-		}
-	}
-
-	@Override
-	protected void onStart() {
-		dbg.setMessageListener(new dbg.IDbgMessage() {
-			@Override
-			public void OnMessage(String message) {
-				Message m=new Message();
-				m.obj=message;
-				handler.sendMessage(m);
-			}
-		});
-		super.onStart();
-	}
-
-	@Override
-	protected void onStop() {
-		dbg.setMessageListener(null);
-		super.onStop();
-	}
-
-	protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
 //		CupFirmwareTools tools= null;
 //		try {
 //			tools = new CupFirmwareTools("/storage/emulated/0/#Cup#C03-Mar-27-2015-121118.bin","37:16:12:24:03:65");
@@ -105,164 +78,188 @@ public class MainActivity extends Activity implements AdapterView.OnItemClickLis
 //			e.printStackTrace();
 //		}
 
-		setContentView(R.layout.activity_main);
-		mDbgText=(TextView)findViewById(R.id.messageList);
-		mDbgText.setMovementMethod(new ScrollingMovementMethod());
-		TabHost tab=(TabHost)findViewById(R.id.tabHost);
+        setContentView(R.layout.activity_main);
+        mDbgText = (TextView) findViewById(R.id.messageList);
+        mDbgText.setMovementMethod(new ScrollingMovementMethod());
+        TabHost tab = (TabHost) findViewById(R.id.tabHost);
 
-		tab.setup();
-		tab.addTab(tab.newTabSpec("tab01").setIndicator("设备列表").setContent(R.id.tab1));
-		tab.addTab(tab.newTabSpec("tab02").setIndicator("日志").setContent(R.id.tab2));
+        tab.setup();
+        tab.addTab(tab.newTabSpec("tab01").setIndicator("设备列表").setContent(R.id.tab1));
+        tab.addTab(tab.newTabSpec("tab02").setIndicator("日志").setContent(R.id.tab2));
 
-		IntentFilter filter=new IntentFilter();
-		filter.addAction(OznerDeviceManager.ACTION_OZNER_MANAGER_DEVICE_ADD);
-		filter.addAction(OznerDeviceManager.ACTION_OZNER_MANAGER_DEVICE_REMOVE);
-		filter.addAction(OznerDeviceManager.ACTION_OZNER_MANAGER_DEVICE_CHANGE);
-		filter.addAction(BluetoothIO.ACTION_BLUETOOTH_READY);
-		filter.addAction(BluetoothIO.ACTION_BLUETOOTH_DISCONNECTED);
-		filter.addAction(Cup.ACTION_BLUETOOTHCUP_SENSOR);
-		filter.addAction(Tap.ACTION_BLUETOOTHTAP_SENSOR);
-		filter.addAction(OznerApplication.ACTION_ServiceInit);
-		filter.addAction(BluetoothIO.ACTION_BLUETOOTH_CONNECTED);
-		this.registerReceiver(mMonitor, filter);
-		adpater=new ListAdpater();
-		list = (ListView) findViewById(R.id.deviceList);
-		list.setAdapter(adpater);
-		list.setOnItemClickListener(this);
-		super.onCreate(savedInstanceState);
-		findViewById(R.id.Device_Bind).setOnClickListener(this);
-		LoadServiceStatus();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(OznerDeviceManager.ACTION_OZNER_MANAGER_DEVICE_ADD);
+        filter.addAction(OznerDeviceManager.ACTION_OZNER_MANAGER_DEVICE_REMOVE);
+        filter.addAction(OznerDeviceManager.ACTION_OZNER_MANAGER_DEVICE_CHANGE);
+        filter.addAction(BluetoothIO.ACTION_BLUETOOTH_READY);
+        filter.addAction(BluetoothIO.ACTION_BLUETOOTH_DISCONNECTED);
+        filter.addAction(Cup.ACTION_BLUETOOTHCUP_SENSOR);
+        filter.addAction(Tap.ACTION_BLUETOOTHTAP_SENSOR);
+        filter.addAction(OznerApplication.ACTION_ServiceInit);
+        filter.addAction(BluetoothIO.ACTION_BLUETOOTH_CONNECTED);
+        this.registerReceiver(mMonitor, filter);
+        adpater = new ListAdpater();
+        list = (ListView) findViewById(R.id.deviceList);
+        list.setAdapter(adpater);
+        list.setOnItemClickListener(this);
+        super.onCreate(savedInstanceState);
+        findViewById(R.id.Device_Bind).setOnClickListener(this);
+        LoadServiceStatus();
 
-		//Intent intent = new Intent(this, AddDeviceActivity.class);
-		//startActivity(intent);
-	}
-	
-	private void LoadServiceStatus() {
-		OznerBLEApplication app=(OznerBLEApplication)getApplication();
-		OznerBLEService.OznerBLEBinder service=app.getService();
-	}
-	@Override
-	protected void onDestroy() {
-		this.unregisterReceiver(mMonitor);
-		super.onDestroy();
-	}
-	@Override
-	protected void onPause() {
-		super.onPause();
-	}
-	@Override
-	protected void onResume() {
-		super.onResume();
-		adpater.Reload();
-		LoadServiceStatus();
-	}
+        //Intent intent = new Intent(this, AddDeviceActivity.class);
+        //startActivity(intent);
+    }
 
-	@Override
-	public void onClick(View v) {
-		switch (v.getId())
-		{
-			case R.id.Device_Bind:
-				Intent intent=new Intent(this, AddDeviceActivity.class);
-				startActivity(intent);
-				break;
-		}
-	}
+    private void LoadServiceStatus() {
+        OznerBLEApplication app = (OznerBLEApplication) getApplication();
+        OznerBLEService.OznerBLEBinder service = app.getService();
+    }
 
-	class Monitor extends BroadcastReceiver
-	{
-		@Override
-		public void onReceive(Context context, Intent intent) {
-			if (intent.getAction().equals(OznerApplication.ACTION_ServiceInit))
-			{
-				LoadServiceStatus();
-			}
-			adpater.Reload();
-			
-		}
-	}
-	private OznerBLEService.OznerBLEBinder getService()
-	{
-		OznerBLEApplication app=(OznerBLEApplication)getApplication();
-		return app.getService();
-	}
-	class ListAdpater extends BaseAdapter
-	{
-		ArrayList<OznerDevice> mDevices=new ArrayList<OznerDevice>();
-		LayoutInflater mInflater;
-		public void Reload()
-		{
-			OznerBLEService.OznerBLEBinder service=getService();
-			if (service==null) return;
-			mDevices.clear();
-			for (OznerDevice device :  service.getDeviceManager().getDevices())
-			{
-				mDevices.add(device);
-			}
-			this.notifyDataSetInvalidated();
-		}
-		public ListAdpater() {
-			mInflater=LayoutInflater.from(MainActivity.this);
-		}
-		@Override
-		public int getCount() {
-			return mDevices.size();
-		}
+    @Override
+    protected void onDestroy() {
+        this.unregisterReceiver(mMonitor);
+        super.onDestroy();
+    }
 
-		@Override
-		public Object getItem(int position) {
-			return mDevices.get(position);
-		}
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
 
-		@Override
-		public long getItemId(int position) {
-			return 0;
-		}
+    @Override
+    protected void onResume() {
+        super.onResume();
+        adpater.Reload();
+        LoadServiceStatus();
+    }
 
-		@Override
-		public View getView(int position, View convertView, ViewGroup parent) {
-			if (convertView==null)
-			{
-				convertView=mInflater.inflate(R.layout.list_device_item, null);
-			}
-			OznerDevice device=(OznerDevice)getItem(position);
-			convertView.setTag(device);
-			((TextView) convertView.findViewById(R.id.Device_Name)).setText(
-					device.getName() + (device.connectStatus() == BaseDeviceIO.ConnectStatus.Connected ? "(已连接)" : ""));
-			((TextView) convertView.findViewById(R.id.Device_Address)).setText(
-					device.Address());
-			String msg="";
-			if (device.connectStatus() == BaseDeviceIO.ConnectStatus.Connected)
-			{
-				if (device instanceof Cup) {
-					Cup cup = (Cup) device;
-					msg = cup.GetBluetooth().getSensor() != null ? cup.GetBluetooth().getSensor().toString() : "";
-				}
-				if (device instanceof Tap) {
-					Tap tap = (Tap) device;
-					msg = tap.GetBluetooth().getSensor() != null ? tap.GetBluetooth().getSensor().toString() : "";
-				}
-			}
-			((TextView) convertView.findViewById(R.id.Device_Message)).setText(msg);
-			return convertView;
-		}
-	}
-	@Override
-	public void onItemClick(AdapterView<?> parent, View view, int position,
-			long id) {
-		OznerDevice device=(OznerDevice)view.getTag();
-		if (device instanceof Cup)
-		{
-			Intent intent=new Intent(this, CupActivity.class);
-			intent.putExtra("Address", device.Address());
-			startActivity(intent);
-		}
-		if (device instanceof Tap)
-		{
-			Intent intent=new Intent(this, TapActivity.class);
-			intent.putExtra("Address", device.Address());
-			startActivity(intent);
-		}
-	}
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.Device_Bind:
+                Intent intent = new Intent(this, AddDeviceActivity.class);
+                startActivity(intent);
+                break;
+        }
+    }
+
+    private OznerBLEService.OznerBLEBinder getService() {
+        OznerBLEApplication app = (OznerBLEApplication) getApplication();
+        return app.getService();
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position,
+                            long id) {
+        OznerDevice device = (OznerDevice) view.getTag();
+        if (device instanceof Cup) {
+            Intent intent = new Intent(this, CupActivity.class);
+            intent.putExtra("Address", device.Address());
+            startActivity(intent);
+        }
+        if (device instanceof Tap) {
+            Intent intent = new Intent(this, TapActivity.class);
+            intent.putExtra("Address", device.Address());
+            startActivity(intent);
+        }
+    }
+
+    class DbgHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            String text = msg.obj.toString() + "\n";
+            mDbgText.append(text);
+            if (mDbgText.getScrollY() >= mDbgText.getHeight()) {
+                mDbgText.scrollTo(0, mDbgText.getHeight());
+            }
+            try {
+                File file = new File(Environment.getExternalStorageDirectory(), "Ble.txt");
+                FileOutputStream stream = new FileOutputStream(file, true);
+                OutputStreamWriter writer = new OutputStreamWriter(stream, Charset.forName("UTF-8"));
+                Date time = new Date();
+                SimpleDateFormat fmt = new SimpleDateFormat("hh:mm:ss");
+                writer.write(fmt.format(time) + " " + text);
+                writer.flush();
+                stream.close();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            super.handleMessage(msg);
+        }
+    }
+
+    class Monitor extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(OznerApplication.ACTION_ServiceInit)) {
+                LoadServiceStatus();
+            }
+            adpater.Reload();
+
+        }
+    }
+
+    class ListAdpater extends BaseAdapter {
+        ArrayList<OznerDevice> mDevices = new ArrayList<OznerDevice>();
+        LayoutInflater mInflater;
+
+        public ListAdpater() {
+            mInflater = LayoutInflater.from(MainActivity.this);
+        }
+
+        public void Reload() {
+            OznerBLEService.OznerBLEBinder service = getService();
+            if (service == null) return;
+            mDevices.clear();
+            for (OznerDevice device : service.getDeviceManager().getDevices()) {
+                mDevices.add(device);
+            }
+            this.notifyDataSetInvalidated();
+        }
+
+        @Override
+        public int getCount() {
+            return mDevices.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return mDevices.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return 0;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            if (convertView == null) {
+                convertView = mInflater.inflate(R.layout.list_device_item, null);
+            }
+            OznerDevice device = (OznerDevice) getItem(position);
+            convertView.setTag(device);
+            ((TextView) convertView.findViewById(R.id.Device_Name)).setText(
+                    device.getName() + (device.connectStatus() == BaseDeviceIO.ConnectStatus.Connected ? "(已连接)" : ""));
+            ((TextView) convertView.findViewById(R.id.Device_Address)).setText(
+                    device.Address());
+            String msg = "";
+            if (device.connectStatus() == BaseDeviceIO.ConnectStatus.Connected) {
+                if (device instanceof Cup) {
+                    Cup cup = (Cup) device;
+                    msg = cup.GetBluetooth().getSensor() != null ? cup.GetBluetooth().getSensor().toString() : "";
+                }
+                if (device instanceof Tap) {
+                    Tap tap = (Tap) device;
+                    msg = tap.GetBluetooth().getSensor() != null ? tap.GetBluetooth().getSensor().toString() : "";
+                }
+            }
+            ((TextView) convertView.findViewById(R.id.Device_Message)).setText(msg);
+            return convertView;
+        }
+    }
 
 
 }
