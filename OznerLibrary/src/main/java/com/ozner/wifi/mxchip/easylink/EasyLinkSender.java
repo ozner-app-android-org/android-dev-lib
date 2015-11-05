@@ -44,10 +44,6 @@ public class EasyLinkSender {
         }
     }
 
-    public void close() {
-        udpSocket.close();
-    }
-
     private static void sendData(DatagramPacket datagramPacket, String ip_addr)
             throws IOException {
         MulticastSocket sock = null;
@@ -65,6 +61,11 @@ public class EasyLinkSender {
         else
             return num;
     }
+
+    public void close() {
+        udpSocket.close();
+    }
+
     public void send_easylink_v2()  {
         try {
             String head = "239.118.0.0";
@@ -102,10 +103,10 @@ public class EasyLinkSender {
             if (userlength == 0) {
                 for (int k = 0; k < data.length; k += 2) {
                     if (k + 1 < data.length)
-                        ip = "239.126." + (int) (data[k] & 0xff) + "."
-                                + (int) (data[k + 1] & 0xff);
+                        ip = "239.126." + (data[k] & 0xff) + "."
+                                + (data[k + 1] & 0xff);
                     else
-                        ip = "239.126." + (int) (data[k] & 0xff) + ".0";
+                        ip = "239.126." + (data[k] & 0xff) + ".0";
                     sockAddr = new InetSocketAddress(InetAddress.getByName(ip),
                             getRandomNumber());
                     byte[] bbbb = new byte[k / 2 + 20];
@@ -128,10 +129,10 @@ public class EasyLinkSender {
                 data = Helper.byteMerger(data, user_info);
                 for (int k = 0; k < data.length; k += 2) {
                     if (k + 1 < data.length)
-                        ip = "239.126." + (int) (data[k] & 0xff) + "."
-                                + (int) (data[k + 1] & 0xff);
+                        ip = "239.126." + (data[k] & 0xff) + "."
+                                + (data[k + 1] & 0xff);
                     else
-                        ip = "239.126." + (int) (data[k] & 0xff) + ".0";
+                        ip = "239.126." + (data[k] & 0xff) + ".0";
                     sockAddr = new InetSocketAddress(InetAddress.getByName(ip),
                             getRandomNumber());
                     byte[] bbbb = new byte[k / 2 + 20];
@@ -188,7 +189,7 @@ public class EasyLinkSender {
             user_info[0] = 0x23;
             String strIP = String.format("%08x", ipAddress);
             System.arraycopy(Helper.hexStringToBytes(strIP), 0, user_info, 1, 4);
-            int broadcatIp = 0xFE000000 | ipAddress;
+            int broadcatIp = 0xFF000000 | ipAddress;
             String ipString = ((broadcatIp & 0xff) + "." + (broadcatIp >> 8 & 0xff) + "."
                     + (broadcatIp >> 16 & 0xff) + "." + (broadcatIp >> 24 & 0xff));
             this.address = InetAddress.getByName(ipString);
