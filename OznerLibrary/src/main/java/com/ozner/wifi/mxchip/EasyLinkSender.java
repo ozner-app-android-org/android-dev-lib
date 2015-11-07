@@ -245,7 +245,7 @@ public class EasyLinkSender {
             }
             send_packet = new DatagramPacket(buffer, length, address, port);
             udpSocket.send(send_packet);
-            port++;
+            //port++;
             Thread.sleep(10);
 
         } catch (Exception e) {

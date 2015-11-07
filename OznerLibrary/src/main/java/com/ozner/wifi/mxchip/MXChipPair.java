@@ -197,7 +197,7 @@ public class MXChipPair {
 
                     while (device == null) {
                         sender.send_easylink_v3();
-                        Thread.sleep(10);
+                        Thread.sleep(100);
                         sender.send_easylink_v2();
                         Thread.sleep(100);
                         count++;
