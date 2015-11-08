@@ -2,6 +2,7 @@ package com.ozner.device;
 
 import android.content.Context;
 
+import com.ozner.AirPurifier.AirPurifierManager;
 import com.ozner.WaterPurifier.WaterPurifierManager;
 import com.ozner.cup.CupManager;
 import com.ozner.tap.TapManager;
@@ -13,11 +14,14 @@ public class DeviceManagerList {
     CupManager cupManager;
     TapManager tapManager;
     WaterPurifierManager waterPurifierManager;
+    AirPurifierManager airPurifierManager;
 
     public DeviceManagerList(Context context) {
         cupManager = new CupManager(context);
         tapManager = new TapManager(context);
         waterPurifierManager = new WaterPurifierManager(context);
+        airPurifierManager = new AirPurifierManager(context);
+
     }
 
     public TapManager tapManager() {
@@ -30,5 +34,9 @@ public class DeviceManagerList {
 
     public WaterPurifierManager waterPurifierManager() {
         return waterPurifierManager;
+    }
+
+    public AirPurifierManager airPurifierManager() {
+        return airPurifierManager;
     }
 }

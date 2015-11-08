@@ -1,4 +1,4 @@
-package com.ozner.WaterPurifier;
+package com.ozner.AirPurifier;
 
 import android.content.Context;
 import android.content.Intent;
@@ -11,36 +11,36 @@ import com.ozner.device.OznerDeviceManager;
 import com.ozner.wifi.mxchip.MXChipIO;
 
 /**
- * Created by xzyxd on 2015/11/2.
+ * Created by xzyxd on 2015/11/7.
  */
-public class WaterPurifierManager extends BaseDeviceManager {
+public class AirPurifierManager extends BaseDeviceManager {
 
     /**
      * 新增一个配对的水机
      */
-    public final static String ACTION_MANAGER_WATER_PURIFIER_ADD = "com.ozner.Water.Purifier.Add";
+    public final static String ACTION_MANAGER_AIR_PURIFIER_ADD = "com.ozner.Air.Purifier.Add";
     /**
      * 删除配对水机
      */
-    public final static String ACTION_MANAGER_WATER_PURIFIER_REMOVE = "com.ozner.Water.Purifier.Remove";
+    public final static String ACTION_MANAGER_AIR_PURIFIER_REMOVE = "com.ozner.Air.Purifier.Remove";
     /**
      * 更新配对水机
      */
-    public final static String ACTION_MANAGER_WATER_PURIFIER_CHANGE = "com.ozner.Water.Purifier.Change";
+    public final static String ACTION_MANAGER_AIR_PURIFIER_CHANGE = "com.ozner.Air.Purifier.Change";
 
-    public WaterPurifierManager(Context context) {
+    public AirPurifierManager(Context context) {
         super(context);
     }
 
-    public static boolean IsWaterPurifier(String Model) {
+    public static boolean IsAirPurifier(String Model) {
         if (Model == null) return false;
-        return Model.trim().equals("MXCHIP_HAOZE_Water");
+        return Model.trim().equals("FOG_HAOZE_AIR");
     }
 
     @Override
     protected void update(OznerDevice device) {
-        if (device instanceof WaterPurifier) {
-            Intent intent = new Intent(ACTION_MANAGER_WATER_PURIFIER_CHANGE);
+        if (device instanceof AirPurifier_MXChip) {
+            Intent intent = new Intent(ACTION_MANAGER_AIR_PURIFIER_CHANGE);
             intent.putExtra("Address", device.Address());
             context().sendBroadcast(intent);
         }
@@ -48,8 +48,8 @@ public class WaterPurifierManager extends BaseDeviceManager {
 
     @Override
     protected void add(OznerDevice device) {
-        if (device instanceof WaterPurifier) {
-            Intent intent = new Intent(ACTION_MANAGER_WATER_PURIFIER_ADD);
+        if (device instanceof AirPurifier_MXChip) {
+            Intent intent = new Intent(ACTION_MANAGER_AIR_PURIFIER_ADD);
             intent.putExtra("Address", device.Address());
             context().sendBroadcast(intent);
         }
@@ -58,8 +58,8 @@ public class WaterPurifierManager extends BaseDeviceManager {
 
     @Override
     protected void remove(OznerDevice device) {
-        if (device instanceof WaterPurifier) {
-            Intent intent = new Intent(ACTION_MANAGER_WATER_PURIFIER_REMOVE);
+        if (device instanceof AirPurifier_MXChip) {
+            Intent intent = new Intent(ACTION_MANAGER_AIR_PURIFIER_REMOVE);
             intent.putExtra("Address", device.Address());
             context().sendBroadcast(intent);
         }
@@ -74,8 +74,8 @@ public class WaterPurifierManager extends BaseDeviceManager {
             if (device != null) {
                 return device;
             } else {
-                if (IsWaterPurifier(io.getModel())) {
-                    WaterPurifier c = new WaterPurifier(context(), address, io.getModel(), "");
+                if (IsAirPurifier(io.getModel())) {
+                    AirPurifier_MXChip c = new AirPurifier_MXChip(context(), address, io.getModel(), "");
                     c.Bind(io);
                     return c;
                 }
@@ -84,12 +84,12 @@ public class WaterPurifierManager extends BaseDeviceManager {
         return null;
     }
 
-    public OznerDevice newWaterPurifier(Context context, String address) {
+    public OznerDevice newAirPurifier(Context context, String address) {
         OznerDevice device = OznerDeviceManager.Instance().getDevice(address);
         if (device != null) {
             return device;
         } else {
-            WaterPurifier waterPurifier = new WaterPurifier(context(), address, "MXCHIP_HAOZE_Water", "");
+            AirPurifier_MXChip waterPurifier = new AirPurifier_MXChip(context(), address, "MXCHIP_HAOZE_Air", "");
             MXChipIO io = OznerDeviceManager.Instance().ioManagerList().mxChipIOManager()
                     .createNewIO(waterPurifier.Setting().name(), waterPurifier.Address(), waterPurifier.Model());
             try {
@@ -105,8 +105,8 @@ public class WaterPurifierManager extends BaseDeviceManager {
 
     @Override
     protected OznerDevice loadDevice(String address, String Model, String Setting) {
-        if (IsWaterPurifier(Model)) {
-            WaterPurifier waterPurifier = new WaterPurifier(context(), address, Model, Setting);
+        if (IsAirPurifier(Model)) {
+            AirPurifier_MXChip waterPurifier = new AirPurifier_MXChip(context(), address, Model, Setting);
             OznerDeviceManager.Instance().ioManagerList().mxChipIOManager()
                     .createNewIO(waterPurifier.Setting().name(), waterPurifier.Address(), waterPurifier.Model());
             return waterPurifier;
@@ -117,7 +117,7 @@ public class WaterPurifierManager extends BaseDeviceManager {
     @Override
     public boolean isMyDevice(BaseDeviceIO io) {
         if (io instanceof MXChipIO) {
-            return IsWaterPurifier(io.getModel());
+            return IsAirPurifier(io.getModel());
         } else return false;
     }
 }

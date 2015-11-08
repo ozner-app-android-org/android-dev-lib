@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
+import com.ozner.AirPurifier.AirPurifier_MXChip;
 import com.ozner.WaterPurifier.WaterPurifier;
 import com.ozner.device.OznerDevice;
 import com.ozner.device.OznerDeviceManager;
@@ -65,9 +66,7 @@ public class DeviceListAdapter extends BaseAdapter {
         return 0;
     }
 
-    private WaterPurifierView loadWaterPurifier(OznerDevice device) {
-        return (WaterPurifierView) layoutInflater.inflate(R.layout.water_purifier_item_view, null);
-    }
+
 
     @Override
     public View getView(int i, View view, ViewGroup viewGroup) {
@@ -85,7 +84,10 @@ public class DeviceListAdapter extends BaseAdapter {
             }
         }
         if (device instanceof WaterPurifier) {
-            item = loadWaterPurifier(device);
+            item = (BaseItemView) layoutInflater.inflate(R.layout.water_purifier_item_view, null);
+        }
+        if (device instanceof AirPurifier_MXChip) {
+            item = (BaseItemView) layoutInflater.inflate(R.layout.air_purifier_item_view, null);
         }
         if (item != null)
             item.loadDevice(device);

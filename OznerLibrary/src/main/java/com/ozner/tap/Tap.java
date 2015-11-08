@@ -8,6 +8,7 @@ import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.DeviceSetting;
 import com.ozner.device.OznerDevice;
+import com.ozner.oznerlibrary.R;
 import com.ozner.util.dbg;
 
 import java.util.Arrays;
@@ -89,6 +90,11 @@ public class Tap extends OznerDevice {
         return false;
     }
 
+    @Override
+    protected String getDefaultName() {
+        return context().getString(R.string.tap_name);
+    }
+
     /**
      * 兼容老的方法
      *
@@ -114,7 +120,6 @@ public class Tap extends OznerDevice {
     public Class<?> getIOType() {
         return BluetoothIO.class;
     }
-
     public TapSensor Sensor() {
         return mSensor;
     }

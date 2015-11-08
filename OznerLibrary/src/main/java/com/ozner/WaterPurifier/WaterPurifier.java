@@ -7,6 +7,7 @@ import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.OperateCallback;
 import com.ozner.device.OperateCallbackProxy;
 import com.ozner.device.OznerDevice;
+import com.ozner.oznerlibrary.R;
 import com.ozner.util.ByteUtil;
 import com.ozner.wifi.mxchip.CRC8;
 import com.ozner.wifi.mxchip.MXChipIO;
@@ -54,6 +55,11 @@ public class WaterPurifier extends OznerDevice {
 
         bytes[len - 1] = CRC8.calcCrc8(bytes, 0, bytes.length - 1);
         return bytes;
+    }
+
+    @Override
+    protected String getDefaultName() {
+        return context().getString(R.string.water_purifier_name);
     }
 
     public boolean isOffline() {

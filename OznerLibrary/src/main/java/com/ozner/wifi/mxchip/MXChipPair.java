@@ -192,7 +192,6 @@ public class MXChipPair {
                     ftc.startListen();
                     EasyLinkSender sender = new EasyLinkSender();
                     sender.setSettings(SSID.trim(), password, info.getIpAddress());
-                    int count = 0;
                     Date t = new Date();
 
                     while (device == null) {
@@ -200,7 +199,6 @@ public class MXChipPair {
                         Thread.sleep(100);
                         sender.send_easylink_v2();
                         Thread.sleep(100);
-                        count++;
                         Date now = new Date();
                         if ((now.getTime() - t.getTime()) > 90000) {
                             break;

@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">OznerLibrary</string>
+
+    <string name="cup_name">浩泽智能杯</string>
+    <string name="tap_name">浩泽智能水探头</string>
+    <string name="water_purifier_name">浩泽智能净水器</string>
+    <string name="air_purifier_name">浩泽智能空气净化器</string>
 </resources>

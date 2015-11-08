@@ -8,6 +8,7 @@ import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.DeviceSetting;
 import com.ozner.device.OznerDevice;
+import com.ozner.oznerlibrary.R;
 import com.ozner.util.ByteUtil;
 import com.ozner.util.dbg;
 
@@ -92,6 +93,11 @@ public class Cup extends OznerDevice {
             return bluetooth;
         } else
             return null;
+    }
+
+    @Override
+    protected String getDefaultName() {
+        return context().getString(R.string.cup_name);
     }
 
     /**

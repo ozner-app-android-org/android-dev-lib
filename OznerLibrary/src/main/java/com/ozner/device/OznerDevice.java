@@ -15,14 +15,14 @@ public abstract class OznerDevice extends XObject {
     private BaseDeviceIO deviceIO;
     private DeviceSetting setting;
     private String Model;
-
     public OznerDevice(Context context, String Address, String Model, String Setting) {
         super(context);
         this.address = Address;
         this.Model = Model;
         this.setting = initSetting(Setting);
-
     }
+
+    protected abstract String getDefaultName();
 
     public abstract Class<?> getIOType();
 
@@ -95,7 +95,7 @@ public abstract class OznerDevice extends XObject {
             return false;
 
         if (Helper.StringIsNullOrEmpty(setting.name())) {
-            setting.name(deviceIO.getName());
+            setting.name(getDefaultName());
         }
 
         doSetDeviceIO(this.deviceIO, deviceIO);
