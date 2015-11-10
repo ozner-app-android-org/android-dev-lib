@@ -52,6 +52,8 @@ public class AirPurifierView extends BaseItemView {
         loadStatus();
 
         findViewById(R.id.delete).setOnClickListener(controlImp);
+        findViewById(R.id.power).setOnClickListener(controlImp);
+
 
     }
 
@@ -89,8 +91,7 @@ public class AirPurifierView extends BaseItemView {
         public void onClick(View view) {
             switch (view.getId()) {
                 case R.id.power:
-                    power.setProgress(0);
-                    power.setProgress(50);
+                    device.airStatus().setPower(true, null);
 
                     break;
 

@@ -5,6 +5,8 @@ import android.content.Context;
 import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.IOManager;
 
+import java.util.ArrayList;
+
 //import com.mxchip.jmdns.JmdnsAPI;
 
 /**
@@ -104,20 +106,26 @@ public class MXChipIOManager extends IOManager {
 
         @Override
         public void onConnected(MQTTProxy proxy) {
-
+            ArrayList<BaseDeviceIO> list = null;
             synchronized (devices) {
-                for (BaseDeviceIO io : devices.values()) {
-                    doAvailable(io);
-                }
+                list = new ArrayList<>(devices.values());
             }
+
+            for (BaseDeviceIO io : list) {
+                doAvailable(io);
+            }
+
         }
 
         @Override
         public void onDisconnected(MQTTProxy proxy) {
+            ArrayList<BaseDeviceIO> list = null;
             synchronized (devices) {
-                for (BaseDeviceIO io : devices.values()) {
-                    doUnavailable(io);
-                }
+                list = new ArrayList<>(devices.values());
+            }
+
+            for (BaseDeviceIO io : list) {
+                doAvailable(io);
             }
         }
 

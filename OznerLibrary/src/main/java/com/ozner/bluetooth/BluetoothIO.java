@@ -376,6 +376,7 @@ public class BluetoothIO extends BaseDeviceIO {
 
         public void close() {
             if (isRuning()) {
+                setObject();
                 if (mLooper != null)
                     mLooper.quit();
             }

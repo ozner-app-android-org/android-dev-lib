@@ -20,6 +20,7 @@ import java.util.TreeSet;
 
 /**
  * Created by zhiyongxu on 15/10/28.
+ * 水探头
  */
 public class Tap extends OznerDevice {
     /**
@@ -65,7 +66,6 @@ public class Tap extends OznerDevice {
     TapFirmwareTools firmwareTools = new TapFirmwareTools();
     Timer autoUpdateTimer = new Timer();
     int RequestCount = 0;
-    Bluetooth bluetooth = new Bluetooth();
 
     public Tap(Context context, String Address, String Model, String Setting) {
         super(context, Address, Model, Setting);
@@ -95,31 +95,12 @@ public class Tap extends OznerDevice {
         return context().getString(R.string.tap_name);
     }
 
-    /**
-     * 兼容老的方法
-     *
-     * @deprecated
-     */
-    public Bluetooth GetBluetooth() {
-        if (IO() != null) {
-            return bluetooth;
-        } else
-            return null;
-    }
-
-    /**
-     * 兼容老的方法
-     *
-     * @deprecated
-     */
-    public BluetoothIO Bluetooth() {
-        return (BluetoothIO) IO();
-    }
 
     @Override
     public Class<?> getIOType() {
         return BluetoothIO.class;
     }
+
     public TapSensor Sensor() {
         return mSensor;
     }
@@ -299,16 +280,6 @@ public class Tap extends OznerDevice {
         }
     }
 
-    /**
-     * 兼容老的方法
-     *
-     * @deprecated
-     */
-    public class Bluetooth {
-        public TapSensor getSensor() {
-            return mSensor;
-        }
-    }
 
     class BluetoothIOImp implements
             BluetoothIO.OnInitCallback,

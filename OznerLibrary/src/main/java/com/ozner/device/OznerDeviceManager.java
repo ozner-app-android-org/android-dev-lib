@@ -182,7 +182,7 @@ public class OznerDeviceManager extends XObject {
     private void LoadDevices() {
         String sql = String.format("select Address,getModel,JSON from %s", getOwnerTableName());
         List<String[]> list = sqLiteDB.ExecSQL(sql, new String[]{});
-        synchronized (this) {
+        synchronized (devices) {
             for (String[] v : list) {
                 String Address = v[0];
                 String Model = v[1];
@@ -216,10 +216,11 @@ public class OznerDeviceManager extends XObject {
         sqLiteDB.execSQLNonQuery(sql, new String[]{device.Address()});
 
         String address = device.Address();
-        synchronized (this) {
+        synchronized (devices) {
             if (devices.containsKey(address)) {
                 devices.remove(address);
             }
+        }
             Intent intent = new Intent(ACTION_OZNER_MANAGER_DEVICE_REMOVE);
             intent.putExtra("Address", address);
             context().sendBroadcast(intent);
@@ -237,14 +238,14 @@ public class OznerDeviceManager extends XObject {
             } catch (DeviceNotReadyException e) {
                 e.printStackTrace();
             }
-        }
+
     }
 
     /**
      * 获取所有设备集合
      */
     public OznerDevice[] getDevices() {
-        synchronized (this) {
+        synchronized (devices) {
             return devices.values().toArray(new OznerDevice[devices.size()]);
         }
     }
@@ -272,7 +273,7 @@ public class OznerDeviceManager extends XObject {
      * 通过MAC地址获取已经保存的设备
      */
     public OznerDevice getDevice(String address) {
-        synchronized (this) {
+        synchronized (devices) {
             if (devices.containsKey(address))
                 return devices.get(address);
             else
@@ -307,7 +308,7 @@ public class OznerDeviceManager extends XObject {
         ArrayList<BaseDeviceIO> result = new ArrayList<>();
         Collections.addAll(list, ioManagerList.getAvailableDevices());
 
-        synchronized (this) {
+        synchronized (devices) {
             for (BaseDeviceIO io : list) {
                 if (!devices.containsKey(io.getAddress()))
                     result.add(io);
@@ -320,9 +321,12 @@ public class OznerDeviceManager extends XObject {
      * 保存并绑定设备设置
      */
     public void save(OznerDevice device) {
-        synchronized (this) {
-            String Address = device.Address();
-            boolean isNew;
+
+        String Address = device.Address();
+        boolean isNew;
+
+        synchronized (devices) {
+
             if (Helper.StringIsNullOrEmpty(Owner())) return;
 
             if (!devices.containsKey(Address)) {
@@ -330,8 +334,10 @@ public class OznerDeviceManager extends XObject {
                 isNew = false;
             } else
                 isNew = true;
+        }
 
-            String sql = String.format("INSERT OR REPLACE INTO %s (Address,getModel,JSON) VALUES (?,?,?);", getOwnerTableName());
+
+        String sql = String.format("INSERT OR REPLACE INTO %s (Address,getModel,JSON) VALUES (?,?,?);", getOwnerTableName());
 
             sqLiteDB.execSQLNonQuery(sql,
                     new String[]{device.Address(), device.Model(),
@@ -354,7 +360,7 @@ public class OznerDeviceManager extends XObject {
                     mgr.update(device);
                 }
             }
-        }
+
     }
 
     private ArrayList<BaseDeviceManager> getManagers() {

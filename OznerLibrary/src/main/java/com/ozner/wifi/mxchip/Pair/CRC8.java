@@ -1,4 +1,4 @@
-package com.ozner.wifi.mxchip;
+package com.ozner.wifi.mxchip.Pair;
 
 /**
  * CRC8相关计算

@@ -1,6 +1,9 @@
 package com.ozner.wifi.mxchip;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 
 import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.DeviceNotReadyException;
@@ -13,20 +16,19 @@ import org.fusesource.mqtt.client.Callback;
  * Created by xzyxd on 2015/10/31.
  */
 public class MXChipIO extends BaseDeviceIO {
-    final MQTTProxy.MQTTListener listener = new MQTTListenerImp();
+    final MXChipIOImp mxChipIOImp = new MXChipIOImp();
     String address = "";
     String name = "";
     MQTTProxy proxy;
     String out = null;
     String in = null;
-    boolean isInited = false;
 
     public MXChipIO(Context context, MQTTProxy proxy, String Name, String Model, String address) {
         super(context, Model);
         this.address = address;
         this.name = Name;
         this.proxy = proxy;
-        proxy.registerListener(listener);
+        proxy.registerListener(mxChipIOImp);
         doConnecting();
     }
 
@@ -64,29 +66,7 @@ public class MXChipIO extends BaseDeviceIO {
         return ret;
     }
 
-    private void doSubscribeComplete(byte[] bytes) {
-        synchronized (this) {
-            if (isInited) return;
-            isInited = true; //防止多次进入
-        }
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                if (doInit(new MQTTSendProxy())) {
-                    doReady();
-                } else
-                    doDisconnected();
-            }
-        }).start();
 
-
-    }
-
-    @Override
-    protected void doDisconnected() {
-        isInited = false;
-        super.doDisconnected();
-    }
 
     /**
      * 设置MQTT设备的分类ID,每个庆科设备都有一个"分类ID/MAC"组成的MQTT订阅主题,在订阅消息前调用
@@ -98,23 +78,9 @@ public class MXChipIO extends BaseDeviceIO {
 
     @Override
     public boolean send(byte[] bytes) {
-        if (proxy.isConnected()) {
-            proxy.publish(in, bytes, null);
-            doSend(bytes);
-            return true;
-        } else
-            return false;
+        return mxChipIOImp.postSend(bytes, null);
     }
 
-    @Override
-    protected void doConnected() {
-        super.doConnected();
-    }
-
-    @Override
-    protected void doReady() {
-        super.doReady();
-    }
 
     @Override
     public boolean send(byte[] bytes, OperateCallback<Void> callback) {
@@ -128,30 +94,16 @@ public class MXChipIO extends BaseDeviceIO {
 
     @Override
     public void close() {
-        if (proxy.isConnected()) {
-            proxy.unsubscribe(out);
-            proxy.unregisterListener(listener);
-        }
+        mxChipIOImp.close();
     }
 
     @Override
     public void open() throws DeviceNotReadyException {
         if (Helper.StringIsNullOrEmpty(out))
             throw new DeviceNotReadyException();
-        if (proxy.isConnected()) {
-            this.proxy.subscribe(out, new Callback<byte[]>() {
-                @Override
-                public void onSuccess(byte[] bytes) {
-                    doSubscribeComplete(bytes);
-                }
-
-                @Override
-                public void onFailure(Throwable throwable) {
-
-                }
-            });
-        }
+        mxChipIOImp.start();
     }
+
 
     @Override
     public ConnectStatus connectStatus() {
@@ -174,45 +126,195 @@ public class MXChipIO extends BaseDeviceIO {
         return address;
     }
 
-    public class MQTTSendProxy extends DataSendProxy {
+    public class MXChipIOSendProxy extends DataSendProxy {
         @Override
         public boolean send(byte[] data) {
-            return MXChipIO.this.send(data);
+            return mxChipIOImp.postSend(data, null);
         }
 
         @Override
         public boolean send(byte[] data, OperateCallback<Void> callback) {
-            return MXChipIO.this.send(data, callback);
+            return mxChipIOImp.postSend(data, callback);
         }
     }
 
-    class MQTTListenerImp implements MQTTProxy.MQTTListener {
+    public interface MXChipRunnable {
+        void run(DataSendProxy sendHandle);
+    }
+
+    class MXChipIOImp implements MQTTProxy.MQTTListener, Runnable {
+        final static int MSG_SendData = 0x1000;
+        final static int MSG_Runnable = 0x2000;
+        Thread thread = null;
+        Looper looper = null;
+        MessageHandler handler = null;
+        static final int Timeout = 10000;
+
+        class MessageHandler extends Handler {
+            public MessageHandler(Looper looper) {
+                super(looper);
+            }
+
+            @Override
+            public void handleMessage(Message msg) {
+                try {
+                    if (msg.what == MSG_SendData) {
+                        AsyncObject object = (AsyncObject) msg.obj;
+                        try {
+                            if (send(object.data)) {
+                                if (object.callback != null)
+                                    object.callback.onSuccess(null);
+                            } else {
+                                if (object.callback != null)
+                                    object.callback.onFailure(null);
+                            }
+                        } catch (Exception e) {
+                            if (object.callback != null)
+                                object.callback.onFailure(e);
+                            throw e;
+                        }
+
+                    } else if (msg.what == MSG_Runnable) {
+                        MXChipRunnable runable = (MXChipRunnable) msg.obj;
+                        runable.run(new MXChipIOSendProxy());
+                    }
+
+                    Thread.sleep(100);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                super.handleMessage(msg);
+            }
+        }
+
+        class AsyncObject {
+            public byte[] data;
+            public OperateCallback<Void> callback;
+
+            public AsyncObject(byte[] data, OperateCallback<Void> callback) {
+                this.data = data;
+                this.callback = callback;
+            }
+
+        }
+
         @Override
         public void onConnected(MQTTProxy proxy) {
-            doConnected();
-            proxy.subscribe(out, new Callback<byte[]>() {
-                @Override
-                public void onSuccess(byte[] bytes) {
-                    doSubscribeComplete(bytes);
-                }
 
-                @Override
-                public void onFailure(Throwable throwable) {
-
-                }
-            });
         }
 
 
         @Override
         public void onDisconnected(MQTTProxy proxy) {
-            doDisconnected();
+            close();
         }
 
         @Override
         public void onPublish(MQTTProxy proxy, String topic, byte[] data) {
             if (topic.equals(out)) {
                 doRecv(data);
+            }
+        }
+
+
+        /**
+         * 设置一个循环发送runnable,来执行发送大数据包,比如挂件升级过程
+         */
+        public boolean postRunable(MXChipRunnable runnable) {
+            if (handler == null) return false;
+            Message message = new Message();
+            message.what = MSG_Runnable;
+            message.obj = runnable;
+            return handler.sendMessage(message);
+        }
+
+        public boolean postSend(byte[] data, OperateCallback<Void> callback) {
+            if (Thread.currentThread().getId() == thread.getId()) {
+                try {
+                    if (send(data)) {
+                        if (callback != null) {
+                            callback.onSuccess(null);
+                        }
+                        return true;
+                    } else {
+                        if (callback != null) {
+                            callback.onFailure(null);
+                        }
+                        return false;
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    callback.onFailure(e);
+                    return false;
+                }
+            } else {
+                if (handler != null) {
+                    Message message = new Message();
+                    message.what = MSG_SendData;
+                    message.obj = new AsyncObject(data, callback);
+                    return handler.sendMessage(message);
+                } else
+                    return false;
+            }
+
+        }
+
+        public boolean isRuning() {
+            return thread != null && thread.isAlive();
+        }
+
+        public void start() throws DeviceNotReadyException {
+            if (isRuning()) {
+                throw new DeviceNotReadyException();
+            }
+            thread = new Thread(this);
+            thread.start();
+        }
+
+        public void close() {
+            if (isRuning()) {
+                setObject();
+                if (looper != null)
+                    looper.quit();
+                thread.interrupt();
+            }
+        }
+
+        private boolean subscribed = false;
+
+        @Override
+        public void run() {
+            try {
+                if (!proxy.isConnected()) return;
+                proxy.subscribe(out, new Callback<byte[]>() {
+                    @Override
+                    public void onSuccess(byte[] bytes) {
+                        subscribed = true;
+                        setObject();
+                    }
+
+                    @Override
+                    public void onFailure(Throwable throwable) {
+                        subscribed = false;
+                        setObject();
+                    }
+                });
+
+                waitObject(Timeout);
+                if (!subscribed)
+                    return;
+
+                Looper.prepare();
+                looper = Looper.myLooper();
+                handler = new MessageHandler(looper);
+                doReady();
+                Looper.loop();
+
+            } catch (InterruptedException ignore) {
+
+            } finally {
+                doDisconnected();
             }
         }
     }

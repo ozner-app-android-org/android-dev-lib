@@ -1,4 +1,4 @@
-package com.ozner.wifi.mxchip.easylink.ftc_service;
+package com.ozner.wifi.mxchip.Pair;
 
 public interface FTC_Listener {
     public void onFTCfinished(String jsonString);

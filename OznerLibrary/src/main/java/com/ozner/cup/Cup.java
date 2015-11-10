@@ -59,7 +59,6 @@ public class Cup extends OznerDevice {
     Timer autoUpdateTimer = null;
     int RequestCount = 0;
     HashSet<String> dataHash = new HashSet<>();
-    Bluetooth bluetooth = new Bluetooth();
 
     public Cup(Context context, String Address, String Model, String Setting) {
         super(context, Address, Model, Setting);
@@ -83,31 +82,12 @@ public class Cup extends OznerDevice {
         return false;
     }
 
-    /**
-     * 兼容老的方法
-     *
-     * @deprecated
-     */
-    public Bluetooth GetBluetooth() {
-        if (IO() != null) {
-            return bluetooth;
-        } else
-            return null;
-    }
 
     @Override
     protected String getDefaultName() {
         return context().getString(R.string.cup_name);
     }
 
-    /**
-     * 兼容老的方法
-     *
-     * @deprecated
-     */
-    public BluetoothIO Bluetooth() {
-        return (BluetoothIO) IO();
-    }
 
     @Override
     public Class<?> getIOType() {
@@ -285,16 +265,6 @@ public class Cup extends OznerDevice {
         }
     }
 
-    /**
-     * 兼容老的方法
-     *
-     * @deprecated
-     */
-    public class Bluetooth {
-        public CupSensor getSensor() {
-            return mSensor;
-        }
-    }
 
     class BluetoothIOImp implements
             BluetoothIO.OnInitCallback,

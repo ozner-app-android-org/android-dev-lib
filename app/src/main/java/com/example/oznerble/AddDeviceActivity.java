@@ -29,7 +29,7 @@ import com.ozner.device.NotSupportDeviceException;
 import com.ozner.device.OznerDevice;
 import com.ozner.tap.Tap;
 import com.ozner.tap.TapManager;
-import com.ozner.wifi.mxchip.easylink.helper.Helper;
+import com.ozner.wifi.mxchip.Pair.Helper;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;

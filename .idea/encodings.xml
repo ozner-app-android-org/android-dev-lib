@@ -4,7 +4,7 @@
     <file url="file://$PROJECT_DIR$/OznerLibrary/src/main/java/com/ozner/bluetooth/BluetoothIOMgr.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/OznerLibrary/src/main/java/com/ozner/bluetooth/BluetoothSynchronizedObject.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/OznerLibrary/src/main/java/com/ozner/device/IOManager.java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/OznerLibrary/src/main/java/com/ozner/wifi/mxchip/CRC8.java" charset="Big5" />
+    <file url="file://$PROJECT_DIR$/OznerLibrary/src/main/java/com/ozner/wifi/mxchip/Pair/CRC8.java" charset="Big5" />
     <file url="PROJECT" charset="UTF-8" />
   </component>
 </project>

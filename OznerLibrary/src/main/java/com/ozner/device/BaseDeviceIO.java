@@ -101,7 +101,11 @@ public abstract class BaseDeviceIO extends XObject {
      */
     protected void doSend(byte[] bytes) {
         if (onTransmissionsCallback != null) {
-            onTransmissionsCallback.onIOSend(bytes);
+            try {
+                onTransmissionsCallback.onIOSend(bytes);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -110,7 +114,11 @@ public abstract class BaseDeviceIO extends XObject {
      */
     protected void doRecv(byte[] bytes) {
         if (onTransmissionsCallback != null) {
-            onTransmissionsCallback.onIORecv(bytes);
+            try {
+                onTransmissionsCallback.onIORecv(bytes);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 

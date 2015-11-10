@@ -1,4 +1,4 @@
-package com.ozner.wifi.mxchip.easylink.ftc_service;
+package com.ozner.wifi.mxchip.Pair;
 
 import android.util.Log;
 

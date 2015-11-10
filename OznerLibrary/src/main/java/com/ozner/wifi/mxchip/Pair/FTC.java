@@ -1,10 +1,7 @@
-package com.ozner.wifi.mxchip;
+package com.ozner.wifi.mxchip.Pair;
 
 import android.content.Context;
 import android.util.Log;
-
-import com.ozner.wifi.mxchip.easylink.ftc_service.FTC_Listener;
-import com.ozner.wifi.mxchip.easylink.ftc_service.ServiceThread;
 
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;

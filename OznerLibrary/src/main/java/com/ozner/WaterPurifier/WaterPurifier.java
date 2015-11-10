@@ -9,8 +9,8 @@ import com.ozner.device.OperateCallbackProxy;
 import com.ozner.device.OznerDevice;
 import com.ozner.oznerlibrary.R;
 import com.ozner.util.ByteUtil;
-import com.ozner.wifi.mxchip.CRC8;
 import com.ozner.wifi.mxchip.MXChipIO;
+import com.ozner.wifi.mxchip.Pair.CRC8;
 
 import java.util.Timer;
 import java.util.TimerTask;

@@ -1,0 +1,79 @@
+package com.ozner.AirPurifier;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.ozner.util.ByteUtil;
+
+/**
+ * Created by zhiyongxu on 15/11/10.
+ */
+public class OnTimeInfo {
+    public final static int Monday = 0x01;
+    public final static int Tuesday = 0x02;
+    public final static int Wednesday = 0x04;
+    public final static int Trusday = 0x08;
+    public final static int Firday = 0x10;
+    public final static int Sturday = 0x20;
+    public final static int Sunday = 0x40;
+
+    /**
+     * 开机时间,分钟单位,当日0时起的分钟差值,默认7点
+     */
+    public short PowerOnTime = 7 * 60;
+
+    /**
+     * 关机时间,分钟单位,当日0时起的分钟差值,默认18点
+     */
+    public short PowerOffTime = 18 * 60;
+
+
+    /**
+     * 周期,如用户选择 周一,周二,周五时该项数值为
+     * Monday | Tuesday | Firday
+     */
+    public byte Week;
+
+    /**
+     * 是否允许自动开关机
+     */
+    public boolean Enable = false;
+
+    public void fromByBytes(byte[] bytes) {
+        if ((bytes == null) || (bytes.length < 4)) return;
+
+        PowerOnTime = ByteUtil.getShort(bytes, 0);
+        PowerOffTime = ByteUtil.getShort(bytes, 2);
+        Week = bytes[4];
+    }
+
+    public byte[] ToBytes() {
+        byte[] bytes = new byte[5];
+        ByteUtil.putShort(bytes, PowerOnTime, 0);
+        ByteUtil.putShort(bytes, PowerOffTime, 2);
+        bytes[4] = Week;
+        return bytes;
+    }
+
+    public String ToJSON() {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("Enable", Enable);
+        jsonObject.put("PowerOnTime", PowerOnTime);
+        jsonObject.put("PowerOffTime", PowerOffTime);
+        jsonObject.put("Week", Week);
+        return jsonObject.toJSONString();
+    }
+
+    public void fromJSON(String json) {
+        try {
+            JSONObject jsonObject = JSON.parseObject(json);
+            Enable = jsonObject.getBoolean("Enable");
+            PowerOnTime = jsonObject.getShort("PowerOnTime");
+            PowerOffTime = jsonObject.getShort("PowerOffTime");
+            Week = jsonObject.getByte("Week");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+}

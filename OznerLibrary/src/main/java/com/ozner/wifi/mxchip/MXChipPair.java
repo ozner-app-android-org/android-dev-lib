@@ -11,7 +11,10 @@ import com.mxchip.jmdns.JmdnsListener;
 import com.ozner.device.OznerDeviceManager;
 import com.ozner.util.Helper;
 import com.ozner.util.HttpUtil;
-import com.ozner.wifi.mxchip.easylink.ftc_service.FTC_Listener;
+import com.ozner.wifi.mxchip.Pair.ConfigurationDevice;
+import com.ozner.wifi.mxchip.Pair.EasyLinkSender;
+import com.ozner.wifi.mxchip.Pair.FTC;
+import com.ozner.wifi.mxchip.Pair.FTC_Listener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
