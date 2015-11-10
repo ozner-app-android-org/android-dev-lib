@@ -125,7 +125,7 @@ public class MXChipIOManager extends IOManager {
             }
 
             for (BaseDeviceIO io : list) {
-                doAvailable(io);
+                doUnavailable(io);
             }
         }
 

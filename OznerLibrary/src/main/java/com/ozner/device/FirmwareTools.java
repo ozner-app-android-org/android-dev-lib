@@ -35,9 +35,9 @@ public abstract class FirmwareTools implements BluetoothIO.BluetoothRunnable {
     protected abstract void loadFile(String path) throws Exception;
 
     @Override
-    public void run(BaseDeviceIO.DataSendProxy sendHandle) {
+    public void run() {
         try {
-            startFirmwareUpdate(sendHandle);
+            startFirmwareUpdate();
         } catch (Exception e) {
             Message message = new Message();
             message.obj = e;
@@ -46,7 +46,7 @@ public abstract class FirmwareTools implements BluetoothIO.BluetoothRunnable {
         }
     }
 
-    protected abstract boolean startFirmwareUpdate(BaseDeviceIO.DataSendProxy sendHandle) throws InterruptedException;
+    protected abstract boolean startFirmwareUpdate() throws InterruptedException;
 
     protected void onFirmwareUpdateStart() {
         updateHandler.sendEmptyMessage(MSG_Start);

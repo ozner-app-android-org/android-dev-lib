@@ -182,8 +182,8 @@ public abstract class BaseDeviceIO extends XObject {
         this.onInitCallback = onInitCallback;
     }
 
-    protected boolean doInit(DataSendProxy handle) {
-        return onInitCallback == null || onInitCallback.onIOInit(handle);
+    protected boolean doInit() {
+        return onInitCallback == null || onInitCallback.onIOInit();
     }
 
     public abstract String getName();
@@ -237,19 +237,12 @@ public abstract class BaseDeviceIO extends XObject {
         /**
          * 连接完成以后,通过回调来继续初始化操作
          *
-         * @param sendHandle 发送接口代理
          * @return 返回FALSE初始化失败
          */
-        boolean onIOInit(DataSendProxy sendHandle);
+        boolean onIOInit();
     }
 
 
-    public abstract class DataSendProxy {
-        public abstract boolean send(byte[] data);
-
-        public abstract boolean send(byte[] data, OperateCallback<Void> callback);
-
-    }
 
 
 }

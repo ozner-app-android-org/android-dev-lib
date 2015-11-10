@@ -1,6 +1,5 @@
 package com.ozner.tap;
 
-import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.FirmwareTools;
 import com.ozner.util.ByteUtil;
 import com.ozner.util.dbg;
@@ -135,7 +134,7 @@ public class TapFirmwareTools extends FirmwareTools {
     }
 
     @Override
-    protected boolean startFirmwareUpdate(BaseDeviceIO.DataSendProxy sendHandle) throws InterruptedException {
+    protected boolean startFirmwareUpdate() throws InterruptedException {
         try {
             onFirmwareUpdateStart();
             if (bytes.length > 31 * 1024) {
@@ -162,7 +161,7 @@ public class TapFirmwareTools extends FirmwareTools {
                 int p = i + 0x17c00;
                 ByteUtil.putInt(data, p, 1);
                 System.arraycopy(bytes, i, data, 5, 8);
-                if (!sendHandle.send(data)) {
+                if (!deviceIO.send(data)) {
                     onFirmwareFail();
                     return false;
                 } else {
@@ -174,7 +173,7 @@ public class TapFirmwareTools extends FirmwareTools {
             byte[] checkSum = new byte[5];
             checkSum[0] = opCode_GetFirmwareSum;
             ByteUtil.putInt(checkSum, Size, 1);
-            if (sendHandle.send(checkSum)) {
+            if (deviceIO.send(checkSum)) {
                 Thread.sleep(200);
                 checkSum = deviceIO.getLastRecvPacket();
                 if (checkSum[0] == opCode_GetFirmwareSumRet) {
@@ -186,7 +185,7 @@ public class TapFirmwareTools extends FirmwareTools {
                         buffer.put((byte) 0xc3);
                         buffer.put(update);
 
-                        if (sendHandle.send(buffer.array())) {
+                        if (deviceIO.send(buffer.array())) {
                             onFirmwareComplete();
                             Thread.sleep(5000);
                             return true;

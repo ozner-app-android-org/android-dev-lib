@@ -119,23 +119,19 @@ public class Tap extends OznerDevice {
 
     @Override
     protected void doChangeRunningMode() {
-        sendBackground(null);
+        sendBackground();
     }
 
-    private void sendBackground(BaseDeviceIO.DataSendProxy proxy) {
+    private void sendBackground() {
         if (getRunningMode() == RunningMode.Foreground) {
-            if (proxy != null) {
-                proxy.send(BluetoothIO.makePacket(opCode_FrontMode, null));
-            } else {
-                send(opCode_FrontMode, null);
-            }
+            send(opCode_FrontMode, null);
         }
     }
 
     @Override
     public void UpdateSetting() {
         if ((IO() != null) && (IO().isReady()))
-            sendSetting(null);
+            sendSetting();
     }
 
     public TapSetting Setting() {
@@ -149,7 +145,7 @@ public class Tap extends OznerDevice {
         return setting;
     }
 
-    private boolean sendTime(BaseDeviceIO.DataSendProxy proxy) {
+    private boolean sendTime() {
         dbg.i("开始设置时间:%s", IO().getAddress());
 
         Time time = new Time();
@@ -161,10 +157,10 @@ public class Tap extends OznerDevice {
         data[3] = (byte) time.hour;
         data[4] = (byte) time.minute;
         data[5] = (byte) time.second;
-        return proxy.send(BluetoothIO.makePacket(opCode_UpdateTime, data));
+        return send(opCode_UpdateTime, data);
     }
 
-    private boolean sendSetting(BaseDeviceIO.DataSendProxy proxy) {
+    private boolean sendSetting() {
         TapSetting setting = Setting();
         if (setting == null)
             return false;
@@ -213,11 +209,8 @@ public class Tap extends OznerDevice {
             data[11] = 0;
         }
 
-        if (proxy != null) {
-            return proxy.send(BluetoothIO.makePacket(opCode_SetDetectTime, data));
-        } else {
-            return send(opCode_SetDetectTime, data);
-        }
+        return send(opCode_SetDetectTime, data);
+
 
     }
 
@@ -311,17 +304,17 @@ public class Tap extends OznerDevice {
         }
 
         @Override
-        public boolean onIOInit(BaseDeviceIO.DataSendProxy sendHandle) {
+        public boolean onIOInit() {
             try {
-                if (!sendTime(sendHandle))
+                if (!sendTime())
                     return false;
                 Thread.sleep(100);
 
-                if (!sendSetting(sendHandle))
+                if (!sendSetting())
                     return false;
                 Thread.sleep(100);
 
-                sendBackground(sendHandle);
+                sendBackground();
                 Thread.sleep(100);
 
                 return true;

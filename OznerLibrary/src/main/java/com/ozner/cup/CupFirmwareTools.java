@@ -1,7 +1,6 @@
 package com.ozner.cup;
 
 import com.ozner.bluetooth.BluetoothIO;
-import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.FirmwareTools;
 import com.ozner.util.ByteUtil;
 import com.ozner.util.dbg;
@@ -134,10 +133,10 @@ public class CupFirmwareTools extends FirmwareTools {
     }
 
 
-    private boolean eraseMCU(BaseDeviceIO.DataSendProxy sendHandle) throws InterruptedException {
-        if (sendHandle.send(BluetoothIO.makePacket((byte) 0x0c, new byte[]{0}))) {
+    private boolean eraseMCU() throws InterruptedException {
+        if (deviceIO.send(BluetoothIO.makePacket((byte) 0x0c, new byte[]{0}))) {
             Thread.sleep(1000);
-            if (sendHandle.send(BluetoothIO.makePacket((byte) 0x0c, new byte[]{1}))) {
+            if (deviceIO.send(BluetoothIO.makePacket((byte) 0x0c, new byte[]{1}))) {
                 Thread.sleep(1000);
                 return true;
             } else
@@ -147,14 +146,14 @@ public class CupFirmwareTools extends FirmwareTools {
     }
 
     @Override
-    protected boolean startFirmwareUpdate(BaseDeviceIO.DataSendProxy sendHandle) throws InterruptedException {
+    protected boolean startFirmwareUpdate() throws InterruptedException {
         try {
             onFirmwareUpdateStart();
             if (Firmware == deviceIO.getFirmware()) {
                 onFirmwareFail();
                 return false;
             }
-            if (eraseMCU(sendHandle)) {
+            if (eraseMCU()) {
 
                 for (int i = 0; i < Size; i += 16) {
                     byte[] data = new byte[20];
@@ -162,7 +161,7 @@ public class CupFirmwareTools extends FirmwareTools {
                     short p = (short) (i / 16);
                     ByteUtil.putShort(data, p, 1);
                     System.arraycopy(bytes, i, data, 3, 16);
-                    if (!sendHandle.send(data)) {
+                    if (!deviceIO.send(data)) {
                         onFirmwareFail();
                         return false;
                     } else {
@@ -177,7 +176,7 @@ public class CupFirmwareTools extends FirmwareTools {
             data[5] = 'U';
             data[6] = 'M';
             ByteUtil.putInt(data, Checksum, 7);
-            if (sendHandle.send(BluetoothIO.makePacket((byte) 0xc3, data))) {
+            if (deviceIO.send(BluetoothIO.makePacket((byte) 0xc3, data))) {
                 onFirmwareComplete();
                 Thread.sleep(5000);
                 return true;

@@ -136,7 +136,7 @@ public class Cup extends OznerDevice {
         return setting;
     }
 
-    private boolean sendTime(BaseDeviceIO.DataSendProxy proxy) {
+    private boolean sendTime() {
         dbg.i("开始设置时间:%s", IO().getAddress());
         Time time = new Time();
         time.setToNow();
@@ -147,25 +147,21 @@ public class Cup extends OznerDevice {
         data[3] = (byte) time.hour;
         data[4] = (byte) time.minute;
         data[5] = (byte) time.second;
-        return proxy.send(BluetoothIO.makePacket(opCode_UpdateTime, data));
+        return send(opCode_UpdateTime, data);
     }
 
     @Override
     protected void doChangeRunningMode() {
-        sendBackground(null);
+        sendBackground();
     }
 
-    private void sendBackground(BaseDeviceIO.DataSendProxy proxy) {
+    private void sendBackground() {
         if (getRunningMode() == RunningMode.Foreground) {
-            if (proxy != null) {
-                proxy.send(BluetoothIO.makePacket(opCode_FrontMode, null));
-            } else {
-                send(opCode_FrontMode, null);
-            }
+            send(opCode_FrontMode, null);
         }
     }
 
-    private boolean sendSetting(BaseDeviceIO.DataSendProxy proxy) {
+    private boolean sendSetting() {
         CupSetting setting = Setting();
         if (setting == null)
             return false;
@@ -181,11 +177,7 @@ public class Cup extends OznerDevice {
         data[17] = 0;// (byte) (isNewCup ? 1 : 0);
         data[18] = 0;
         dbg.i(IO().getAddress() + " 写入提醒数据", context());
-        if (proxy != null) {
-            return proxy.send(BluetoothIO.makePacket(opCode_SetRemind, data));
-        } else {
-            return send(opCode_SetRemind, data);
-        }
+        return send(opCode_SetRemind, data);
     }
 
     private boolean send(byte opCode, byte[] data) {
@@ -238,7 +230,7 @@ public class Cup extends OznerDevice {
     public void UpdateSetting() {
 
         if ((IO() != null) && (IO().isReady()))
-            sendSetting(null);
+            sendSetting();
 
     }
 
@@ -368,17 +360,17 @@ public class Cup extends OznerDevice {
         }
 
         @Override
-        public boolean onIOInit(BaseDeviceIO.DataSendProxy sendHandle) {
+        public boolean onIOInit() {
             try {
-                if (!sendTime(sendHandle))
+                if (!sendTime())
                     return false;
                 Thread.sleep(100);
 
-                if (!sendSetting(sendHandle))
+                if (!sendSetting())
                     return false;
 
                 Thread.sleep(100);
-                sendBackground(sendHandle);
+                sendBackground();
                 Thread.sleep(100);
                 return true;
             } catch (Exception e) {

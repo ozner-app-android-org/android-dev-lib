@@ -195,7 +195,7 @@ public class BluetoothIO extends BaseDeviceIO {
     }
 
     public interface BluetoothRunnable {
-        void run(DataSendProxy sendHandle);
+        void run();
     }
 
     class AsyncObject {
@@ -209,18 +209,7 @@ public class BluetoothIO extends BaseDeviceIO {
 
     }
 
-    public class BluetoothSendProxy extends DataSendProxy {
-        @Override
-        public boolean send(byte[] data) {
-            return bluetoothProxy.postSend(data, null);
-        }
 
-        @Override
-        public boolean send(byte[] data, OperateCallback<Void> callback) {
-            return bluetoothProxy.postSend(data, callback);
-        }
-
-    }
 
     private class BluetoothProxy extends BluetoothGattCallback implements Runnable {
         final static int MSG_SendData = 0x1000;
@@ -414,7 +403,7 @@ public class BluetoothIO extends BaseDeviceIO {
                         return;
                     }
                     Thread.sleep(100);
-                    if (!doInit(new BluetoothSendProxy())) {
+                    if (!doInit()) {
                         return;
                     }
                 }
@@ -429,11 +418,13 @@ public class BluetoothIO extends BaseDeviceIO {
                     Looper.loop();
                 } else {
                     doReady();
+                    while (true)
                     {
                         //每次等待5秒
                         Thread.sleep(5000);
+                        if (doCheckTransmissionsComplete())
+                            break;
                     }
-                    while (!doCheckTransmissionsComplete()) ;
                 }
 
             } catch (Exception e) {
@@ -538,7 +529,7 @@ public class BluetoothIO extends BaseDeviceIO {
 
                     } else if (msg.what == MSG_Runnable) {
                         BluetoothRunnable runable = (BluetoothRunnable) msg.obj;
-                        runable.run(new BluetoothSendProxy());
+                        runable.run();
                     }
 
                     Thread.sleep(100);

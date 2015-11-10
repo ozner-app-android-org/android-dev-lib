@@ -28,7 +28,6 @@ public class MQTTProxy extends XObject {
     final ArrayList<MQTTListener> listeners = new ArrayList<>();
     CallbackConnection connection;
     boolean connected = false;
-
     public MQTTProxy(Context context) {
         super(context);
         try {
@@ -63,6 +62,10 @@ public class MQTTProxy extends XObject {
         }
         connection = mqtt.callbackConnection();
         connection.listener(mqttImp);
+    }
+
+    public MQTT mqtt() {
+        return mqtt;
     }
 
     public void registerListener(MQTTListener listener) {

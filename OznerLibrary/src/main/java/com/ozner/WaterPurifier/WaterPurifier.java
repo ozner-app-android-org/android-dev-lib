@@ -9,6 +9,7 @@ import com.ozner.device.OperateCallbackProxy;
 import com.ozner.device.OznerDevice;
 import com.ozner.oznerlibrary.R;
 import com.ozner.util.ByteUtil;
+import com.ozner.util.Helper;
 import com.ozner.wifi.mxchip.MXChipIO;
 import com.ozner.wifi.mxchip.Pair.CRC8;
 
@@ -45,7 +46,7 @@ public class WaterPurifier extends OznerDevice {
         ByteUtil.putShort(bytes, (short) len, 1);
         bytes[3] = OpCode;
 
-        byte[] macs = MXChipIO.HexString2Bytes(Address.replace(":", ""));
+        byte[] macs = Helper.HexString2Bytes(Address.replace(":", ""));
         System.arraycopy(macs, 0, bytes, 4, 6);
 
         bytes[10] = 0;//保留数据
@@ -90,7 +91,7 @@ public class WaterPurifier extends OznerDevice {
     @Override
     protected void doChangeRunningMode() {
         if (getRunningMode() == RunningMode.Foreground) {
-            updateStatus(null, null);
+            updateStatus(null);
         }
         super.doChangeRunningMode();
     }
@@ -196,7 +197,7 @@ public class WaterPurifier extends OznerDevice {
 
                     @Override
                     public void onSuccess(Void var1) {
-                        updateStatus(null, null);
+                        updateStatus(null);
                         super.onSuccess(var1);
                     }
                 });
@@ -204,18 +205,13 @@ public class WaterPurifier extends OznerDevice {
     }
 
 
-    private void updateStatus(BaseDeviceIO.DataSendProxy sendHandle, OperateCallback<Void> cb) {
-        if (sendHandle == null) {
+    private void updateStatus(OperateCallback<Void> cb) {
             if (IO() == null) {
                 if (cb != null)
                     cb.onFailure(null);
             } else {
                 IO().send(MakeWoodyBytes(GroupCode_AppToDevice, Opcode_RequestStatus, Address(), null), cb);
             }
-        } else {
-            sendHandle.send(MakeWoodyBytes(GroupCode_AppToDevice, Opcode_RequestStatus, Address(), null), cb);
-        }
-
     }
 
 
@@ -251,7 +247,7 @@ public class WaterPurifier extends OznerDevice {
         }
 
         private void doTime() {
-            updateStatus(null, null);
+            updateStatus(null);
         }
 
         @Override
@@ -286,10 +282,10 @@ public class WaterPurifier extends OznerDevice {
         }
 
         @Override
-        public boolean onIOInit(BaseDeviceIO.DataSendProxy sendHandle) {
+        public boolean onIOInit() {
             try {
                 isOffline = true;
-                updateStatus(sendHandle, new OperateCallback<Void>() {
+                updateStatus(new OperateCallback<Void>() {
                     @Override
                     public void onSuccess(Void var1) {
                     }

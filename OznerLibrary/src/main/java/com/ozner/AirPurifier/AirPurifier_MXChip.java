@@ -8,6 +8,7 @@ import com.ozner.device.OperateCallback;
 import com.ozner.device.OznerDevice;
 import com.ozner.oznerlibrary.R;
 import com.ozner.util.ByteUtil;
+import com.ozner.util.Helper;
 import com.ozner.wifi.mxchip.MXChipIO;
 
 import java.util.HashMap;
@@ -49,6 +50,10 @@ public class AirPurifier_MXChip extends OznerDevice {
     AirStatus airStatus = new AirStatus();
     OnTimeInfo onTimeInfo = new OnTimeInfo();
 
+    public AirPurifier_MXChip(Context context, String Address, String Model, String Setting) {
+        super(context, Address, Model, Setting);
+    }
+
     public Sensor sensor() {
         return sensor;
     }
@@ -56,11 +61,6 @@ public class AirPurifier_MXChip extends OznerDevice {
     public AirStatus airStatus() {
         return airStatus;
     }
-
-    public AirPurifier_MXChip(Context context, String Address, String Model, String Setting) {
-        super(context, Address, Model, Setting);
-    }
-
 
     @Override
     protected DeviceSetting initSetting(String Setting) {
@@ -114,7 +114,7 @@ public class AirPurifier_MXChip extends OznerDevice {
         bytes[0] = (byte) 0xfb;
         ByteUtil.putShort(bytes, (short) bytes.length, 1);
         bytes[3] = (byte) 1;
-        byte[] macs = MXChipIO.HexString2Bytes(this.Address().replace(":", ""));
+        byte[] macs = Helper.HexString2Bytes(this.Address().replace(":", ""));
         System.arraycopy(macs, 0, bytes, 4, 6);
 
         bytes[12] = (byte) propertys.size();
@@ -138,14 +138,12 @@ public class AirPurifier_MXChip extends OznerDevice {
         bytes[0] = (byte) 0xfb;
         ByteUtil.putShort(bytes, (short) bytes.length, 1);
         bytes[3] = (byte) 2;
-        byte[] macs = MXChipIO.HexString2Bytes(this.Address().replace(":", ""));
+        byte[] macs = Helper.HexString2Bytes(this.Address().replace(":", ""));
         System.arraycopy(macs, 0, bytes, 4, 6);
         bytes[12] = propertyId;
         System.arraycopy(value, 0, bytes, 13, value.length);
         IO().send(bytes, cb);
     }
-
-    public enum SpeedValue {Auto, High, Mid, Low, Power}
 
     private int getIntValueByShort(short property) {
         synchronized (this.property) {
@@ -198,6 +196,8 @@ public class AirPurifier_MXChip extends OznerDevice {
                 return ErrorValue;
         }
     }
+
+    public enum SpeedValue {Auto, High, Mid, Low, Power}
 
     public class AirStatus {
 
@@ -405,7 +405,7 @@ public class AirPurifier_MXChip extends OznerDevice {
 
 
         @Override
-        public boolean onIOInit(BaseDeviceIO.DataSendProxy sendHandle) {
+        public boolean onIOInit() {
             try {
                 isOffline = true;
                 return true;
