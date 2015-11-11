@@ -11,6 +11,7 @@ import com.ozner.util.ByteUtil;
 import com.ozner.util.Helper;
 import com.ozner.wifi.mxchip.MXChipIO;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Timer;
@@ -21,6 +22,10 @@ import java.util.TimerTask;
  */
 public class AirPurifier_MXChip extends OznerDevice {
     public static final String ACTION_WATER_PURIFIER_STATUS_CHANGE = "com.ozner.air.purifier.status.change";
+    public static final byte CMD_SET_PROPERTY=(byte)0x2;
+    public static final byte CMD_REQUEST_PROPERTY=(byte)0x1;
+    public static final byte CMD_RECV_PROPERTY=(byte)0x4;
+
 
     public static final byte PROPERTY_POWER = 0x00;
     public static final byte PROPERTY_SPEED = 0x01;
@@ -33,14 +38,17 @@ public class AirPurifier_MXChip extends OznerDevice {
     public static final byte PROPERTY_LIGHTSENSOR = 0x14;
     public static final byte PROPERTY_FILTER = 0x15;
     public static final byte PROPERTY_TIME = 0x16;
+    public static final byte PROPERTY_PERIOD=0x17;
+
     public static final byte PROPERTY_MODEL = 0x21;
     public static final byte PROPERTY_TYPE = 0x22;
     public static final byte PROPERTY_MAINBOARD = 0x23;
     public static final byte PROPERTY_CONTROLBOARD = 0x24;
 
-    public static final byte PROPERTY_MESSAGEs = 0x25;
-    public static final int ErrorValue = 0xffff;
 
+    public static final byte PROPERTY_MESSAGES = 0x25;
+    public static final int ErrorValue = 0xffff;
+    private static final int Timeout=5000;
     private static String SecureCode = "580c2783";
     final AirPurifierImp airPurifierImp = new AirPurifierImp();
     boolean isOffline = true;
@@ -113,7 +121,7 @@ public class AirPurifier_MXChip extends OznerDevice {
         byte[] bytes = new byte[14 + propertys.size()];
         bytes[0] = (byte) 0xfb;
         ByteUtil.putShort(bytes, (short) bytes.length, 1);
-        bytes[3] = (byte) 1;
+        bytes[3] = (byte) CMD_REQUEST_PROPERTY;
         byte[] macs = Helper.HexString2Bytes(this.Address().replace(":", ""));
         System.arraycopy(macs, 0, bytes, 4, 6);
 
@@ -123,7 +131,7 @@ public class AirPurifier_MXChip extends OznerDevice {
             bytes[p] = id;
             p++;
         }
-        IO().send(bytes, cb);
+        airPurifierImp.send(bytes, cb);
     }
 
     private void setProperty(byte propertyId, byte[] value, OperateCallback<Void> cb) {
@@ -137,12 +145,12 @@ public class AirPurifier_MXChip extends OznerDevice {
 
         bytes[0] = (byte) 0xfb;
         ByteUtil.putShort(bytes, (short) bytes.length, 1);
-        bytes[3] = (byte) 2;
+        bytes[3] =  CMD_SET_PROPERTY;
         byte[] macs = Helper.HexString2Bytes(this.Address().replace(":", ""));
         System.arraycopy(macs, 0, bytes, 4, 6);
         bytes[12] = propertyId;
         System.arraycopy(value, 0, bytes, 13, value.length);
-        IO().send(bytes, cb);
+        airPurifierImp.send(bytes, cb);
     }
 
     private int getIntValueByShort(short property) {
@@ -196,6 +204,7 @@ public class AirPurifier_MXChip extends OznerDevice {
                 return ErrorValue;
         }
     }
+
 
     public enum SpeedValue {Auto, High, Mid, Low, Power}
 
@@ -291,12 +300,9 @@ public class AirPurifier_MXChip extends OznerDevice {
     class AirPurifierImp implements
             BaseDeviceIO.OnTransmissionsCallback,
             BaseDeviceIO.StatusCallback,
-            BaseDeviceIO.OnInitCallback, Runnable {
-        Thread runThread;
-
+            BaseDeviceIO.OnInitCallback {
+        private boolean Respone=false;
         public AirPurifierImp() {
-            runThread = new Thread(this);
-            runThread.start();
         }
 
         @Override
@@ -339,10 +345,36 @@ public class AirPurifier_MXChip extends OznerDevice {
             ps.add(PROPERTY_FILTER);
             requestProperty(ps, null);
         }
+        private void setAutoReflash(short period,HashSet<Byte> propertys,OperateCallback<Void> cb)
+        {
+            byte[] bytes=new byte[3+propertys.size()];
+            ByteUtil.putShort(bytes,period,0);
+            bytes[2]=(byte)propertys.size();
+            int i=3;
+            for (Byte p : propertys)
+            {
+                bytes[i]=p;
+                i++;
+            }
+            setProperty(PROPERTY_PERIOD,bytes,cb);
+
+        }
         @Override
         public void onReady(BaseDeviceIO io) {
             //setNowTime();
-            requestInfo();
+            //requestInfo();
+
+            FilterStatus filterStatus=new FilterStatus();
+            filterStatus.lastTime=new Date();
+            filterStatus.stopTime=new Date(filterStatus.lastTime.getTime()+1000*60*60*24);
+            filterStatus.WorkTime=1000;
+            filterStatus.MaxWorkTime=2000;
+
+            setProperty(PROPERTY_FILTER,filterStatus.toBytes(),null);
+
+            HashSet<Byte> list=new HashSet<>();
+            list.add(PROPERTY_FILTER);
+            requestProperty(list,null);
             if (getRunningMode() == RunningMode.Foreground) {
                 if (autoUpdateTimer != null)
                     cancelTimer();
@@ -365,42 +397,97 @@ public class AirPurifier_MXChip extends OznerDevice {
 
         }
 
+        class SendOperateCallbackProxy implements OperateCallback<Void>
+        {
+            OperateCallback<Void> callback;
+            public SendOperateCallbackProxy(OperateCallback<Void> callback)
+            {
+                this.callback=callback;
+            }
+
+            @Override
+            public void onSuccess(Void var1) {
+                try {
+                    waitObject(Timeout);
+                    if (callback!=null) {
+                        if (Respone)
+                            callback.onSuccess(null);
+                        else
+                            this.callback.onFailure(null);
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    if (callback!=null)
+                        callback.onFailure(e);
+                }
+
+            }
+            @Override
+            public void onFailure(Throwable var1) {
+                callback.onFailure(var1);
+            }
+        }
+
+        private boolean send(byte[] data,OperateCallback<Void> cb)
+        {
+            if (IO()!=null)
+            {
+                Respone=false;
+                return IO().send(data, new SendOperateCallbackProxy(cb));
+            }else
+                return false;
+        }
 
         @Override
         public void onIORecv(byte[] bytes) {
             if ((bytes == null) || (bytes.length<= 0)) {
                 return;
             }
+
             if (bytes[0] != (byte) 0xFA) return;
-            int len = ByteUtil.getShort(bytes, 2);
+
+            int len = ByteUtil.getShort(bytes, 1);
             if (len <= 0) return;
-            int cmd = bytes[3];
-            if (cmd == 0x4) {
-                int count = bytes[12];
-                int p = 13;
-                HashMap<Byte, byte[]> set = new HashMap<>();
-                for (int i = 0; i < count; i++) {
-                    byte id = bytes[p];
-                    p++;
+            byte cmd = bytes[3];
+            switch (cmd)
+            {
+                case CMD_RECV_PROPERTY:
+                    int count = bytes[12];
+                    int p = 13;
+                    HashMap<Byte, byte[]> set = new HashMap<>();
+                    for (int i = 0; i < count; i++) {
+                        byte id = bytes[p];
+                        p++;
 
-                    byte size = bytes[p];
-                    p++;
+                        byte size = bytes[p];
+                        p++;
 
-                    byte[] data = new byte[size];
+                        byte[] data = new byte[size];
 
-                    if (p >= bytes.length) return;
-                    if (p + size > bytes.length) return;
+                        if (p >= bytes.length) return;
+                        if (p + size > bytes.length) return;
 
-                    System.arraycopy(bytes, p, data, 0, size);
-                    p += size;
-                    set.put(id, data);
-                }
-                synchronized (property) {
-                    for (Byte id : set.keySet()) {
-                        property.put(id, set.get(id));
+                        System.arraycopy(bytes, p, data, 0, size);
+                        p += size;
+                        set.put(id, data);
                     }
-                }
+                    synchronized (property) {
+                        for (Byte id : set.keySet()) {
+                            property.put(id, set.get(id));
+                        }
+                        if (property.containsKey(PROPERTY_FILTER))
+                        {
+                            byte[] b=property.get(PROPERTY_FILTER);
+                            FilterStatus fs=new FilterStatus();
+                            fs.fromBytes(b);
+                        }
+                    }
+
+                    Respone=true;
+                    setObject();
+                    break;
             }
+
         }
 
 
@@ -423,10 +510,7 @@ public class AirPurifier_MXChip extends OznerDevice {
             }
         }
 
-        @Override
-        public void run() {
 
-        }
     }
 
 

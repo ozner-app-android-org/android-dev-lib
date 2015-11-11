@@ -100,12 +100,7 @@ public class BluetoothIO extends BaseDeviceIO {
         return customData;
     }
 
-    /**
-     * 获取最后一次收到的数据包
-     */
-    public byte[] getLastRecvPacket() {
-        return bluetoothProxy.lastRecvPacket;
-    }
+
 
     @Override
     public boolean send(byte[] bytes) {
@@ -226,7 +221,7 @@ public class BluetoothIO extends BaseDeviceIO {
         BluetoothGatt mGatt = null;
         Looper mLooper;
         MessageHandler mHandler;
-        byte[] lastRecvPacket = null;
+
         private int connectionState = BluetoothGatt.STATE_DISCONNECTED;
         private int lastStatus = BluetoothGatt.GATT_FAILURE;
 
@@ -296,7 +291,7 @@ public class BluetoothIO extends BaseDeviceIO {
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
-            lastRecvPacket = characteristic.getValue();
+
             doRecv(characteristic.getValue());
             super.onCharacteristicChanged(gatt, characteristic);
         }

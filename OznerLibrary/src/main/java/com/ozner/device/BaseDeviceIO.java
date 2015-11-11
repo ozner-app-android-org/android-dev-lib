@@ -5,7 +5,9 @@ import android.content.Intent;
 
 import com.ozner.XObject;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -33,6 +35,7 @@ public abstract class BaseDeviceIO extends XObject {
     OnInitCallback onInitCallback = null;
     CheckTransmissionsCompleteCallback checkTransmissionsCompleteCallback = null;
     OnTransmissionsCallback onTransmissionsCallback = null;
+    byte[] lastRecvPacket = null;
 
     public BaseDeviceIO(Context context, String Model) {
         super(context);
@@ -46,7 +49,19 @@ public abstract class BaseDeviceIO extends XObject {
     public boolean isReady() {
         return isReady;
     }
-
+    /**
+     * 获取最后一次收到的数据包
+     */
+    public byte[] getLastRecvPacket() {
+        synchronized (this)
+        {
+            if (lastRecvPacket!=null)
+            {
+                return Arrays.copyOf(lastRecvPacket,lastRecvPacket.length);
+            }else
+                return null;
+        }
+    }
     /**
      * 异步方法
      *
@@ -113,9 +128,13 @@ public abstract class BaseDeviceIO extends XObject {
      * 调用数据监听回调
      */
     protected void doRecv(byte[] bytes) {
+        synchronized (this) {
+            lastRecvPacket = bytes;
+        }
         if (onTransmissionsCallback != null) {
             try {
                 onTransmissionsCallback.onIORecv(bytes);
+
             } catch (Exception e) {
                 e.printStackTrace();
             }

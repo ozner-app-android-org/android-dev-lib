@@ -98,7 +98,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.addWifiButton:
-                BaseDeviceIO io = OznerDeviceManager.Instance().ioManagerList().mxChipIOManager().createNewIO("FOG_HAOZE_AIR", "C8:93:46:C0:54:06", "FOG_HAOZE_AIR");
+                BaseDeviceIO io = OznerDeviceManager.Instance().ioManagerList().mxChipIOManager().createNewIO("FOG_HAOZE_AIR", "C8:93:46:C0:4D:B3", "FOG_HAOZE_AIR");
                 OznerDevice device = null;
                 try {
                     device = OznerDeviceManager.Instance().getDevice(io);

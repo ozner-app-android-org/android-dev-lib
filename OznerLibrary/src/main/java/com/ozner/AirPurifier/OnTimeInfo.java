@@ -39,18 +39,19 @@ public class OnTimeInfo {
     public boolean Enable = false;
 
     public void fromByBytes(byte[] bytes) {
-        if ((bytes == null) || (bytes.length < 4)) return;
-
-        PowerOnTime = ByteUtil.getShort(bytes, 0);
-        PowerOffTime = ByteUtil.getShort(bytes, 2);
-        Week = bytes[4];
+        if ((bytes == null) || (bytes.length < 6)) return;
+        Enable=bytes[0]!=0;
+        PowerOnTime = ByteUtil.getShort(bytes, 1);
+        PowerOffTime = ByteUtil.getShort(bytes, 3);
+        Week = bytes[5];
     }
 
     public byte[] ToBytes() {
-        byte[] bytes = new byte[5];
-        ByteUtil.putShort(bytes, PowerOnTime, 0);
-        ByteUtil.putShort(bytes, PowerOffTime, 2);
-        bytes[4] = Week;
+        byte[] bytes = new byte[6];
+        bytes[0]=(byte)(Enable?1:0);
+        ByteUtil.putShort(bytes, PowerOnTime, 1);
+        ByteUtil.putShort(bytes, PowerOffTime, 3);
+        bytes[5] = Week;
         return bytes;
     }
 
