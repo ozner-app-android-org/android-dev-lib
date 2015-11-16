@@ -67,8 +67,8 @@ public class Tap extends OznerDevice {
     Timer autoUpdateTimer = new Timer();
     int RequestCount = 0;
 
-    public Tap(Context context, String Address, String Model, String Setting) {
-        super(context, Address, Model, Setting);
+    public Tap(Context context, String Address, String Type, String Setting) {
+        super(context, Address, Type, Setting);
         initSetting(Setting);
         mDatas = new TapDatas(context, Address());
     }
@@ -80,7 +80,7 @@ public class Tap extends OznerDevice {
      * @return true=配对状态
      */
     public static boolean isBindMode(BluetoothIO io) {
-        if (!TapManager.IsTap(io.getModel())) return false;
+        if (!TapManager.IsTap(io.getType())) return false;
         if (io.getCustomData() != null) {
             byte[] data = io.getCustomData();
             if (data.length > 0) {

@@ -20,7 +20,7 @@ import java.util.HashMap;
 @SuppressLint("NewApi")
 public class BluetoothScan extends XObject implements LeScanCallback, Runnable {
     public static final String Extra_Address = "Address";
-    public static final String Extra_Model = "getModel";
+    public static final String Extra_Model = "getType";
     public static final String Extra_Firmware = "getFirmware";
     public static final String Extra_Platform = "Platform";
     public static final String Extra_CustomType = "CustomType";
@@ -86,7 +86,10 @@ public class BluetoothScan extends XObject implements LeScanCallback, Runnable {
                     synchronized (mFoundDevice) {
                         mFoundDevice.clear();
                     }
-
+                    if (adapter.getState() == BluetoothAdapter.STATE_OFF) {
+                        Thread.sleep(1000);
+                        continue;
+                    }
                     adapter.startLeScan(this);
                     Thread.sleep(scanPeriod);
                     adapter.stopLeScan(this);

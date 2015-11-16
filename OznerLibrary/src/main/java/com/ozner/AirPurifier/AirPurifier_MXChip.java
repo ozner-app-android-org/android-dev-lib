@@ -1,6 +1,8 @@
 package com.ozner.AirPurifier;
 
 import android.content.Context;
+import android.content.Intent;
+import android.util.Log;
 
 import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.DeviceSetting;
@@ -11,6 +13,7 @@ import com.ozner.util.ByteUtil;
 import com.ozner.util.Helper;
 import com.ozner.wifi.mxchip.MXChipIO;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,7 +24,9 @@ import java.util.TimerTask;
  * Created by xzyxd on 2015/11/2.
  */
 public class AirPurifier_MXChip extends OznerDevice {
-    public static final String ACTION_WATER_PURIFIER_STATUS_CHANGE = "com.ozner.air.purifier.status.change";
+    public static final String ACTION_AIR_PURIFIER_SENSOR_CHANGED = "com.ozner.AirPurifier.Sensor.Changed";
+    public static final String ACTION_AIR_PURIFIER_STATUS_CHANGED = "com.ozner.AirPurifier.Status.Changed";
+
     public static final byte CMD_SET_PROPERTY=(byte)0x2;
     public static final byte CMD_REQUEST_PROPERTY=(byte)0x1;
     public static final byte CMD_RECV_PROPERTY=(byte)0x4;
@@ -31,35 +36,40 @@ public class AirPurifier_MXChip extends OznerDevice {
     public static final byte PROPERTY_SPEED = 0x01;
     public static final byte PROPERTY_LIGHT = 0x02;
     public static final byte PROPERTY_LOCK = 0x03;
-    public static final byte PROPERTY_ONTIME = 0x04;
+    public static final byte PROPERTY_POWER_TIMER = 0x04;
     public static final byte PROPERTY_PM25 = 0x11;
     public static final byte PROPERTY_TEMPERATURE = 0x12;
     public static final byte PROPERTY_VOC = 0x13;
-    public static final byte PROPERTY_LIGHTSENSOR = 0x14;
+    public static final byte PROPERTY_LIGHT_SENSOR = 0x14;
     public static final byte PROPERTY_FILTER = 0x15;
     public static final byte PROPERTY_TIME = 0x16;
     public static final byte PROPERTY_PERIOD=0x17;
 
     public static final byte PROPERTY_MODEL = 0x21;
-    public static final byte PROPERTY_TYPE = 0x22;
-    public static final byte PROPERTY_MAINBOARD = 0x23;
-    public static final byte PROPERTY_CONTROLBOARD = 0x24;
 
+    public static final byte PROPERTY_DEVICE_TYPE = 0x22;
 
+    public static final byte PROPERTY_MAIN_BOARD = 0x23;
+    public static final byte PROPERTY_CONTROL_BOARD = 0x24;
     public static final byte PROPERTY_MESSAGES = 0x25;
+
     public static final int ErrorValue = 0xffff;
     private static final int Timeout=5000;
     private static String SecureCode = "580c2783";
     final AirPurifierImp airPurifierImp = new AirPurifierImp();
+    final HashMap<Byte, byte[]> property = new HashMap<>();
+    final PowerTimer powerTimer = new PowerTimer();
+    final FilterStatus filterStatus = new FilterStatus();
     boolean isOffline = true;
     Timer autoUpdateTimer = null;
-    HashMap<Byte, byte[]> property = new HashMap<>();
     Sensor sensor = new Sensor();
     AirStatus airStatus = new AirStatus();
-    OnTimeInfo onTimeInfo = new OnTimeInfo();
+
 
     public AirPurifier_MXChip(Context context, String Address, String Model, String Setting) {
         super(context, Address, Model, Setting);
+        String json = Setting().get("powerTimer", "").toString();
+        powerTimer.fromJSON(json);
     }
 
     public Sensor sensor() {
@@ -70,6 +80,51 @@ public class AirPurifier_MXChip extends OznerDevice {
         return airStatus;
     }
 
+    /**
+     * 设备型号
+     *
+     * @return 型号
+     */
+    public String Model() {
+        return Setting().get("Model", "").toString();
+    }
+
+    /**
+     * 设备类型
+     *
+     * @return
+     */
+    public String DeviceType() {
+        return Setting().get("DeviceType", "").toString();
+    }
+
+    /**
+     * 主板编号
+     *
+     * @return 编号
+     */
+    public String MainBoardNo() {
+        return Setting().get("MainBoard", "").toString();
+    }
+
+    /**
+     * 控制板编号
+     *
+     * @return 编号
+     */
+    public String ControlBoardNo() {
+        return Setting().get("ControlBoard", "").toString();
+    }
+
+    /**
+     * 定时开关机设置
+     *
+     * @return 定时开关机
+     */
+    public PowerTimer PowerTimer() {
+        return powerTimer;
+    }
+
     @Override
     protected DeviceSetting initSetting(String Setting) {
         return super.initSetting(Setting);
@@ -77,8 +132,8 @@ public class AirPurifier_MXChip extends OznerDevice {
 
     @Override
     public void UpdateSetting() {
-        Setting().put("ontime", onTimeInfo.ToJSON());
-
+        Setting().put("powerTimer", powerTimer.ToJSON());
+        setProperty(PROPERTY_POWER_TIMER, powerTimer.ToBytes(), null);
         super.UpdateSetting();
     }
 
@@ -121,7 +176,7 @@ public class AirPurifier_MXChip extends OznerDevice {
         byte[] bytes = new byte[14 + propertys.size()];
         bytes[0] = (byte) 0xfb;
         ByteUtil.putShort(bytes, (short) bytes.length, 1);
-        bytes[3] = (byte) CMD_REQUEST_PROPERTY;
+        bytes[3] = CMD_REQUEST_PROPERTY;
         byte[] macs = Helper.HexString2Bytes(this.Address().replace(":", ""));
         System.arraycopy(macs, 0, bytes, 4, 6);
 
@@ -153,7 +208,7 @@ public class AirPurifier_MXChip extends OznerDevice {
         airPurifierImp.send(bytes, cb);
     }
 
-    private int getIntValueByShort(short property) {
+    private int getIntValueByShort(byte property) {
         synchronized (this.property) {
             if (this.property.containsKey(property)) {
                 byte[] data = this.property.get(property);
@@ -166,7 +221,7 @@ public class AirPurifier_MXChip extends OznerDevice {
         }
     }
 
-    private boolean getBoolValue(short property) {
+    private boolean getBoolValue(byte property) {
         synchronized (this.property) {
             if (this.property.containsKey(property)) {
                 byte[] data = this.property.get(property);
@@ -179,7 +234,7 @@ public class AirPurifier_MXChip extends OznerDevice {
         }
     }
 
-    private int getIntValueByByte(short property) {
+    private int getIntValueByByte(byte property) {
         synchronized (this.property) {
             if (this.property.containsKey(property)) {
                 byte[] data = this.property.get(property);
@@ -192,7 +247,7 @@ public class AirPurifier_MXChip extends OznerDevice {
         }
     }
 
-    private int getIntValueByInt(short property) {
+    private int getIntValueByInt(byte property) {
         synchronized (this.property) {
             if (this.property.containsKey(property)) {
                 byte[] data = this.property.get(property);
@@ -206,9 +261,26 @@ public class AirPurifier_MXChip extends OznerDevice {
     }
 
 
-    public enum SpeedValue {Auto, High, Mid, Low, Power}
+    public final static int FAN_SPEED_AUTO = 0;
+    public final static int FAN_SPEED_HIGH = 1;
+    public final static int FAN_SPEED_MID = 2;
+    public final static int FAN_SPEED_LOW = 3;
+    public final static int FAN_SPEED_SILENT = 4;
+    public final static int FAN_SPEED_POWER = 5;
+
+    public void ResetFilter(OperateCallback<Void> cb) {
+        FilterStatus filterStatus = new FilterStatus();
+        filterStatus.lastTime = new Date();
+        filterStatus.WorkTime = 0;
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.YEAR, 1);
+        filterStatus.stopTime = calendar.getTime();
+        filterStatus.MaxWorkTime = 60 * 1000;
+        setProperty(PROPERTY_FILTER, filterStatus.toBytes(), cb);
+    }
 
     public class AirStatus {
+
 
         public boolean Power() {
             return getBoolValue(PROPERTY_POWER);
@@ -218,39 +290,32 @@ public class AirPurifier_MXChip extends OznerDevice {
             setProperty(PROPERTY_POWER, new byte[]{power ? (byte) 1 : (byte) 0}, cb);
         }
 
-        public int Speed() {
-
+        /**
+         * 获取风扇速度
+         *
+         * @return FAN_SPEED_AUTO..FAN_SPEED_POWER
+         */
+        public int speed() {
             return getIntValueByByte(PROPERTY_SPEED);
         }
 
-        public void setSpeed(SpeedValue value, OperateCallback<Void> cb) {
-            byte v = 0;
-            switch (value) {
-                case Auto:
-                    v = 0;
-                    break;
-                case High:
-                    v = 1;
-                    break;
-                case Mid:
-                    v = 2;
-                    break;
-                case Low:
-                    v = 3;
-                    break;
-                case Power:
-                    v = 4;
-                    break;
-            }
-            setProperty(PROPERTY_SPEED, new byte[]{v}, cb);
+        /**
+         * 设置风扇速度
+         *
+         * @param value FAN_SPEED_AUTO..FAN_SPEED_POWER
+         * @param cb    设置回调
+         */
+        public void setSpeed(int value, OperateCallback<Void> cb) {
+
+            setProperty(PROPERTY_SPEED, new byte[]{(byte) value}, cb);
         }
 
         public int Light() {
             return getIntValueByByte(PROPERTY_LIGHT);
         }
 
-        public int Lock() {
-            return getIntValueByByte(PROPERTY_LOCK);
+        public boolean Lock() {
+            return getBoolValue(PROPERTY_LOCK);
         }
 
         public void setLock(boolean lock, OperateCallback<Void> cb) {
@@ -292,8 +357,17 @@ public class AirPurifier_MXChip extends OznerDevice {
          *
          * @return 亮度
          */
-        public int LIGHT() {
-            return getIntValueByInt(PROPERTY_LIGHTSENSOR);
+        public int Light() {
+            return getIntValueByShort(PROPERTY_LIGHT_SENSOR);
+        }
+
+        /**
+         * 滤芯状态,如果没收到返回NULL
+         *
+         * @return 没收到状态时返回NULL
+         */
+        public FilterStatus FilterStatus() {
+            return filterStatus;
         }
     }
 
@@ -323,14 +397,7 @@ public class AirPurifier_MXChip extends OznerDevice {
             setProperty(PROPERTY_TIME, time, null);
         }
 
-        private void requestInfo() {
-            HashSet<Byte> ps = new HashSet<>();
-            ps.add(PROPERTY_MODEL);
-            ps.add(PROPERTY_TYPE);
-            ps.add(PROPERTY_CONTROLBOARD);
-            ps.add(PROPERTY_MAINBOARD);
-            requestProperty(ps, null);
-        }
+
 
         private void requestStatus() {
             HashSet<Byte> ps = new HashSet<>();
@@ -341,40 +408,34 @@ public class AirPurifier_MXChip extends OznerDevice {
             ps.add(PROPERTY_PM25);
             ps.add(PROPERTY_TEMPERATURE);
             ps.add(PROPERTY_VOC);
-            ps.add(PROPERTY_LIGHTSENSOR);
+            ps.add(PROPERTY_LIGHT_SENSOR);
             ps.add(PROPERTY_FILTER);
             requestProperty(ps, null);
         }
-        private void setAutoReflash(short period,HashSet<Byte> propertys,OperateCallback<Void> cb)
-        {
-            byte[] bytes=new byte[3+propertys.size()];
-            ByteUtil.putShort(bytes,period,0);
+
+        private void setAutoReflash(short period, HashSet<Byte> propertys, OperateCallback<Void> cb) {
+            byte[] bytes = new byte[3 + propertys.size()];
+            ByteUtil.putShort(bytes, period, 0);
             bytes[2]=(byte)propertys.size();
             int i=3;
-            for (Byte p : propertys)
-            {
-                bytes[i]=p;
+            for (Byte p : propertys) {
+                bytes[i] = p;
                 i++;
             }
-            setProperty(PROPERTY_PERIOD,bytes,cb);
-
+            setProperty(PROPERTY_PERIOD, bytes, cb);
         }
+
         @Override
         public void onReady(BaseDeviceIO io) {
-            //setNowTime();
-            //requestInfo();
-
-            FilterStatus filterStatus=new FilterStatus();
-            filterStatus.lastTime=new Date();
-            filterStatus.stopTime=new Date(filterStatus.lastTime.getTime()+1000*60*60*24);
-            filterStatus.WorkTime=1000;
-            filterStatus.MaxWorkTime=2000;
-
-            setProperty(PROPERTY_FILTER,filterStatus.toBytes(),null);
-
-            HashSet<Byte> list=new HashSet<>();
+            setNowTime();
+            HashSet<Byte> list = new HashSet<>();
             list.add(PROPERTY_FILTER);
-            requestProperty(list,null);
+            list.add(PROPERTY_MODEL);
+            list.add(PROPERTY_DEVICE_TYPE);
+            list.add(PROPERTY_CONTROL_BOARD);
+            list.add(PROPERTY_MAIN_BOARD);
+            list.add(PROPERTY_POWER_TIMER);
+            requestProperty(list, null);
             if (getRunningMode() == RunningMode.Foreground) {
                 if (autoUpdateTimer != null)
                     cancelTimer();
@@ -390,42 +451,23 @@ public class AirPurifier_MXChip extends OznerDevice {
         }
 
         private void doTime() {
+
+            HashSet<Byte> list = new HashSet<>();
+            list.add(PROPERTY_PM25);
+            list.add(PROPERTY_LIGHT_SENSOR);
+            list.add(PROPERTY_TEMPERATURE);
+
+            list.add(PROPERTY_VOC);
+            list.add(PROPERTY_POWER);
+            list.add(PROPERTY_SPEED);
+            list.add(PROPERTY_LIGHT);
+            list.add(PROPERTY_LOCK);
+            requestProperty(list, null);
         }
 
         @Override
         public void onIOSend(byte[] bytes) {
 
-        }
-
-        class SendOperateCallbackProxy implements OperateCallback<Void>
-        {
-            OperateCallback<Void> callback;
-            public SendOperateCallbackProxy(OperateCallback<Void> callback)
-            {
-                this.callback=callback;
-            }
-
-            @Override
-            public void onSuccess(Void var1) {
-                try {
-                    waitObject(Timeout);
-                    if (callback!=null) {
-                        if (Respone)
-                            callback.onSuccess(null);
-                        else
-                            this.callback.onFailure(null);
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                    if (callback!=null)
-                        callback.onFailure(e);
-                }
-
-            }
-            @Override
-            public void onFailure(Throwable var1) {
-                callback.onFailure(var1);
-            }
         }
 
         private boolean send(byte[] data,OperateCallback<Void> cb)
@@ -440,56 +482,97 @@ public class AirPurifier_MXChip extends OznerDevice {
 
         @Override
         public void onIORecv(byte[] bytes) {
-            if ((bytes == null) || (bytes.length<= 0)) {
+            if ((bytes == null) || (bytes.length <= 0)) {
                 return;
             }
+            try {
+                if (bytes[0] != (byte) 0xFA) return;
+                int len = ByteUtil.getShort(bytes, 1);
+                if (len <= 0) return;
+                byte cmd = bytes[3];
+                switch (cmd) {
+                    case CMD_RECV_PROPERTY:
+                        isOffline = false;
+                        int count = bytes[12];
+                        int p = 13;
+                        HashMap<Byte, byte[]> set = new HashMap<>();
+                        for (int i = 0; i < count; i++) {
+                            byte id = bytes[p];
+                            p++;
 
-            if (bytes[0] != (byte) 0xFA) return;
+                            byte size = bytes[p];
+                            p++;
 
-            int len = ByteUtil.getShort(bytes, 1);
-            if (len <= 0) return;
-            byte cmd = bytes[3];
-            switch (cmd)
-            {
-                case CMD_RECV_PROPERTY:
-                    int count = bytes[12];
-                    int p = 13;
-                    HashMap<Byte, byte[]> set = new HashMap<>();
-                    for (int i = 0; i < count; i++) {
-                        byte id = bytes[p];
-                        p++;
+                            byte[] data = new byte[size];
 
-                        byte size = bytes[p];
-                        p++;
+                            if (p >= bytes.length) return;
+                            if (p + size > bytes.length) return;
 
-                        byte[] data = new byte[size];
-
-                        if (p >= bytes.length) return;
-                        if (p + size > bytes.length) return;
-
-                        System.arraycopy(bytes, p, data, 0, size);
-                        p += size;
-                        set.put(id, data);
-                    }
-                    synchronized (property) {
+                            System.arraycopy(bytes, p, data, 0, size);
+                            p += size;
+                            set.put(id, data);
+                        }
+                        synchronized (property) {
+                            for (Byte id : set.keySet()) {
+                                property.put(id, set.get(id));
+                                if (id == PROPERTY_POWER) {
+                                    Log.i("power", "1");
+                                }
+                            }
+                        }
                         for (Byte id : set.keySet()) {
-                            property.put(id, set.get(id));
-                        }
-                        if (property.containsKey(PROPERTY_FILTER))
-                        {
-                            byte[] b=property.get(PROPERTY_FILTER);
-                            FilterStatus fs=new FilterStatus();
-                            fs.fromBytes(b);
-                        }
-                    }
+                            switch (id) {
+                                case PROPERTY_POWER_TIMER:
+                                    powerTimer.fromByBytes(set.get(id));
+                                    Setting().put("powerTimer", powerTimer.ToJSON());
+                                case PROPERTY_POWER:
+                                case PROPERTY_LIGHT:
+                                case PROPERTY_LOCK:
+                                case PROPERTY_SPEED: {
+                                    Intent intent = new Intent(ACTION_AIR_PURIFIER_STATUS_CHANGED);
+                                    intent.putExtra(Extra_Address, Address());
+                                    context().sendBroadcast(intent);
+                                    break;
+                                }
 
-                    Respone=true;
-                    setObject();
-                    break;
+                                case PROPERTY_FILTER: {
+                                    filterStatus.fromBytes(set.get(id));
+                                }
+                                case PROPERTY_PM25:
+                                case PROPERTY_TEMPERATURE:
+                                case PROPERTY_VOC:
+                                case PROPERTY_LIGHT_SENSOR: {
+                                    Intent intent = new Intent(ACTION_AIR_PURIFIER_SENSOR_CHANGED);
+                                    intent.putExtra(Extra_Address, Address());
+                                    context().sendBroadcast(intent);
+                                    break;
+                                }
+                                case PROPERTY_MODEL:
+                                    Setting().put("Model", new String(set.get(id), "US-ASCII"));
+                                    break;
+
+                                case PROPERTY_DEVICE_TYPE:
+                                    Setting().put("DeviceType", new String(set.get(id), "US-ASCII"));
+                                    break;
+
+                                case PROPERTY_MAIN_BOARD:
+                                    Setting().put("MainBoard", new String(set.get(id), "US-ASCII"));
+                                    break;
+                                case PROPERTY_CONTROL_BOARD:
+                                    Setting().put("ControlBoard", new String(set.get(id), "US-ASCII"));
+                                    break;
+
+
+                            }
+                        }
+                        Respone = true;
+                        setObject();
+                        break;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-
         }
-
 
         @Override
         public boolean onIOInit() {
@@ -507,6 +590,40 @@ public class AirPurifier_MXChip extends OznerDevice {
                 autoUpdateTimer.cancel();
                 autoUpdateTimer.purge();
                 autoUpdateTimer = null;
+            }
+        }
+
+        class SendOperateCallbackProxy implements OperateCallback<Void> {
+            OperateCallback<Void> callback;
+
+            public SendOperateCallbackProxy(OperateCallback<Void> callback) {
+                this.callback = callback;
+            }
+
+            @Override
+            public void onSuccess(Void var1) {
+                try {
+                    waitObject(Timeout);
+                    if (callback != null) {
+                        if (Respone) {
+                            isOffline = false;
+                            callback.onSuccess(null);
+                        } else {
+                            isOffline = true;
+                            this.callback.onFailure(null);
+                        }
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    if (callback != null)
+                        callback.onFailure(e);
+                }
+
+            }
+
+            @Override
+            public void onFailure(Throwable var1) {
+                callback.onFailure(var1);
             }
         }
 

@@ -7,7 +7,7 @@ import com.ozner.util.ByteUtil;
 /**
  * Created by zhiyongxu on 15/11/10.
  */
-public class OnTimeInfo {
+public class PowerTimer {
     public final static int Monday = 0x01;
     public final static int Tuesday = 0x02;
     public final static int Wednesday = 0x04;
@@ -31,7 +31,7 @@ public class OnTimeInfo {
      * 周期,如用户选择 周一,周二,周五时该项数值为
      * Monday | Tuesday | Firday
      */
-    public byte Week;
+    public byte Week = Monday | Tuesday | Wednesday | Trusday | Firday | Sturday | Sunday;
 
     /**
      * 是否允许自动开关机

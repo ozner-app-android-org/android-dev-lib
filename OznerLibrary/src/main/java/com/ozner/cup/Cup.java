@@ -60,8 +60,8 @@ public class Cup extends OznerDevice {
     int RequestCount = 0;
     HashSet<String> dataHash = new HashSet<>();
 
-    public Cup(Context context, String Address, String Model, String Setting) {
-        super(context, Address, Model, Setting);
+    public Cup(Context context, String Address, String Type, String Setting) {
+        super(context, Address, Type, Setting);
         initSetting(Setting);
         mCupVolume = new CupVolume(context, Address);
     }
@@ -73,7 +73,7 @@ public class Cup extends OznerDevice {
      * @return true=配对状态
      */
     public static boolean isBindMode(BluetoothIO io) {
-        if (!CupManager.IsCup(io.getModel())) return false;
+        if (!CupManager.IsCup(io.getType())) return false;
         if ((io.getCustomDataType() == AD_CustomType_Gravity) && (io.getCustomData() != null)) {
             CupGravity gravity = new CupGravity();
             gravity.FromBytes(io.getCustomData(), 0);

@@ -76,8 +76,8 @@ public class TapManager extends BaseBluetoothDeviceManager {
             if (device != null) {
                 return device;
             } else {
-                if (IsTap(io.getModel())) {
-                    Tap c = new Tap(context(), address, io.getModel(), "");
+                if (IsTap(io.getType())) {
+                    Tap c = new Tap(context(), address, io.getType(), "");
                     c.Bind(io);
                     return c;
                 }
@@ -87,10 +87,10 @@ public class TapManager extends BaseBluetoothDeviceManager {
     }
 
     @Override
-    protected OznerDevice loadDevice(String address, String Model,
+    protected OznerDevice loadDevice(String address, String Type,
                                      String Setting) {
-        if (IsTap(Model)) {
-            return new Tap(context(), address, Model, Setting);
+        if (IsTap(Type)) {
+            return new Tap(context(), address, Type, Setting);
         } else
             return null;
     }
@@ -138,6 +138,6 @@ public class TapManager extends BaseBluetoothDeviceManager {
     @Override
     public boolean isMyDevice(BaseDeviceIO io) {
         if (io == null) return false;
-        return IsTap(io.getModel());
+        return IsTap(io.getType());
     }
 }

@@ -31,7 +31,7 @@ public class MXChipPair {
     /**
      * 默认1分钟配网超时
      */
-    final static int ConfigurationTimeout = 60000;
+    final static int ConfigurationTimeout = 120000;
     final static int MDNSTimeout = 60000;
     static final MXChipPairImp mxChipPairImp = new MXChipPairImp();
     static Context context;
@@ -200,10 +200,11 @@ public class MXChipPair {
                     while (device == null) {
                         sender.send_easylink_v3();
                         Thread.sleep(100);
+
                         sender.send_easylink_v2();
                         Thread.sleep(100);
                         Date now = new Date();
-                        if ((now.getTime() - t.getTime()) > 90000) {
+                        if ((now.getTime() - t.getTime()) > ConfigurationTimeout) {
                             break;
                         }
                     }
@@ -215,6 +216,27 @@ public class MXChipPair {
                 if (device == null) {
                     callback.onPairFailure(new TimeoutException());
                     return;
+                }
+                if ((device.activated) && (!Helper.StringIsNullOrEmpty(device.activeDeviceID))) {
+                    int p = device.activeDeviceID.indexOf("/");
+                    if (p > 0) {
+                        String tmp = device.activeDeviceID.substring(p + 1).toUpperCase();
+                        if (tmp.length() == 12) {
+                            String mac = tmp.substring(0, 2) + ":" +
+                                    tmp.substring(2, 4) + ":" +
+                                    tmp.substring(4, 6) + ":" +
+                                    tmp.substring(6, 8) + ":" +
+                                    tmp.substring(8, 10) + ":" +
+                                    tmp.substring(10, 12);
+                            MXChipIO io = OznerDeviceManager.Instance().ioManagerList().mxChipIOManager().
+                                    createNewIO(device.Type, mac, device.Type);
+                            if (io != null) {
+                                callback.onPairComplete(io);
+                            } else
+                                callback.onPairFailure(null);
+                            return;
+                        }
+                    }
                 }
                 callback.onWaitConnectWifi();
 
@@ -244,6 +266,7 @@ public class MXChipPair {
                     callback.onPairComplete(io);
                 } else
                     callback.onPairFailure(null);
+
 
             } catch (Exception e) {
                 callback.onPairFailure(e);

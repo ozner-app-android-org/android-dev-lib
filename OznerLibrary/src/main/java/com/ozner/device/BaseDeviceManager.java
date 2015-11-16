@@ -20,7 +20,7 @@ public abstract class BaseDeviceManager extends XObject {
 
     protected abstract OznerDevice getDevice(BaseDeviceIO io) throws DeviceNotReadyException;
 
-    protected abstract OznerDevice loadDevice(String address, String Model, String Setting);
+    protected abstract OznerDevice loadDevice(String address, String Type, String Setting);
 
 
     protected void remove(OznerDevice device) {

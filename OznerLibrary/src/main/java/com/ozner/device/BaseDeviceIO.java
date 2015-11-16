@@ -5,7 +5,6 @@ import android.content.Intent;
 
 import com.ozner.XObject;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -23,27 +22,27 @@ public abstract class BaseDeviceIO extends XObject {
     /**
      * 设备连接并初始化完成事件
      */
-    public final static String ACTION_DEVICE_CONNECTED = "com.ozner.device.connectStatus";
+    public final static String ACTION_DEVICE_CONNECTED = "com.ozner.device.connected";
     /**
      * 设备连接断开事件
      */
     public final static String ACTION_DEVICE_DISCONNECTED = "com.ozner.device.disconnected";
     public final static String Extra_Address = "Address";
     final ArrayList<StatusCallback> statusCallback = new ArrayList<>();
-    String Model = "";
+    String Type = "";
     boolean isReady = false;
     OnInitCallback onInitCallback = null;
     CheckTransmissionsCompleteCallback checkTransmissionsCompleteCallback = null;
     OnTransmissionsCallback onTransmissionsCallback = null;
     byte[] lastRecvPacket = null;
 
-    public BaseDeviceIO(Context context, String Model) {
+    public BaseDeviceIO(Context context, String Type) {
         super(context);
-        this.Model = Model;
+        this.Type = Type;
     }
 
-    public String getModel() {
-        return this.Model;
+    public String getType() {
+        return this.Type;
     }
 
     public boolean isReady() {
@@ -95,7 +94,7 @@ public abstract class BaseDeviceIO extends XObject {
     /**
      * 设置数据传输监听回调
      *
-     * @param cb
+     * @param cb 完成状态回调
      */
     public void setOnTransmissionsCallback(OnTransmissionsCallback cb) {
         onTransmissionsCallback = cb;
@@ -105,10 +104,7 @@ public abstract class BaseDeviceIO extends XObject {
      * 在后台模式调用完成doReady以后会调用doComplete来检查当前传输是否完成,没有继续等待,完成以后关闭连接
      */
     protected boolean doCheckTransmissionsComplete() {
-        if (checkTransmissionsCompleteCallback != null) {
-            return checkTransmissionsCompleteCallback.CheckTransmissionsComplete(this);
-        } else
-            return true;
+        return checkTransmissionsCompleteCallback == null || checkTransmissionsCompleteCallback.CheckTransmissionsComplete(this);
     }
 
     /**
@@ -239,14 +235,14 @@ public abstract class BaseDeviceIO extends XObject {
         /**
          * 接口发送数据时调用该回调
          *
-         * @param bytes
+         * @param bytes 已发送的数据
          */
         void onIOSend(byte[] bytes);
 
         /**
          * 接口收到数据时调用
          *
-         * @param bytes
+         * @param bytes 收到的数据
          */
         void onIORecv(byte[] bytes);
     }

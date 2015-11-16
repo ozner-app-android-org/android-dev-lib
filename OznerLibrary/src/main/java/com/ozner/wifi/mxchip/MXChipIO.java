@@ -23,11 +23,12 @@ public class MXChipIO extends BaseDeviceIO {
     String out = null;
     String in = null;
 
-    public MXChipIO(Context context, MQTTProxy proxy, String Name, String Model, String address) {
-        super(context, Model);
+    public MXChipIO(Context context, MQTTProxy proxy, String Name, String Type, String address) {
+        super(context, Type);
         this.address = address;
         this.name = Name;
         this.proxy = proxy;
+
         proxy.registerListener(mxChipIOImp);
         doConnecting();
     }

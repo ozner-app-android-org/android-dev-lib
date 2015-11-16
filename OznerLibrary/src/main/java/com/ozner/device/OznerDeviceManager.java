@@ -120,17 +120,17 @@ public class OznerDeviceManager extends XObject {
 
         for (String owner : ownerList) {
             String table = Helper.MD5(owner);
-            String Sql = String.format("CREATE TABLE IF NOT EXISTS %s (Address VARCHAR PRIMARY KEY NOT NULL,getModel Text NOT NULL,JSON TEXT)", table);
+            String Sql = String.format("CREATE TABLE IF NOT EXISTS %s (Address VARCHAR PRIMARY KEY NOT NULL,Type Text NOT NULL,JSON TEXT)", table);
             sqLiteDB.execSQLNonQuery(Sql, new String[]{});
             try {
-                String sql = String.format("INSERT INTO %s (Address,getModel,JSON) SELECT Address,'CUP001',JSON from CupSetting where Owner=?", table);
+                String sql = String.format("INSERT INTO %s (Address,Type,JSON) SELECT Address,'CUP001',JSON from CupSetting where Owner=?", table);
                 sqLiteDB.execSQLNonQuery(sql, new String[]{owner});
             } catch (Exception ignored) {
 
             }
 
             try {
-                String sql = String.format("INSERT INTO %s (Address,getModel,JSON) SELECT Address,getModel,JSON from OznerDevices where Owner=?", table);
+                String sql = String.format("INSERT INTO %s (Address,Type,JSON) SELECT Address,Model,JSON from OznerDevices where Owner=?", table);
                 sqLiteDB.execSQLNonQuery(sql, new String[]{owner});
             } catch (Exception ignored) {
 
@@ -165,7 +165,7 @@ public class OznerDeviceManager extends XObject {
             devices.clear();
         }
 
-        String Sql = String.format("CREATE TABLE IF NOT EXISTS %s (Address VARCHAR PRIMARY KEY NOT NULL,getModel Text NOT NULL,JSON TEXT)", getOwnerTableName());
+        String Sql = String.format("CREATE TABLE IF NOT EXISTS %s (Address VARCHAR PRIMARY KEY NOT NULL,Type Text NOT NULL,JSON TEXT)", getOwnerTableName());
         sqLiteDB.execSQLNonQuery(Sql, new String[]{});
 
 
@@ -180,7 +180,7 @@ public class OznerDeviceManager extends XObject {
     }
 
     private void LoadDevices() {
-        String sql = String.format("select Address,getModel,JSON from %s", getOwnerTableName());
+        String sql = String.format("select Address,Type,JSON from %s", getOwnerTableName());
         List<String[]> list = sqLiteDB.ExecSQL(sql, new String[]{});
         synchronized (devices) {
             for (String[] v : list) {
@@ -337,10 +337,10 @@ public class OznerDeviceManager extends XObject {
         }
 
 
-        String sql = String.format("INSERT OR REPLACE INTO %s (Address,getModel,JSON) VALUES (?,?,?);", getOwnerTableName());
+        String sql = String.format("INSERT OR REPLACE INTO %s (Address,Type,JSON) VALUES (?,?,?);", getOwnerTableName());
 
             sqLiteDB.execSQLNonQuery(sql,
-                    new String[]{device.Address(), device.Model(),
+                    new String[]{device.Address(), device.Type(),
                             device.Setting().toString()});
 
             Intent intent = new Intent();

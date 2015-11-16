@@ -51,7 +51,7 @@ public class CupManager extends BaseBluetoothDeviceManager {
         ArrayList<BaseDeviceIO> list = new ArrayList<>();
         OznerDeviceManager mgr = OznerDeviceManager.Instance();
         for (BaseDeviceIO device : mgr.ioManagerList().bluetoothIOMgr().getAvailableDevices()) {
-            if (IsCup(device.getModel())) {
+            if (IsCup(device.getType())) {
                 if (mgr.getDevice(device.getAddress()) == null) {
                     list.add(device);
                 }
@@ -162,9 +162,9 @@ public class CupManager extends BaseBluetoothDeviceManager {
 
     @Override
     protected OznerDevice loadDevice(String address,
-                                     String Model, String Setting) {
-        if (IsCup(Model)) {
-            return new Cup(context(), address, Model, Setting);
+                                     String Type, String Setting) {
+        if (IsCup(Type)) {
+            return new Cup(context(), address, Type, Setting);
         } else
             return null;
     }
@@ -177,8 +177,8 @@ public class CupManager extends BaseBluetoothDeviceManager {
             if (device != null) {
                 return device;
             } else {
-                if (IsCup(io.getModel())) {
-                    Cup c = new Cup(context(), address, io.getModel(), "");
+                if (IsCup(io.getType())) {
+                    Cup c = new Cup(context(), address, io.getType(), "");
                     c.Bind(io);
                     return c;
                 }
@@ -203,6 +203,6 @@ public class CupManager extends BaseBluetoothDeviceManager {
     @Override
     public boolean isMyDevice(BaseDeviceIO io) {
         if (io == null) return false;
-        return IsCup(io.getModel());
+        return IsCup(io.getType());
     }
 }

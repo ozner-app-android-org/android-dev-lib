@@ -192,7 +192,7 @@ public class AddDeviceActivity extends Activity {
                 ((TextView) convertView.findViewById(id.Device_Name)).setText(
                         device.getName() + "(" + device.getAddress() + ")");
                 ((TextView) convertView.findViewById(id.Device_Model)).setText(
-                        device.getModel());
+                        device.getType());
                 if (device instanceof BluetoothIO) {
                     BluetoothIO bluetoothIO = (BluetoothIO) device;
                     ((TextView) convertView.findViewById(id.Device_Platfrom)).setText(
@@ -203,13 +203,13 @@ public class AddDeviceActivity extends Activity {
                             ((BluetoothIO) device).getCustomData() != null ?
                                     Helper.ConvertHexByteArrayToString(((BluetoothIO) device).getCustomData())
                                     : "");
-                    if (CupManager.IsCup(device.getModel())) {
+                    if (CupManager.IsCup(device.getType())) {
                         if (Cup.isBindMode(bluetoothIO))
                             convertView.findViewById(id.addDeviceButton).setEnabled(true);
                         else
                             convertView.findViewById(id.addDeviceButton).setEnabled(false);
                     }
-                    if (TapManager.IsTap(device.getModel())) {
+                    if (TapManager.IsTap(device.getType())) {
                         if (Tap.isBindMode(bluetoothIO))
                             convertView.findViewById(id.addDeviceButton).setEnabled(true);
                         else

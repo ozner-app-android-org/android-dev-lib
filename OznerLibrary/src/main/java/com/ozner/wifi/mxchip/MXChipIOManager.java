@@ -7,7 +7,6 @@ import com.ozner.device.IOManager;
 
 import java.util.ArrayList;
 
-//import com.mxchip.jmdns.JmdnsAPI;
 
 /**
  * Created by xzyxd on 2015/10/31.
@@ -16,8 +15,6 @@ public class MXChipIOManager extends IOManager {
 
     final MQTTProxyImp mqttProxyImp = new MQTTProxyImp();
     MQTTProxy proxy;
-    MXChipIOManager ioManager;
-
 
     public MXChipIOManager(Context context) {
         super(context);
@@ -25,20 +22,6 @@ public class MXChipIOManager extends IOManager {
         proxy.registerListener(mqttProxyImp);
     }
 
-//    private void load()
-//    {
-//        OznerDevice[] list=OznerDeviceManager.Instance().getDevices();
-//        synchronized (localList) {
-//            for (OznerDevice device : list) {
-//                if (device.getIOType().equals(MXChipIO.class)) {
-//                    if (!localList.containsKey(device.Address())) {
-//                        MXChipIO io = new MXChipIO(context(), proxy, device.getName(), device.Model(), device.Address());
-//                        localList.put(io.getAddress(), io);
-//                    }
-//                }
-//            }
-//        }
-//    }
 
     public MXChipIO createNewIO(String Name, String address, String Model) throws ClassCastException {
 
@@ -51,24 +34,6 @@ public class MXChipIOManager extends IOManager {
             return io;
         }
     }
-//
-//    @Override
-//    protected void doUnavailable(BaseDeviceIO io) {
-//        super.doUnavailable(io);
-//        if (proxy.connected) {
-//            Handler handler = new Handler(Looper.getMainLooper())
-//            {
-//                @Override
-//                public void handleMessage(Message msg) {
-//                    doAvailable((BaseDeviceIO)msg.obj);
-//                }
-//            };
-//            Message msg=new Message();
-//            msg.obj=io;
-//            handler.sendMessageDelayed(msg,1000);
-//
-//        }
-//    }
 
     @Override
     public BaseDeviceIO getAvailableDevice(String address) {
@@ -106,7 +71,7 @@ public class MXChipIOManager extends IOManager {
 
         @Override
         public void onConnected(MQTTProxy proxy) {
-            ArrayList<BaseDeviceIO> list = null;
+            ArrayList<BaseDeviceIO> list;
             synchronized (devices) {
                 list = new ArrayList<>(devices.values());
             }
@@ -119,7 +84,7 @@ public class MXChipIOManager extends IOManager {
 
         @Override
         public void onDisconnected(MQTTProxy proxy) {
-            ArrayList<BaseDeviceIO> list = null;
+            ArrayList<BaseDeviceIO> list;
             synchronized (devices) {
                 list = new ArrayList<>(devices.values());
             }

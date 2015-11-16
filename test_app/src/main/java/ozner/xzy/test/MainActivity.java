@@ -13,9 +13,6 @@ import android.widget.ListView;
 
 import com.getbase.floatingactionbutton.FloatingActionButton;
 import com.ozner.application.OznerBLEService;
-import com.ozner.device.BaseDeviceIO;
-import com.ozner.device.NotSupportDeviceException;
-import com.ozner.device.OznerDevice;
 import com.ozner.device.OznerDeviceManager;
 import com.ozner.ui.library.RoundDrawable;
 
@@ -29,6 +26,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
         BitmapDrawable drawable = (BitmapDrawable) this.getResources().getDrawable(R.drawable.user1);
         RoundDrawable icon = new RoundDrawable(this);
@@ -98,14 +96,15 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.addWifiButton:
-                BaseDeviceIO io = OznerDeviceManager.Instance().ioManagerList().mxChipIOManager().createNewIO("FOG_HAOZE_AIR", "C8:93:46:C0:4D:B3", "FOG_HAOZE_AIR");
-                OznerDevice device = null;
-                try {
-                    device = OznerDeviceManager.Instance().getDevice(io);
-                } catch (NotSupportDeviceException e) {
-                    e.printStackTrace();
-                }
-                OznerDeviceManager.Instance().save(device);
+//                BaseDeviceIO io = OznerDeviceManager.Instance().ioManagerList().mxChipIOManager().createNewIO("FOG_HAOZE_AIR", "C8:93:46:C0:54:06", "FOG_HAOZE_AIR");
+//                OznerDevice device = null;
+//                try {
+//                    device = OznerDeviceManager.Instance().getDevice(io);
+//                    OznerDeviceManager.Instance().save(device);
+//                } catch (NotSupportDeviceException e) {
+//                    e.printStackTrace();
+//                }
+
                 Intent intent = new Intent(this, WifiConfigurationActivity.class);
                 startActivityForResult(intent, WifiActivityRequestCode);
                 break;

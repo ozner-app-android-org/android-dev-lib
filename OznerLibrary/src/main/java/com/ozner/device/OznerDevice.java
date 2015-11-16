@@ -14,11 +14,12 @@ public abstract class OznerDevice extends XObject {
     private String address;
     private BaseDeviceIO deviceIO;
     private DeviceSetting setting;
-    private String Model;
-    public OznerDevice(Context context, String Address, String Model, String Setting) {
+    private String Type;
+
+    public OznerDevice(Context context, String Address, String Type, String Setting) {
         super(context);
         this.address = Address;
-        this.Model = Model;
+        this.Type = Type;
         this.setting = initSetting(Setting);
     }
 
@@ -27,10 +28,10 @@ public abstract class OznerDevice extends XObject {
     public abstract Class<?> getIOType();
 
     /**
-     * 设备型号
+     * 设备类型
      */
-    public String Model() {
-        return Model;
+    public String Type() {
+        return Type;
     }
 
     /**

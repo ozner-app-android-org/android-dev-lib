@@ -74,8 +74,8 @@ public class WaterPurifierManager extends BaseDeviceManager {
             if (device != null) {
                 return device;
             } else {
-                if (IsWaterPurifier(io.getModel())) {
-                    WaterPurifier c = new WaterPurifier(context(), address, io.getModel(), "");
+                if (IsWaterPurifier(io.getType())) {
+                    WaterPurifier c = new WaterPurifier(context(), address, io.getType(), "");
                     c.Bind(io);
                     return c;
                 }
@@ -91,7 +91,7 @@ public class WaterPurifierManager extends BaseDeviceManager {
         } else {
             WaterPurifier waterPurifier = new WaterPurifier(context(), address, "MXCHIP_HAOZE_Water", "");
             MXChipIO io = OznerDeviceManager.Instance().ioManagerList().mxChipIOManager()
-                    .createNewIO(waterPurifier.Setting().name(), waterPurifier.Address(), waterPurifier.Model());
+                    .createNewIO(waterPurifier.Setting().name(), waterPurifier.Address(), waterPurifier.Type());
             try {
                 waterPurifier.Bind(io);
             } catch (DeviceNotReadyException e) {
@@ -104,11 +104,11 @@ public class WaterPurifierManager extends BaseDeviceManager {
 
 
     @Override
-    protected OznerDevice loadDevice(String address, String Model, String Setting) {
-        if (IsWaterPurifier(Model)) {
-            WaterPurifier waterPurifier = new WaterPurifier(context(), address, Model, Setting);
+    protected OznerDevice loadDevice(String address, String Type, String Setting) {
+        if (IsWaterPurifier(Type)) {
+            WaterPurifier waterPurifier = new WaterPurifier(context(), address, Type, Setting);
             OznerDeviceManager.Instance().ioManagerList().mxChipIOManager()
-                    .createNewIO(waterPurifier.Setting().name(), waterPurifier.Address(), waterPurifier.Model());
+                    .createNewIO(waterPurifier.Setting().name(), waterPurifier.Address(), waterPurifier.Type());
             return waterPurifier;
         } else
             return null;
@@ -117,7 +117,7 @@ public class WaterPurifierManager extends BaseDeviceManager {
     @Override
     public boolean isMyDevice(BaseDeviceIO io) {
         if (io instanceof MXChipIO) {
-            return IsWaterPurifier(io.getModel());
+            return IsWaterPurifier(io.getType());
         } else return false;
     }
 }
