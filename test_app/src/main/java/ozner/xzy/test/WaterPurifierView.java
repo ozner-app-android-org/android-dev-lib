@@ -19,7 +19,7 @@ import com.ozner.device.OznerDevice;
  * Created by zhiyongxu on 15/11/4.
  *
  */
-public class WaterPurifierView extends BaseItemView {
+public class WaterPurifierView extends DeviceItemView {
     TextView status;
     TextView tds1;
     TextView tds2;
@@ -67,7 +67,7 @@ public class WaterPurifierView extends BaseItemView {
         hot.setOnClickListener(controlImp);
         loadStatus();
 
-        findViewById(R.id.delete).setOnClickListener(controlImp);
+        //findViewById(R.id.delete).setOnClickListener(controlImp);
 
     }
 
@@ -76,8 +76,6 @@ public class WaterPurifierView extends BaseItemView {
             return;
         }
         WaterPurifier waterPurifier = (WaterPurifier) device();
-        name.setText(device.getName());
-        mac.setText(device.Address());
 
         status.setText("连接状态:" + (waterPurifier.isOffline() ? "离线" : "在线"));
         tds1.setText("TDS1:" + String.valueOf(waterPurifier.TDS1()));

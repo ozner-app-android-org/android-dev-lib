@@ -1,6 +1,7 @@
 package com.ozner.device;
 
 import android.content.Context;
+import android.content.Intent;
 
 import com.ozner.XObject;
 import com.ozner.util.Helper;
@@ -21,6 +22,17 @@ public abstract class OznerDevice extends XObject {
         this.address = Address;
         this.Type = Type;
         this.setting = initSetting(Setting);
+    }
+    /**
+     * 设备数值改变
+     */
+    public final static String ACTION_DEVICE_UPDATE = "com.ozner.device.update";
+
+    protected void doUpdate()
+    {
+        Intent intent = new Intent(ACTION_DEVICE_UPDATE);
+        intent.putExtra(Extra_Address, Address());
+        context().sendBroadcast(intent);
     }
 
     protected abstract String getDefaultName();
@@ -92,6 +104,11 @@ public abstract class OznerDevice extends XObject {
     protected abstract void doSetDeviceIO(BaseDeviceIO oldIO, BaseDeviceIO newIO);
 
     public boolean Bind(BaseDeviceIO deviceIO) throws DeviceNotReadyException {
+
+        if ((deviceIO!=null) && (!deviceIO.getClass().equals(getIOType())))
+        {
+            throw new ClassCastException();
+        }
         if (this.deviceIO == deviceIO)
             return false;
 
@@ -113,6 +130,7 @@ public abstract class OznerDevice extends XObject {
 
         return true;
     }
+
 
 
 }

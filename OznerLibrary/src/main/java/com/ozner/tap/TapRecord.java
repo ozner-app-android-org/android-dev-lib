@@ -2,8 +2,6 @@ package com.ozner.tap;
 
 import android.annotation.SuppressLint;
 
-import com.ozner.util.ByteUtil;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -11,38 +9,19 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
- * 水探头原始记录数据
- *
  * @author zhiyongxu
- * @category 水探头
+ *         水探头TDS自动监测记录
  */
-@SuppressLint("SimpleDateFormat")
-class TapRecord implements Comparable {
+public class TapRecord {
     public int id;
+    /**
+     * 监测时间
+     */
     public Date time;
-    public int Index = 0;
-    public int Count;
+    /**
+     * TDS
+     */
     public int TDS;
-
-    public TapRecord() {
-        time = new Date();
-    }
-
-    @SuppressLint("DefaultLocale")
-    @Override
-    public String toString() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        return String.format("Time:%s TDS:%d ", sdf.format(time), TDS);
-    }
-
-    @SuppressWarnings("deprecation")
-    public void FromBytes(byte[] data) {
-        time = new Date(data[0] + 2000 - 1900, data[1] - 1, data[2], data[3],
-                data[4], data[5]);
-        TDS = ByteUtil.getShort(data, 6);
-        Index = ByteUtil.getShort(data, 8);
-        Count = ByteUtil.getShort(data, 10);
-    }
 
     @SuppressLint("NewApi")
     public String toJSON() {
@@ -54,6 +33,12 @@ class TapRecord implements Comparable {
             e.printStackTrace();
             return "";
         }
+    }
+
+    @Override
+    public String toString() {
+        return String.format("time:%s TDS:%d",
+                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(time), TDS);
     }
 
     @SuppressLint("NewApi")
@@ -72,10 +57,5 @@ class TapRecord implements Comparable {
         }
     }
 
-    @Override
-    public int compareTo(Object o) {
-        TapRecord tap = (TapRecord) o;
-        return time.compareTo(tap.time);
-    }
 
 }

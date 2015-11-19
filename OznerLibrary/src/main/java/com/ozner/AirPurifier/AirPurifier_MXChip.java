@@ -23,9 +23,7 @@ import java.util.TimerTask;
 /**
  * Created by xzyxd on 2015/11/2.
  */
-public class AirPurifier_MXChip extends OznerDevice {
-    public static final String ACTION_AIR_PURIFIER_SENSOR_CHANGED = "com.ozner.AirPurifier.Sensor.Changed";
-    public static final String ACTION_AIR_PURIFIER_STATUS_CHANGED = "com.ozner.AirPurifier.Status.Changed";
+public class AirPurifier_MXChip extends AirPurifier {
 
     public static final byte CMD_SET_PROPERTY=(byte)0x2;
     public static final byte CMD_REQUEST_PROPERTY=(byte)0x1;
@@ -41,6 +39,8 @@ public class AirPurifier_MXChip extends OznerDevice {
     public static final byte PROPERTY_TEMPERATURE = 0x12;
     public static final byte PROPERTY_VOC = 0x13;
     public static final byte PROPERTY_LIGHT_SENSOR = 0x14;
+    public static final byte PROPERTY_LIGHT_HUMIDITY = 0x18;
+
     public static final byte PROPERTY_FILTER = 0x15;
     public static final byte PROPERTY_TIME = 0x16;
     public static final byte PROPERTY_PERIOD=0x17;
@@ -54,7 +54,7 @@ public class AirPurifier_MXChip extends OznerDevice {
     public static final byte PROPERTY_MESSAGES = 0x25;
 
     public static final int ErrorValue = 0xffff;
-    private static final int Timeout=5000;
+    private static final int Timeout=2000;
     private static String SecureCode = "580c2783";
     final AirPurifierImp airPurifierImp = new AirPurifierImp();
     final HashMap<Byte, byte[]> property = new HashMap<>();
@@ -64,6 +64,14 @@ public class AirPurifier_MXChip extends OznerDevice {
     Timer autoUpdateTimer = null;
     Sensor sensor = new Sensor();
     AirStatus airStatus = new AirStatus();
+    private String getValue(int value)
+    {
+        if (value==0xFFFF)
+        {
+            return "-";
+        }else
+            return String.valueOf(value);
+    }
 
 
     public AirPurifier_MXChip(Context context, String Address, String Model, String Setting) {
@@ -71,21 +79,13 @@ public class AirPurifier_MXChip extends OznerDevice {
         String json = Setting().get("powerTimer", "").toString();
         powerTimer.fromJSON(json);
     }
-
-    public Sensor sensor() {
-        return sensor;
-    }
-
-    public AirStatus airStatus() {
-        return airStatus;
-    }
-
     /**
      * 设备型号
      *
      * @return 型号
      */
-    public String Model() {
+    @Override
+    public  String Model() {
         return Setting().get("Model", "").toString();
     }
 
@@ -115,6 +115,15 @@ public class AirPurifier_MXChip extends OznerDevice {
     public String ControlBoardNo() {
         return Setting().get("ControlBoard", "").toString();
     }
+
+    public Sensor sensor() {
+        return sensor;
+    }
+
+    public AirStatus airStatus() {
+        return airStatus;
+    }
+
 
     /**
      * 定时开关机设置
@@ -260,6 +269,16 @@ public class AirPurifier_MXChip extends OznerDevice {
         }
     }
 
+    @Override
+    public String toString() {
+        if (isOffline)
+        {
+            return "Offline";
+        }else
+        {
+            return sensor().toString()+"\n"+airStatus().toString();
+        }
+    }
 
     public final static int FAN_SPEED_AUTO = 0;
     public final static int FAN_SPEED_HIGH = 1;
@@ -321,10 +340,24 @@ public class AirPurifier_MXChip extends OznerDevice {
         public void setLock(boolean lock, OperateCallback<Void> cb) {
             setProperty(PROPERTY_POWER, new byte[]{lock ? (byte) 1 : (byte) 0}, cb);
         }
+
+        @Override
+        public String toString() {
+            return String.format("Power:%s Speed:%s Light:%s Lock:%s",
+                    String.valueOf(Power()),getValue(speed()),getValue(Light()),String.valueOf(Lock()));
+        }
     }
 
 
     public class Sensor {
+        /**
+         * PM2.5
+         *
+         * @return pm25
+         */
+        public int Humidity() {
+            return getIntValueByShort(PROPERTY_LIGHT_HUMIDITY);
+        }
         /**
          * PM2.5
          *
@@ -369,6 +402,13 @@ public class AirPurifier_MXChip extends OznerDevice {
         public FilterStatus FilterStatus() {
             return filterStatus;
         }
+
+        @Override
+        public String toString() {
+            return String.format("PM2.5:%s VOC:%s Light:%s\nTemperature:%s Humidity:%s%%",
+                    getValue(PM25()),getValue(VOC()),getValue(Light()),
+                    getValue(Temperature()),getValue(Humidity()));
+        }
     }
 
     class AirPurifierImp implements
@@ -395,6 +435,7 @@ public class AirPurifier_MXChip extends OznerDevice {
             byte[] time = new byte[4];
             ByteUtil.putInt(time, (int) (System.currentTimeMillis() / 1000), 0);
             setProperty(PROPERTY_TIME, time, null);
+
         }
 
 
@@ -445,7 +486,7 @@ public class AirPurifier_MXChip extends OznerDevice {
                     public void run() {
                         doTime();
                     }
-                }, 100, 5000);
+                }, 1000, 5000);
             }
 
         }
@@ -456,8 +497,8 @@ public class AirPurifier_MXChip extends OznerDevice {
             list.add(PROPERTY_PM25);
             list.add(PROPERTY_LIGHT_SENSOR);
             list.add(PROPERTY_TEMPERATURE);
-
             list.add(PROPERTY_VOC);
+
             list.add(PROPERTY_POWER);
             list.add(PROPERTY_SPEED);
             list.add(PROPERTY_LIGHT);
@@ -532,6 +573,7 @@ public class AirPurifier_MXChip extends OznerDevice {
                                     Intent intent = new Intent(ACTION_AIR_PURIFIER_STATUS_CHANGED);
                                     intent.putExtra(Extra_Address, Address());
                                     context().sendBroadcast(intent);
+                                    doUpdate();
                                     break;
                                 }
 
@@ -545,6 +587,7 @@ public class AirPurifier_MXChip extends OznerDevice {
                                     Intent intent = new Intent(ACTION_AIR_PURIFIER_SENSOR_CHANGED);
                                     intent.putExtra(Extra_Address, Address());
                                     context().sendBroadcast(intent);
+                                    doUpdate();
                                     break;
                                 }
                                 case PROPERTY_MODEL:
@@ -604,6 +647,7 @@ public class AirPurifier_MXChip extends OznerDevice {
             public void onSuccess(Void var1) {
                 try {
                     waitObject(Timeout);
+
                     if (callback != null) {
                         if (Respone) {
                             isOffline = false;

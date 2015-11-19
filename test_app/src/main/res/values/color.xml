@@ -9,4 +9,10 @@
     <color name="pink_pressed">#ec407a</color>
     <color name="blue_semi_transparent">#805677fc</color>
     <color name="blue_semi_transparent_pressed">#80738ffe</color>
+    <color name="text_gray">#ffa5a5a5</color>
+    <color name="text_blue">#ff2b6eac</color>
+    <color name="text_white">#ffffffff</color>
+    <color name="panel_blue">#ffecfefe</color>
+    <color name="panel_white">#ffffffff</color>
+    <color name="text_select">#ffff9900</color>
 </resources>

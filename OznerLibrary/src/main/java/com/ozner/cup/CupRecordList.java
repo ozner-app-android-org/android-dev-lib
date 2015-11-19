@@ -17,12 +17,12 @@ import java.util.List;
  * @author xuzhiyong
  */
 @SuppressLint({"NewApi", "SimpleDateFormat", "DefaultLocale"})
-public class CupVolume {
+public class CupRecordList {
     public Date time;
     private String Address;
     private SQLiteDB db;
 
-    public CupVolume(Context context, String Address) {
+    public CupRecordList(Context context, String Address) {
         super();
         db = new SQLiteDB(context);
         this.Address = Address;
@@ -42,27 +42,27 @@ public class CupVolume {
      * 清除设备数据并往数据库里面插入一组数据,
      *
      * @param Address 设备地址
-     * @param Records 设备记录列表
+     * @param cupRecords 设备记录列表
      */
-    public void LoadDay(String Address, Record[] Records) {
+    public void LoadDay(String Address, CupRecord[] cupRecords) {
         db.execSQLNonQuery("delete from DayTable where sn=?", new String[]{Address});
         db.execSQLNonQuery("delete from HourTable2 where sn=?", new String[]{Address});
 
-        for (Record record : Records) {
+        for (CupRecord cupRecord : cupRecords) {
             db.execSQLNonQuery(
                     "insert into DayTable (sn,time,json,updateflag) values (?,?,?,1);",
                     new Object[]{Address,
-                            record.time.getTime(),
-                            record.toJSON()});
+                            cupRecord.time.getTime(),
+                            cupRecord.toJSON()});
         }
     }
 
-    private Record getLastDay() {
+    private CupRecord getLastDay() {
         List<String[]> valuesListDay = db
                 .ExecSQL("select id,time,json from DayTable where sn=? order by time desc limit 1 ;",
                         new String[]{Address});
         if (valuesListDay.size() > 0) {
-            Record lastDay = new Record();
+            CupRecord lastDay = new CupRecord();
 
             String[] valDay = valuesListDay.get(0);
 
@@ -79,13 +79,13 @@ public class CupVolume {
 
     }
 
-    private Record getLastHour() {
+    private CupRecord getLastHour() {
         List<String[]> valuesList = db
                 .ExecSQL(
                         "select id,time,json from HourTable2 where sn=? order by time desc limit 1 ;",
                         new String[]{Address});
         if (valuesList.size() > 0) {
-            Record item = new Record();
+            CupRecord item = new CupRecord();
             item.id = Integer.parseInt(valuesList.get(0)[0]);
             item.time = new Date(Long.parseLong(valuesList.get(0)[1]));
             item.FromJSON(valuesList.get(0)[2]);
@@ -101,20 +101,20 @@ public class CupVolume {
      *
      * @param items 饮水记录数组
      */
-    public void addRecord(CupRecord[] items) {
+    public void addRecord(RawRecord[] items) {
         synchronized (this) {
             if (items.length <= 0) {
                 return;
             }
 
-            Record lastHour = getLastHour();
+            CupRecord lastHour = getLastHour();
             if (lastHour == null) {
-                lastHour = new Record();
+                lastHour = new CupRecord();
                 lastHour.time = new Date(0);
             }
-            Record lastDay = getLastDay();
+            CupRecord lastDay = getLastDay();
             if (lastDay == null) {
-                lastDay = new Record();
+                lastDay = new CupRecord();
                 lastDay.time = new Date(0);
             }
 
@@ -124,7 +124,7 @@ public class CupVolume {
             boolean hourChange = false;
             boolean dayChange = false;
 
-            for (CupRecord item : items) {
+            for (RawRecord item : items) {
                 long inv = item.time.getTime();
                 // inv/86400000==lastHour.time.getTime()/3600000
                 if (inv / 3600000 == hour) {
@@ -139,7 +139,7 @@ public class CupVolume {
                                 new Object[]{lastHour.toJSON(),
                                         lastHour.id});// /
                     }
-                    lastHour = new Record();
+                    lastHour = new CupRecord();
 
                     hour = inv / 3600000;
 
@@ -175,7 +175,7 @@ public class CupVolume {
                                 new Object[]{lastDay.toJSON(),
                                         lastDay.id});
                     }
-                    lastDay = new Record();
+                    lastDay = new CupRecord();
                     day = inv / 86400000;
                     lastDay.time = new Date(day * 86400000);
                     lastDay.Volume += item.Vol;
@@ -220,7 +220,7 @@ public class CupVolume {
     }
 
 	/*
-     * public CupRecord getItemByDay(Date day) { synchronized (this) { Long pt =
+     * public TapRecord getItemByDay(Date day) { synchronized (this) { Long pt =
 	 * new Date(day.getTime() / 86400000*86400000).getTime();
 	 * 
 	 * List<String[]> valuesList = db .ExecSQL(
@@ -228,7 +228,7 @@ public class CupVolume {
 	 * String[] { Address, pt.toString() });
 	 * 
 	 * if (valuesList.size() <= 0) { return null; } else { for (String[] val :
-	 * valuesList) { CupRecord item = new CupRecord(); item.id =
+	 * valuesList) { TapRecord item = new TapRecord(); item.id =
 	 * Integer.parseInt(val[0]); item.time = new Date(Long.parseLong(val[1]));//
 	 * valuesList.get(0)[1] item.Vol = Integer.parseInt(val[2]); return item; }
 	 * }} return null; }
@@ -239,7 +239,7 @@ public class CupVolume {
      *
      * @param time 要获取的时间
      */
-    public Record getRecordByDate(Date time) {
+    public CupRecord getRecordByDate(Date time) {
         synchronized (this) {
 
             Long pt = new Date(time.getTime() / 86400000 * 86400000).getTime();
@@ -251,7 +251,7 @@ public class CupVolume {
                 return null;
             } else {
                 for (String[] val : valuesList) {
-                    Record item = new Record();
+                    CupRecord item = new CupRecord();
                     item.id = Integer.parseInt(val[0]);
                     item.time = new Date(Long.parseLong(val[1]));// valuesList.get(0)[1]
                     item.FromJSON(val[2]);
@@ -268,7 +268,7 @@ public class CupVolume {
      *
      * @param time 要获取的起始时间
      */
-    public Record[] getRecordsByDate(Date time) {
+    public CupRecord[] getRecordsByDate(Date time) {
         synchronized (this) {
 
             Long pt = new Date(time.getTime() / 86400000 * 86400000).getTime();
@@ -278,18 +278,18 @@ public class CupVolume {
                             "select id,time,json from DayTable where sn=? and time>=?;",
                             new String[]{Address, pt.toString()});
 
-            ArrayList<Record> list = new ArrayList<Record>();
+            ArrayList<CupRecord> list = new ArrayList<CupRecord>();
             if (valuesList.size() <= 0) {
-                return list.toArray(new Record[list.size()]);
+                return list.toArray(new CupRecord[list.size()]);
             } else {
                 for (String[] val : valuesList) {
-                    Record item = new Record();
+                    CupRecord item = new CupRecord();
                     item.id = Integer.parseInt(val[0]);
                     item.time = new Date(Long.parseLong(val[1]));// valuesList.get(0)[1]
                     item.FromJSON(val[2]);
                     list.add(item);
                 }
-                return list.toArray(new Record[list.size()]);
+                return list.toArray(new CupRecord[list.size()]);
             }
         }
 
@@ -300,7 +300,7 @@ public class CupVolume {
      */
     public int getCurrHourVol() {
         synchronized (this) {
-            Record lastHour = getLastHour();
+            CupRecord lastHour = getLastHour();
             Date dt = new Date();
             if (lastHour != null) {
                 if ((lastHour.time.getTime() / 3600000) == (dt.getTime() / 3600000)) {
@@ -314,7 +314,7 @@ public class CupVolume {
         }
     }
 
-    public Record getTodayItem() {
+    public CupRecord getTodayItem() {
         return getRecordByDate(new Date());
     }
 
@@ -328,7 +328,7 @@ public class CupVolume {
     /**
      * 获取今日饮水小时数据
      */
-    public Record[] getToday() {
+    public CupRecord[] getToday() {
         synchronized (this) {
             Date now = new Date();
 
@@ -341,12 +341,12 @@ public class CupVolume {
             String sql = "select id, time,json from HourTable2 where sn=? and time>=? and time<=?";
             List<String[]> valuesList = db.ExecSQL(sql,
                     new String[]{Address, String.valueOf(startDate), String.valueOf(endDate)});
-            ArrayList<Record> list = new ArrayList<>();
+            ArrayList<CupRecord> list = new ArrayList<>();
             if (valuesList.size() <= 0) {
-                return list.toArray(new Record[list.size()]);
+                return list.toArray(new CupRecord[list.size()]);
             } else {
                 for (String[] val : valuesList) {
-                    Record item = new Record();
+                    CupRecord item = new CupRecord();
                     item.id = Integer.parseInt(val[0]);
                     item.time = new Date(Long.parseLong(val[1]));
                     item.FromJSON(val[2]);
@@ -354,7 +354,7 @@ public class CupVolume {
                 }
             }
 
-            return list.toArray(new Record[list.size()]);
+            return list.toArray(new CupRecord[list.size()]);
         }
     }
 
@@ -363,7 +363,7 @@ public class CupVolume {
      *
      * @param time 起始时间
      */
-    public Record[] getNoSyncItemHour(Date time) {
+    public CupRecord[] getNoSyncItemHour(Date time) {
         synchronized (this) {
 
             Long pt = new Date(time.getTime() / 86400000).getTime();
@@ -371,15 +371,15 @@ public class CupVolume {
                     .ExecSQL(
                             "select id, time,json from HourTable2 where updateflag=0 and sn=? and time>=?;",
                             new String[]{Address, pt.toString()});
-            ArrayList<Record> list = new ArrayList<>();
+            ArrayList<CupRecord> list = new ArrayList<>();
             for (String[] val : valuesList) {
-                Record item = new Record();
+                CupRecord item = new CupRecord();
                 item.id = Integer.parseInt(val[0]);
                 item.time = new Date(Long.parseLong(val[1]));// valuesList.get(0)[1]
                 item.FromJSON(val[2]);
                 list.add(item);
             }
-            return list.toArray(new Record[list.size()]);
+            return list.toArray(new CupRecord[list.size()]);
         }
     }
 
@@ -401,7 +401,7 @@ public class CupVolume {
      *
      * @param time 起始时间
      */
-    public Record[] getNoSyncItemDay(Date time) {
+    public CupRecord[] getNoSyncItemDay(Date time) {
         synchronized (this) {
 
             Long pt = new Date(time.getTime() / 86400000).getTime();
@@ -409,15 +409,15 @@ public class CupVolume {
                     .ExecSQL(
                             "select id, time,json from DayTable where updateflag=0 and sn=? and time>=?;",
                             new String[]{Address, pt.toString()});
-            ArrayList<Record> list = new ArrayList<>();
+            ArrayList<CupRecord> list = new ArrayList<>();
             for (String[] val : valuesList) {
-                Record item = new Record();
+                CupRecord item = new CupRecord();
                 item.id = Integer.parseInt(val[0]);
                 item.time = new Date(Long.parseLong(val[1]));// valuesList.get(0)[1]
                 item.FromJSON(val[2]);
                 list.add(item);
             }
-            return list.toArray(new Record[list.size()]);
+            return list.toArray(new CupRecord[list.size()]);
         }
     }
 

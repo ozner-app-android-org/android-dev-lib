@@ -26,12 +26,12 @@ import java.text.SimpleDateFormat;
 /**
  * Created by zhiyongxu on 15/11/4.
  */
-public class AirPurifierView extends BaseItemView {
+public class AirPurifierView extends DeviceItemView {
     TextView status;
     TextView sendStatus;
     ControlImp controlImp = new ControlImp();
-    Monitor monitor = new Monitor();
-    Handler handler = new Handler();
+    final Monitor monitor = new Monitor();
+    final Handler handler = new Handler();
     AirPurifier_MXChip airPurifier;
 
     public AirPurifierView(Context context, AttributeSet attrs) {

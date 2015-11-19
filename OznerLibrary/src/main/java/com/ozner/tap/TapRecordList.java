@@ -13,12 +13,12 @@ import java.util.List;
  *
  * @author zhiyongxu
  */
-public class TapDatas {
+public class TapRecordList {
     public Date time;
     private String Address;
     private SQLiteDB db;
 
-    public TapDatas(Context context, String Address) {
+    public TapRecordList(Context context, String Address) {
         super();
         this.db = new SQLiteDB(context);
         this.Address = Address;
@@ -31,16 +31,16 @@ public class TapDatas {
      * 清除设备数据并往数据库里面插入一组数据,
      *
      * @param Address 设备地址
-     * @param Records 设备记录列表
+     * @param tapRecords 设备记录列表
      */
-    public void LoadRecords(String Address, Record[] Records) {
+    public void LoadRecords(String Address, TapRecord[] tapRecords) {
         db.execSQLNonQuery("delete from DayTable where sn=?", new String[]{Address});
-        for (Record record : Records) {
+        for (TapRecord tapRecord : tapRecords) {
             db.execSQLNonQuery(
                     "insert into DayTable (sn,time,json,updateflag) values (?,?,?,0);",
                     new Object[]{Address,
-                            record.time.getTime(),
-                            record.toJSON()});
+                            tapRecord.time.getTime(),
+                            tapRecord.toJSON()});
         }
     }
 
@@ -49,12 +49,12 @@ public class TapDatas {
      *
      * @param items TDS记录
      */
-    public void addRecord(TapRecord[] items) {
+    public void addRecord(RawRecord[] items) {
         if (items == null) return;
         if (items.length <= 0) return;
         synchronized (this) {
-            for (TapRecord r : items) {
-                TapRecord record = new TapRecord();
+            for (RawRecord r : items) {
+                RawRecord record = new RawRecord();
                 record.time = r.time;
                 record.TDS = r.TDS;
                 db.execSQLNonQuery(
@@ -72,7 +72,7 @@ public class TapDatas {
      * @param time 要获取的起始时间
      * @return
      */
-    public Record[] getRecordsByDate(Date time) {
+    public TapRecord[] getRecordsByDate(Date time) {
         synchronized (this) {
             Long pt = new Date(time.getTime() / 86400000 * 86400000).getTime();
             List<String[]> valuesList = db
@@ -80,18 +80,18 @@ public class TapDatas {
                             "select id,time,json from TapTable where sn=? and time>=?;",
                             new String[]{Address, pt.toString()});
 
-            ArrayList<Record> list = new ArrayList<Record>();
+            ArrayList<TapRecord> list = new ArrayList<TapRecord>();
             if (valuesList.size() <= 0) {
-                return list.toArray(new Record[0]);
+                return list.toArray(new TapRecord[0]);
             } else {
                 for (String[] val : valuesList) {
-                    Record item = new Record();
+                    TapRecord item = new TapRecord();
                     item.id = Integer.parseInt(val[0]);
                     item.time = new Date(Long.parseLong(val[1]));// valuesList.get(0)[1]
                     item.FromJSON(val[2]);
                     list.add(item);
                 }
-                return list.toArray(new Record[list.size()]);
+                return list.toArray(new TapRecord[list.size()]);
             }
         }
     }
@@ -102,7 +102,7 @@ public class TapDatas {
      * @param time 起始时间
      * @return
      */
-    public Record[] getNoSyncItemDay(Date time) {
+    public TapRecord[] getNoSyncItemDay(Date time) {
         synchronized (this) {
 
             Long pt = new Date(time.getTime() / 86400000 * 86400000).getTime();
@@ -110,15 +110,15 @@ public class TapDatas {
                     .ExecSQL(
                             "select id, time,json from TapTable where updateflag=0 and sn=? and time>=?;",
                             new String[]{Address, pt.toString()});
-            ArrayList<Record> list = new ArrayList<Record>();
+            ArrayList<TapRecord> list = new ArrayList<TapRecord>();
             for (String[] val : valuesList) {
-                Record item = new Record();
+                TapRecord item = new TapRecord();
                 item.id = Integer.parseInt(val[0]);
                 item.time = new Date(Long.parseLong(val[1]));// valuesList.get(0)[1]
                 item.FromJSON(val[2]);
                 list.add(item);
             }
-            return list.toArray(new Record[list.size()]);
+            return list.toArray(new TapRecord[list.size()]);
         }
     }
 

@@ -27,6 +27,8 @@ public abstract class BaseDeviceIO extends XObject {
      * 设备连接断开事件
      */
     public final static String ACTION_DEVICE_DISCONNECTED = "com.ozner.device.disconnected";
+
+
     public final static String Extra_Address = "Address";
     final ArrayList<StatusCallback> statusCallback = new ArrayList<>();
     String Type = "";
@@ -163,7 +165,9 @@ public abstract class BaseDeviceIO extends XObject {
                 cb.onConnected(this);
         }
 
-
+        Intent intent = new Intent(ACTION_DEVICE_CONNECTING);
+        intent.putExtra(Extra_Address, getAddress());
+        context().sendBroadcast(intent);
     }
 
     protected void doDisconnected() {

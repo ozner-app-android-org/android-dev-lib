@@ -3,6 +3,8 @@ package com.ozner.AirPurifier;
 import android.content.Context;
 import android.content.Intent;
 
+import com.ozner.bluetooth.BaseBluetoothDeviceManager;
+import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.BaseDeviceManager;
 import com.ozner.device.DeviceNotReadyException;
@@ -13,58 +15,33 @@ import com.ozner.wifi.mxchip.MXChipIO;
 /**
  * Created by xzyxd on 2015/11/7.
  */
-public class AirPurifierManager extends BaseDeviceManager {
+public class AirPurifierManager extends BaseBluetoothDeviceManager {
 
-    /**
-     * 新增一个配对的水机
-     */
-    public final static String ACTION_MANAGER_AIR_PURIFIER_ADD = "com.ozner.Air.Purifier.Add";
-    /**
-     * 删除配对水机
-     */
-    public final static String ACTION_MANAGER_AIR_PURIFIER_REMOVE = "com.ozner.Air.Purifier.Remove";
-    /**
-     * 更新配对水机
-     */
-    public final static String ACTION_MANAGER_AIR_PURIFIER_CHANGE = "com.ozner.Air.Purifier.Change";
 
     public AirPurifierManager(Context context) {
         super(context);
     }
 
-    public static boolean IsAirPurifier(String Model) {
-        if (Model == null) return false;
-        return Model.trim().equals("FOG_HAOZE_AIR");
+    @Override
+    protected boolean chekcBindMode(String Model, int CustomType, byte[] CustomData) {
+        if (CustomType==0x20)
+        {
+            return CustomData[0]!=0;
+        }
+        return false;
     }
 
-    @Override
-    protected void update(OznerDevice device) {
-        if (device instanceof AirPurifier_MXChip) {
-            Intent intent = new Intent(ACTION_MANAGER_AIR_PURIFIER_CHANGE);
-            intent.putExtra("Address", device.Address());
-            context().sendBroadcast(intent);
-        }
+    public static boolean IsWifiAirPurifier(String Type) {
+        if (Type == null) return false;
+        return Type.trim().equals("FOG_HAOZE_AIR");
     }
 
-    @Override
-    protected void add(OznerDevice device) {
-        if (device instanceof AirPurifier_MXChip) {
-            Intent intent = new Intent(ACTION_MANAGER_AIR_PURIFIER_ADD);
-            intent.putExtra("Address", device.Address());
-            context().sendBroadcast(intent);
-        }
-        super.add(device);
+
+    public static boolean IsBluetoothAirPurifier(String Type) {
+        if (Type == null) return false;
+        return Type.trim().equals("FLT001");
     }
 
-    @Override
-    protected void remove(OznerDevice device) {
-        if (device instanceof AirPurifier_MXChip) {
-            Intent intent = new Intent(ACTION_MANAGER_AIR_PURIFIER_REMOVE);
-            intent.putExtra("Address", device.Address());
-            context().sendBroadcast(intent);
-        }
-        super.remove(device);
-    }
 
     @Override
     protected OznerDevice getDevice(BaseDeviceIO io) throws DeviceNotReadyException {
@@ -74,8 +51,20 @@ public class AirPurifierManager extends BaseDeviceManager {
             if (device != null) {
                 return device;
             } else {
-                if (IsAirPurifier(io.getType())) {
+                if (IsWifiAirPurifier(io.getType())) {
                     AirPurifier_MXChip c = new AirPurifier_MXChip(context(), address, io.getType(), "");
+                    c.Bind(io);
+                    return c;
+                }
+            }
+        } else if (io instanceof BluetoothIO) {
+            String address = io.getAddress();
+            OznerDevice device = OznerDeviceManager.Instance().getDevice(address);
+            if (device != null) {
+                return device;
+            } else {
+                if (IsBluetoothAirPurifier(io.getType())) {
+                    AirPurifier_Bluetooth c = new AirPurifier_Bluetooth(context(), address, io.getType(), "");
                     c.Bind(io);
                     return c;
                 }
@@ -84,32 +73,34 @@ public class AirPurifierManager extends BaseDeviceManager {
         return null;
     }
 
-    public OznerDevice newAirPurifier(Context context, String address) {
-        OznerDevice device = OznerDeviceManager.Instance().getDevice(address);
-        if (device != null) {
-            return device;
-        } else {
-            AirPurifier_MXChip waterPurifier = new AirPurifier_MXChip(context(), address, "MXCHIP_HAOZE_Air", "");
-            MXChipIO io = OznerDeviceManager.Instance().ioManagerList().mxChipIOManager()
-                    .createNewIO(waterPurifier.Setting().name(), waterPurifier.Address(), waterPurifier.Type());
-            try {
-                waterPurifier.Bind(io);
-            } catch (DeviceNotReadyException e) {
-                e.printStackTrace();
-            }
-
-            return waterPurifier;
-        }
-    }
+//    public OznerDevice newAirPurifier(Context context, String address) {
+//        OznerDevice device = OznerDeviceManager.Instance().getDevice(address);
+//        if (device != null) {
+//            return device;
+//        } else {
+//            AirPurifier_MXChip waterPurifier = new AirPurifier_MXChip(context(), address, "MXCHIP_HAOZE_Air", "");
+//            MXChipIO io = OznerDeviceManager.Instance().ioManagerList().mxChipIOManager()
+//                    .createNewIO(waterPurifier.Setting().name(), waterPurifier.Address(), waterPurifier.Type());
+//            try {
+//                waterPurifier.Bind(io);
+//            } catch (DeviceNotReadyException e) {
+//                e.printStackTrace();
+//            }
+//
+//            return waterPurifier;
+//        }
+//    }
 
 
     @Override
     protected OznerDevice loadDevice(String address, String Type, String Setting) {
-        if (IsAirPurifier(Type)) {
+        if (IsWifiAirPurifier(Type)) {
             AirPurifier_MXChip waterPurifier = new AirPurifier_MXChip(context(), address, Type, Setting);
             OznerDeviceManager.Instance().ioManagerList().mxChipIOManager()
                     .createNewIO(waterPurifier.Setting().name(), waterPurifier.Address(), waterPurifier.Type());
             return waterPurifier;
+        } else if (IsBluetoothAirPurifier(Type)) {
+            return new AirPurifier_Bluetooth(context(), address, Type, Setting);
         } else
             return null;
     }
@@ -117,7 +108,10 @@ public class AirPurifierManager extends BaseDeviceManager {
     @Override
     public boolean isMyDevice(BaseDeviceIO io) {
         if (io instanceof MXChipIO) {
-            return IsAirPurifier(io.getType());
-        } else return false;
+            return IsWifiAirPurifier(io.getType());
+        } else if (io instanceof BluetoothIO) {
+            return IsBluetoothAirPurifier(io.getType());
+        } else
+            return false;
     }
 }

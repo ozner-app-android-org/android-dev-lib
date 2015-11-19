@@ -34,6 +34,8 @@ public abstract class UIXChartView extends UIXBaseView {
         init();
     }
 
+
+
     public void setAdapter(ChartAdapter adapter) {
         this.adapter = adapter;
         adapter.setAdapterListener(new ChartAdapter.AdapterListener() {

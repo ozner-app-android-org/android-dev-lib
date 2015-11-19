@@ -15,6 +15,15 @@ public abstract class ChartAdapter {
         this.adapterListener = adapterListener;
 
     }
+    public ChartAdapter()
+    {
+        init();
+    }
+
+    protected void init()
+    {
+
+    }
 
     public String getPostionText(int postion) {
         switch (getViewMode()) {
@@ -52,6 +61,7 @@ public abstract class ChartAdapter {
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTime(viewDate);
                 return calendar.getActualMaximum(Calendar.DATE);
+
             }
         }
         return 1;
@@ -92,7 +102,7 @@ public abstract class ChartAdapter {
 
     public abstract ViewMode getViewMode();
 
-    public enum ViewMode {Day, Week, Month}
+    public enum ViewMode {Day, Week, Month,Custom}
 
     public interface AdapterListener {
         void onUpdate(ChartAdapter adapter);

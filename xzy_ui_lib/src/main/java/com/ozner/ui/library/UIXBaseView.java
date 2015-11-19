@@ -31,6 +31,7 @@ public abstract class UIXBaseView extends View implements AnimatorListener {
         if (isAnnmatorRuning()) return;
         _step = 0;
         initAnimator();
+        invalidate();
     }
 
     private void initAnimator() {

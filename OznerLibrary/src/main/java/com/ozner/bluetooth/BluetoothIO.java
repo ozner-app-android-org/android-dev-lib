@@ -25,20 +25,6 @@ import java.util.UUID;
  * Created by zhiyongxu on 15/10/28.
  */
 public class BluetoothIO extends BaseDeviceIO {
-    /**
-     * 设备连接成功广播
-     */
-    public final static String ACTION_BLUETOOTH_CONNECTED = "com.ozner.bluetooth.connectStatus";
-    //public final static String ACTION_BLUETOOTH_ERROR = "com.ozner.bluetooth.error";
-
-    /**
-     * 设备就绪广播
-     */
-    public final static String ACTION_BLUETOOTH_READY = "com.ozner.bluetooth.ready";
-    /**
-     * 设备连接断开广播
-     */
-    public final static String ACTION_BLUETOOTH_DISCONNECTED = "com.ozner.bluetooth.disconnected";
     //    /**
 //     * 连接中
 //     */
@@ -152,32 +138,7 @@ public class BluetoothIO extends BaseDeviceIO {
             return ConnectStatus.Disconnect;
     }
 
-    @Override
-    protected void doConnected() {
-        Intent intent = new Intent();
-        intent.setAction(ACTION_BLUETOOTH_CONNECTED);
-        intent.putExtra("Address", device.getAddress());
-        context().sendBroadcast(intent);
-        super.doConnected();
-    }
 
-    @Override
-    protected void doReady() {
-        Intent intent = new Intent();
-        intent.setAction(ACTION_BLUETOOTH_READY);
-        intent.putExtra("Address", device.getAddress());
-        context().sendBroadcast(intent);
-        super.doReady();
-    }
-
-    @Override
-    protected void doDisconnected() {
-        Intent intent = new Intent();
-        intent.setAction(ACTION_BLUETOOTH_DISCONNECTED);
-        intent.putExtra("Address", device.getAddress());
-        context().sendBroadcast(intent);
-        super.doDisconnected();
-    }
 
     @Override
     protected void doChangeRunningMode() {
@@ -248,7 +209,6 @@ public class BluetoothIO extends BaseDeviceIO {
                     doDisconnected();
                     close();
                 }
-
                 setObject();
                 super.onConnectionStateChange(gatt, status, newState);
             } catch (Exception e) {
@@ -450,6 +410,7 @@ public class BluetoothIO extends BaseDeviceIO {
                 }
             }
             waitObject(10000);
+            Thread.sleep(100);
             return checkStatus();
         }
 

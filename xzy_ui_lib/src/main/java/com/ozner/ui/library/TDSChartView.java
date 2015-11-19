@@ -13,6 +13,7 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * Created by xzyxd on 2015/9/17.
@@ -29,8 +30,12 @@ public class TDSChartView extends UIXChartView {
     float ani_y_rate = 0;
     float ani_x_rate = 0;
     int ani_sharp_alpha = 0;
+
     public TDSChartView(Context context, AttributeSet attrs) {
         super(context, attrs);
+
+        setAdapter(testAdapter);
+        this.setMinimumHeight(Screen.dip2px(getContext(), 30));
     }
 
     @Override
@@ -40,6 +45,40 @@ public class TDSChartView extends UIXChartView {
         valueTag.put(200, getResources().getString(R.string.normal_water));
         valueTag.put(400, getResources().getString(R.string.bad_water));
     }
+
+
+    ChartAdapter testAdapter=new ChartAdapter() {
+        int[] data;
+        @Override
+        protected void init() {
+            data=new int[20];
+            Random random=new Random();
+            for (int i=0;i<data.length;i++)
+            {
+                data[i]=random.nextInt(400);
+            }
+            super.init();
+        }
+
+        public int count() {
+            return data.length;
+        }
+
+        @Override
+        public int getValue(int Index) {
+            return data[Index];
+        }
+
+        @Override
+        public int getMax() {
+            return 400;
+        }
+
+        @Override
+        public ViewMode getViewMode() {
+            return ViewMode.Day;
+        }
+    };
 
     @Override
     public void onAnimationStart(Animator animation) {
@@ -98,13 +137,13 @@ public class TDSChartView extends UIXChartView {
         return 1;
     }
 
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            this.startAnimation();
-        }
-        return super.onTouchEvent(event);
-    }
+//    @Override
+//    public boolean onTouchEvent(MotionEvent event) {
+//        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+//            this.startAnimation();
+//        }
+//        return super.onTouchEvent(event);
+//    }
 
     private Shader getLineShare() {
         return new LinearGradient(0, valueRect.bottom, 0, valueRect.top,
@@ -192,6 +231,8 @@ public class TDSChartView extends UIXChartView {
 
 
     private void drawSharp(Canvas canvas) {
+        if (adapter==null) return;
+
         int count = adapter.count();
         if (count <= 0) return;
         int maxValue = adapter.getMax();

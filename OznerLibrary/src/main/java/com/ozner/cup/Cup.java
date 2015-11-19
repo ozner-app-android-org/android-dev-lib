@@ -33,8 +33,6 @@ public class Cup extends OznerDevice {
      * 饮水记录传输完成
      */
     public final static String ACTION_BLUETOOTHCUP_RECORD_COMPLETE = "com.ozner.cup.bluetooth.record.complete";
-
-
     /**
      * 收到传感器信息
      */
@@ -52,9 +50,9 @@ public class Cup extends OznerDevice {
     static final byte opCode_FrontMode = (byte) 0x21;
     final CupSensor mSensor = new CupSensor();
     final CupFirmwareTools firmwareTools = new CupFirmwareTools();
-    final TreeSet<CupRecord> mRecords = new TreeSet<>();
+    final TreeSet<RawRecord> mRawRecords = new TreeSet<>();
     final BluetoothIOImp bluetoothIOImp = new BluetoothIOImp();
-    CupVolume mCupVolume;
+    CupRecordList mCupRecordList;
     Date mLastDataTime = new Date();
     Timer autoUpdateTimer = null;
     int RequestCount = 0;
@@ -63,9 +61,19 @@ public class Cup extends OznerDevice {
     public Cup(Context context, String Address, String Type, String Setting) {
         super(context, Address, Type, Setting);
         initSetting(Setting);
-        mCupVolume = new CupVolume(context, Address);
+        mCupRecordList = new CupRecordList(context, Address);
     }
 
+    @Override
+    public String toString() {
+        if (connectStatus()== BaseDeviceIO.ConnectStatus.Connected)
+        {
+            return Sensor().toString();
+        }else
+        {
+            return connectStatus().toString();
+        }
+    }
     /**
      * 判断设备是否处于配对状态
      *
@@ -99,7 +107,7 @@ public class Cup extends OznerDevice {
         if (oldIO != null) {
             oldIO.setOnInitCallback(null);
             oldIO.unRegisterStatusCallback(bluetoothIOImp);
-            newIO.setOnTransmissionsCallback(null);
+            oldIO.setOnTransmissionsCallback(null);
             oldIO.setCheckTransmissionsCompleteCallback(null);
             firmwareTools.bind(null);
         }
@@ -121,8 +129,8 @@ public class Cup extends OznerDevice {
         return mSensor;
     }
 
-    public CupVolume Volume() {
-        return mCupVolume;
+    public CupRecordList Volume() {
+        return mCupRecordList;
     }
 
     public CupFirmwareTools firmwareTools() {
@@ -314,44 +322,46 @@ public class Cup extends OznerDevice {
                     intent.putExtra("Address", IO().getAddress());
                     intent.putExtra("Sensor", data);
                     context().sendBroadcast(intent);
+                    doUpdate();
                     break;
                 }
 
                 case opCode_ReadRecordRet: {
                     if (data != null) {
-                        CupRecord record = new CupRecord();
-                        record.FromBytes(data);
-                        if ((record.Index == record.Count) && (record.Count == 0) && (record.Vol == 0)) {
+                        RawRecord rawRecord = new RawRecord();
+                        rawRecord.FromBytes(data);
+                        if ((rawRecord.Index == rawRecord.Count) && (rawRecord.Count == 0) && (rawRecord.Vol == 0)) {
                             return;
                         }
 
-                        if (record.Vol > 0) {
-                            String hashKey = String.valueOf(record.time.getTime()) + "_" + String.valueOf(record.Vol);
-                            synchronized (mRecords) {
+                        if (rawRecord.Vol > 0) {
+                            String hashKey = String.valueOf(rawRecord.time.getTime()) + "_" + String.valueOf(rawRecord.Vol);
+                            synchronized (mRawRecords) {
                                 if (dataHash.contains(hashKey)) {
                                     dbg.e("收到水杯重复数据");
                                     break;
                                 } else
                                     dataHash.add(hashKey);
-                                mRecords.add(record);
+                                mRawRecords.add(rawRecord);
                             }
                             Intent intent = new Intent(ACTION_BLUETOOTHCUP_RECORD);
                             intent.putExtra("Address", IO().getAddress());
-                            intent.putExtra("Record", data);
+                            intent.putExtra("CupRecord", data);
                             context().sendBroadcast(intent);
                         }
 
                         mLastDataTime = new Date();
-                        if (record.Index == record.Count) {
+                        if ((mRawRecords.size()>0) && (rawRecord.Index == rawRecord.Count)) {
                             dbg.i("收到记录完成");
-                            synchronized (mRecords) {
-                                mCupVolume.addRecord(mRecords.toArray(new CupRecord[mRecords.size()]));
-                                mRecords.clear();
+                            synchronized (mRawRecords) {
+                                mCupRecordList.addRecord(mRawRecords.toArray(new RawRecord[mRawRecords.size()]));
+                                mRawRecords.clear();
                                 dataHash.clear();
                             }
                             Intent comp_intent = new Intent(ACTION_BLUETOOTHCUP_RECORD_COMPLETE);
                             comp_intent.putExtra("Address", IO().getAddress());
                             context().sendBroadcast(comp_intent);
+                            doUpdate();
                         }
                     }
                     break;

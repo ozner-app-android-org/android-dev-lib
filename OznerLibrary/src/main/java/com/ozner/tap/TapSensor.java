@@ -13,6 +13,7 @@ public class TapSensor {
      * 电池电压
      */
     public int BatteryFix = 0;
+
     public int Temperature = 0;
     /**
      * 温度
@@ -38,14 +39,20 @@ public class TapSensor {
      * @return 0-100%
      */
     public float getPower() {
-        if (BatteryFix >= 3000) {
-            float ret = BatteryFix - 3000f / (4200f - 3000f);
-            if (ret > 100)
-                ret = 100;
-            return ret;
-        } else
-            return 0;
+        if (BatteryFix > 3000) return 1;
+        if (BatteryFix >= 2900) return 0.9f;
+        if (BatteryFix >= 2800) return 0.7f;
+        if (BatteryFix >= 2700) return 0.5f;
+        if (BatteryFix >= 2600) return 0.3f;
+        if (BatteryFix >= 2500) return 0.17f;
+        if (BatteryFix >= 2400) return 0.16f;
+        if (BatteryFix >= 2300) return 0.15f;
+        if (BatteryFix >= 2200) return 0.07f;
+        if (BatteryFix >= 2100) return 0.03f;
+        if (BatteryFix == 0) return 0;
+        return 0f;
     }
+
 
     @Override
     public String toString() {

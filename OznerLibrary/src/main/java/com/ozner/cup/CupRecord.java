@@ -1,72 +1,163 @@
 package com.ozner.cup;
 
-import com.ozner.util.ByteUtil;
+import android.annotation.SuppressLint;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
- * 水杯原始饮水记录
- *
  * @author zhiyongxu
+ *         饮水记录
  */
-public class CupRecord implements Comparable {
+public class CupRecord {
+    public long id;
     /**
-     * 时间
+     * 饮水时间
      */
     public Date time;
     /**
      * 饮水量
      */
-    public int Vol = 0;
+    public int Volume;
     /**
-     * 当前记录位置
+     * 小于25度的次数
      */
-    public int Index = 0;
+    public int Temperature_25;
     /**
-     * 记录总条数
+     * 大于65度的饮水次数
      */
-    public int Count;
-    public int id;
+    public int Temperature_65;
     /**
-     * 当时饮水温度
+     * 25-65度的次数
      */
-    public int Temperature;
+    public int Temperature_25_65;
     /**
-     * TDS
+     * TDS小于50的次数
      */
-    public int TDS;
+    public int TDS_50;
+    /**
+     * TDS大于200的次数
+     */
+    public int TDS_200;
+    /**
+     * TDS 50-200的次数
+     */
+    public int TDS_50_200;
 
-    public CupRecord() {
-        time = new Date();
+    /**
+     * TDS 最高值
+     */
+    public int TDS_High = 0;
+
+    /**
+     * 温度最高值
+     */
+    public int Temperature_High = 0;
+    /**
+     * 饮水次数
+     */
+    public int Count = 0;
+
+
+    public void incTemp(int Temp) {
+        if (Temp < 20)
+            Temperature_25++;
+        else if (Temp > 50)
+            Temperature_65++;
+        else
+            Temperature_25_65++;
+
+        if (Temp > Temperature_High)
+            Temperature_High = Temp;
+        Count++;
+    }
+
+    public void incTDS(int TDS) {
+        if (TDS < 50)
+            TDS_50++;
+        else if (TDS > 200)
+            TDS_200++;
+        else
+            TDS_50_200++;
+        if (TDS > TDS_High)
+            TDS_High = TDS;
     }
 
     @Override
     public String toString() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        return String.format("Time:%s Vol:%d TDS:%d Temperature:%d", sdf.format(time), Vol, TDS, Temperature);
+        return String.format("time:%s vol:%d t25:%d t25-65:%d t64:%d s50:%d s200:%d s50-200:%d tds_h:%d temp_h:%d count:%d",
+                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(time), Volume,
+                Temperature_25, Temperature_25_65, Temperature_65, TDS_50, TDS_200, TDS_50_200,
+                TDS_High, Temperature_High, Count);
     }
 
-    @SuppressWarnings("deprecation")
-    public void FromBytes(byte[] data) {
-        time = new Date(data[0] + 2000 - 1900, data[1] - 1, data[2], data[3],
-                data[4], data[5]);
-        // time.set(data[5],data[4],data[3], data[2],data[1], data[0]+2000);
-        Vol = ByteUtil.getShort(data, 8);
-        Index = ByteUtil.getShort(data, 10);
-        Count = ByteUtil.getShort(data, 12);
-        Temperature = ByteUtil.getShort(data, 14);
-        TDS = ByteUtil.getShort(data, 16);
+    @SuppressLint("NewApi")
+    public String toJSON() {
+        try {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("Volume", Volume);
+            jsonObject.put("Temperature_25", Temperature_25);
+            jsonObject.put("Temperature_65", Temperature_65);
+            jsonObject.put("Temperature_25_65", Temperature_25_65);
+            jsonObject.put("TDS_50", TDS_50);
+            jsonObject.put("TDS_200", TDS_200);
+            jsonObject.put("TDS_50_200", TDS_50_200);
+            jsonObject.put("Temperature_High", Temperature_High);
+            jsonObject.put("TDS_High", TDS_High);
+            jsonObject.put("Count", Count);
+            return jsonObject.toString();
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return "";
+        }
     }
 
-    @Override
-    public int hashCode() {
-        return time.hashCode();
-    }
+    @SuppressLint("NewApi")
+    public void FromJSON(String json) {
+        if (json == null)
+            return;
+        if (json.isEmpty())
+            return;
+        try {
+            JSONObject object = new JSONObject(json);
+            if (object.has("Volume")) {
+                Volume = object.getInt("Volume");
+            }
 
-    @Override
-    public int compareTo(Object o) {
-        CupRecord cup = (CupRecord) o;
-        return time.compareTo(cup.time);
+            if (object.has("Temperature_25")) {
+                Temperature_25 = object.getInt("Temperature_25");
+            }
+            if (object.has("Temperature_25_65")) {
+                Temperature_25_65 = object.getInt("Temperature_25_65");
+            }
+            if (object.has("Temperature_65")) {
+                Temperature_65 = object.getInt("Temperature_65");
+            }
+
+            if (object.has("TDS_50")) {
+                TDS_50 = object.getInt("TDS_50");
+            }
+            if (object.has("TDS_200")) {
+                TDS_200 = object.getInt("TDS_200");
+            }
+            if (object.has("TDS_50_200")) {
+                TDS_50_200 = object.getInt("TDS_50_200");
+            }
+            if (object.has("Count")) {
+                Count = object.getInt("Count");
+            }
+            if (object.has("TDS_High")) {
+                TDS_High = object.getInt("TDS_High");
+            }
+            if (object.has("Temperature_High")) {
+                Temperature_High = object.getInt("Temperature_High");
+            }
+        } catch (JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 }
