@@ -7,7 +7,6 @@ import android.util.Log;
 import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.DeviceSetting;
 import com.ozner.device.OperateCallback;
-import com.ozner.device.OznerDevice;
 import com.ozner.oznerlibrary.R;
 import com.ozner.util.ByteUtil;
 import com.ozner.util.Helper;
@@ -52,6 +51,7 @@ public class AirPurifier_MXChip extends AirPurifier {
     public static final byte PROPERTY_MAIN_BOARD = 0x23;
     public static final byte PROPERTY_CONTROL_BOARD = 0x24;
     public static final byte PROPERTY_MESSAGES = 0x25;
+    public static final byte PROPERTY_VERSION = 0x26;
 
     public static final int ErrorValue = 0xffff;
     private static final int Timeout=2000;
@@ -300,7 +300,9 @@ public class AirPurifier_MXChip extends AirPurifier {
 
     public class AirStatus {
 
-
+        public int Version(){
+            return getIntValueByShort(PROPERTY_VERSION);
+        }
         public boolean Power() {
             return getBoolValue(PROPERTY_POWER);
         }
@@ -351,9 +353,9 @@ public class AirPurifier_MXChip extends AirPurifier {
 
     public class Sensor {
         /**
-         * PM2.5
+         * 湿度
          *
-         * @return pm25
+         * @return 湿度%
          */
         public int Humidity() {
             return getIntValueByShort(PROPERTY_LIGHT_HUMIDITY);
@@ -467,16 +469,33 @@ public class AirPurifier_MXChip extends AirPurifier {
         }
 
         @Override
+        public boolean onIOInit() {
+            try {
+                isOffline = true;
+                try {
+                    setNowTime();
+                    waitObject(Timeout);
+                    HashSet<Byte> list = new HashSet<>();
+                    list.add(PROPERTY_FILTER);
+                    list.add(PROPERTY_MODEL);
+                    list.add(PROPERTY_DEVICE_TYPE);
+                    list.add(PROPERTY_CONTROL_BOARD);
+                    list.add(PROPERTY_MAIN_BOARD);
+                    list.add(PROPERTY_POWER_TIMER);
+                    list.add(PROPERTY_VERSION);
+                    requestProperty(list, null);
+                    waitObject(Timeout);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                return true;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+        @Override
         public void onReady(BaseDeviceIO io) {
-            setNowTime();
-            HashSet<Byte> list = new HashSet<>();
-            list.add(PROPERTY_FILTER);
-            list.add(PROPERTY_MODEL);
-            list.add(PROPERTY_DEVICE_TYPE);
-            list.add(PROPERTY_CONTROL_BOARD);
-            list.add(PROPERTY_MAIN_BOARD);
-            list.add(PROPERTY_POWER_TIMER);
-            requestProperty(list, null);
             if (getRunningMode() == RunningMode.Foreground) {
                 if (autoUpdateTimer != null)
                     cancelTimer();
@@ -488,7 +507,6 @@ public class AirPurifier_MXChip extends AirPurifier {
                     }
                 }, 1000, 5000);
             }
-
         }
 
         private void doTime() {
@@ -617,16 +635,7 @@ public class AirPurifier_MXChip extends AirPurifier {
             }
         }
 
-        @Override
-        public boolean onIOInit() {
-            try {
-                isOffline = true;
-                return true;
-            } catch (Exception e) {
-                e.printStackTrace();
-                return false;
-            }
-        }
+
 
         private void cancelTimer() {
             if (autoUpdateTimer != null) {
@@ -645,9 +654,6 @@ public class AirPurifier_MXChip extends AirPurifier {
 
             @Override
             public void onSuccess(Void var1) {
-                try {
-                    waitObject(Timeout);
-
                     if (callback != null) {
                         if (Respone) {
                             isOffline = false;
@@ -657,11 +663,7 @@ public class AirPurifier_MXChip extends AirPurifier {
                             this.callback.onFailure(null);
                         }
                     }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                    if (callback != null)
-                        callback.onFailure(e);
-                }
+
 
             }
 

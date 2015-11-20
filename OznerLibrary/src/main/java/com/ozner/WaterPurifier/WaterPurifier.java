@@ -28,15 +28,21 @@ public class WaterPurifier extends OznerDevice {
     private static final byte Opcode_RequestStatus = (byte) 0x01;
     private static final byte Opcode_RespondStatus = (byte) 0x01;
     private static final byte Opcode_ChangeStatus = (byte) 0x02;
-    private static final byte Opcode_DeviceInfo = (byte) 0x01;
+    private static final byte Opcode_DeviceInfo = (byte) 0x03;
+
     private static String SecureCode = "16a21bd6";
     final WaterPurifierStatus status = new WaterPurifierStatus();
+    final WaterPurifierInfo info=new WaterPurifierInfo();
     final WaterPurifierImp waterPurifierImp = new WaterPurifierImp();
     boolean isOffline = true;
     Timer autoUpdateTimer = null;
 
     public WaterPurifier(Context context, String Address, String Model, String Setting) {
         super(context, Address, Model, Setting);
+    }
+    public WaterPurifierInfo info()
+    {
+        return info;
     }
 
     public static byte[] MakeWoodyBytes(byte Group, byte OpCode, String Address, byte[] payload) {
@@ -56,6 +62,18 @@ public class WaterPurifier extends OznerDevice {
 
         bytes[len - 1] = CRC8.calcCrc8(bytes, 0, bytes.length - 1);
         return bytes;
+    }
+
+    @Override
+    public String toString() {
+        if (isOffline())
+        {
+            return "offline";
+        }else {
+            return String.format("Power:%s Hot:%s Cool:%s\nTDS1:%d TDS2:%d",
+                    String.valueOf(Power()), String.valueOf(Hot()), String.valueOf(Cool()),
+                    TDS1(), TDS2());
+        }
     }
 
     @Override
@@ -215,6 +233,8 @@ public class WaterPurifier extends OznerDevice {
     }
 
 
+
+
     class WaterPurifierImp implements
             BaseDeviceIO.OnTransmissionsCallback,
             BaseDeviceIO.StatusCallback,
@@ -233,6 +253,7 @@ public class WaterPurifier extends OznerDevice {
 
         @Override
         public void onReady(BaseDeviceIO io) {
+            updateStatus(null);
             if (getRunningMode() == RunningMode.Foreground) {
                 if (autoUpdateTimer != null)
                     cancelTimer();
@@ -263,19 +284,23 @@ public class WaterPurifier extends OznerDevice {
                 byte opCode = bytes[3];
                 switch (group) {
                     case GroupCode_DeviceToApp:
-                        if (opCode == Opcode_RespondStatus) {
-                            status.fromBytes(bytes);
-                            Intent intent = new Intent(ACTION_WATER_PURIFIER_STATUS_CHANGE);
-                            intent.putExtra(Extra_Address, Address());
-                            context().sendBroadcast(intent);
-                            isOffline = false;
+                        switch (opCode)
+                        {
+                            case Opcode_RespondStatus:
+                                status.fromBytes(bytes);
+                                Intent intent = new Intent(ACTION_WATER_PURIFIER_STATUS_CHANGE);
+                                intent.putExtra(Extra_Address, Address());
+                                context().sendBroadcast(intent);
+                                isOffline = false;
+                                break;
+                            case Opcode_DeviceInfo:
+                                info.fromBytes(bytes);
+                                setObject();
+                                isOffline = false;
+                                break;
                         }
                         break;
-                    case GroupCode_DevceToServer:
-                        if (opCode == Opcode_DeviceInfo) {
 
-                        }
-                        break;
                 }
 
             }
@@ -285,16 +310,8 @@ public class WaterPurifier extends OznerDevice {
         public boolean onIOInit() {
             try {
                 isOffline = true;
-                updateStatus(new OperateCallback<Void>() {
-                    @Override
-                    public void onSuccess(Void var1) {
-                    }
-
-                    @Override
-                    public void onFailure(Throwable var1) {
-                        setObject();
-                    }
-                });
+                IO().send(MakeWoodyBytes(GroupCode_AppToDevice, Opcode_RequestStatus, Address(), null), null);
+                waitObject(5000);
                 return true;
             } catch (Exception e) {
                 e.printStackTrace();

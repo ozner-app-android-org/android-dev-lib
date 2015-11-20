@@ -182,8 +182,7 @@ public class BluetoothScan extends XObject implements LeScanCallback, Runnable {
                             }
                         }
                         if (flag == GAP_ADTYPE_SERVICE_DATA) {
-                            byte[] data = Arrays.copyOfRange(scanRecord,
-                                    pos + 1, pos + len);
+                            byte[] data = Arrays.copyOfRange(scanRecord, pos + 1, pos + len);
                             //BluetoothScanRep rep = new BluetoothScanRep();
                             rep.FromBytes(data);
                         }

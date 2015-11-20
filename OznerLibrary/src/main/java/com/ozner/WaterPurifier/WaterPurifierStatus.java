@@ -24,8 +24,8 @@ public class WaterPurifierStatus {
      */
     public Boolean Sterilization = false;
 
-    private int TDS1 = Integer.MAX_VALUE;
-    private int TDS2 = Integer.MAX_VALUE;
+    private int TDS1 = 0xffff;
+    private int TDS2 = 0xffff;
 
     public int TDS1() {
         return TDS1;
