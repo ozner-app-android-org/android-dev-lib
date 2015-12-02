@@ -23,10 +23,10 @@ public class BluetoothScan extends XObject implements LeScanCallback, Runnable {
     public static final String Extra_Model = "getType";
     public static final String Extra_Firmware = "getFirmware";
     public static final String Extra_Platform = "Platform";
-    public static final String Extra_CustomType = "CustomType";
-    public static final String Extra_CustomData = "CustomData";
+    public static final String Extra_ScanResponseType = "CustomType";
+    public static final String Extra_ScanResponseData = "ScanResponseData";
     public static final String Extra_RSSI = "RSSI";
-    public static final String Extra_DataAvailable = "DataAvailable";
+    //public static final String Extra_DataAvailable = "DataAvailable";
 
     /**
      * 扫描开始广播,无附加数据
@@ -176,9 +176,9 @@ public class BluetoothScan extends XObject implements LeScanCallback, Runnable {
                             if (device.getName().equals("Ozner Cup")) {
                                 rep.Model = "CP001";
                                 rep.Platform = "C01";
-                                rep.CustomData = data;
-                                rep.Available = true;
-                                rep.CustomDataType = AD_CustomType_Gravity;
+                                rep.ScanResponseData = data;
+                                //rep.Available = true;
+                                rep.ScanResponseType = AD_CustomType_Gravity;
                             }
                         }
                         if (flag == GAP_ADTYPE_SERVICE_DATA) {
@@ -207,9 +207,9 @@ public class BluetoothScan extends XObject implements LeScanCallback, Runnable {
         intent.putExtra(Extra_RSSI, rssi);
         if (rep.Firmware != null)
             intent.putExtra(Extra_Firmware, rep.Firmware.getTime());
-        intent.putExtra(Extra_CustomType, rep.CustomDataType);
-        intent.putExtra(Extra_CustomData, rep.CustomData);
-        intent.putExtra(Extra_DataAvailable, rep.Available);
+        intent.putExtra(Extra_ScanResponseType, rep.ScanResponseType);
+        intent.putExtra(Extra_ScanResponseData, rep.ScanResponseData);
+        //intent.putExtra(Extra_DataAvailable, rep.Available);
         mContext.sendBroadcast(intent);
     }
 

@@ -14,14 +14,12 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import com.getbase.floatingactionbutton.FloatingActionButton;
 import com.ozner.AirPurifier.AirPurifier_MXChip;
+import com.ozner.WaterPurifier.WaterPurifier;
 import com.ozner.application.OznerBLEService;
 import com.ozner.cup.Cup;
-import com.ozner.device.BaseDeviceIO;
-import com.ozner.device.NotSupportDeviceException;
 import com.ozner.device.OznerDevice;
 import com.ozner.device.OznerDeviceManager;
 import com.ozner.tap.Tap;
@@ -40,21 +38,28 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         {
             Intent intent=new Intent(this,TapActivity.class);
             intent.putExtra("Address", device.Address());
-            startActivity(intent);
+            startActivityForResult(intent, 0);
             return;
         }
         if (device instanceof Cup)
         {
-            Intent intent=new Intent(this,TapActivity.class);
+            Intent intent=new Intent(this,CupActivity.class);
             intent.putExtra("Address", device.Address());
-            startActivity(intent);
+            startActivityForResult(intent,0);
             return;
         }
         if (device instanceof AirPurifier_MXChip)
         {
             Intent intent=new Intent(this,AirPurifierAcivity.class);
             intent.putExtra("Address", device.Address());
-            startActivity(intent);
+            startActivityForResult(intent,0);
+            return;
+        }
+        if (device instanceof WaterPurifier)
+        {
+            Intent intent=new Intent(this,WaterPurifierActivity.class);
+            intent.putExtra("Address", device.Address());
+            startActivityForResult(intent,0);
             return;
         }
     }
@@ -84,7 +89,6 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_main);
         adapter=new MyAdapter(this);
 
@@ -137,30 +141,22 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-            case WifiActivityRequestCode:
-                if (requestCode == RESULT_OK) {
-
-                }
-                break;
-        }
         super.onActivityResult(requestCode, resultCode, data);
+        load();
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.addWifiButton: {
-                                BaseDeviceIO io = OznerDeviceManager.Instance().ioManagerList().mxChipIOManager().createNewIO("FOG_HAOZE_AIR", "C8:93:46:C0:43:D7", "FOG_HAOZE_AIR");
-                OznerDevice device = null;
-                try {
-                    device = OznerDeviceManager.Instance().getDevice(io);
-                    OznerDeviceManager.Instance().save(device);
-                } catch (NotSupportDeviceException e) {
-                    e.printStackTrace();
-                }
-
-
+//                BaseDeviceIO io = OznerDeviceManager.Instance().ioManagerList().mxChipIOManager().createNewIO("MXCHIP_HAOZE_Water", "C8:93:46:C0:13:D7", "MXCHIP_HAOZE_Water");
+//                OznerDevice device = null;
+//                try {
+//                    device = OznerDeviceManager.Instance().getDevice(io);
+//                    OznerDeviceManager.Instance().save(device);
+//                } catch (NotSupportDeviceException e) {
+//                    e.printStackTrace();
+//                }
                 Intent intent = new Intent(this, WifiConfigurationActivity.class);
                 startActivityForResult(intent, WifiActivityRequestCode);
                 break;
@@ -173,7 +169,6 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         }
     }
     private void load(){
-        adapter.clear();
         if (OznerDeviceManager.Instance()==null)
         {
             return;
@@ -183,7 +178,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         {
             return;
         }
-
+        adapter.clear();
         for (OznerDevice device : OznerDeviceManager.Instance().getDevices())
         {
             adapter.add(device);

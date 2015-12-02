@@ -35,11 +35,6 @@
                 android:textSize="15sp" />
         </LinearLayout>
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_alignParentBottom="true"
-            android:background="@android:color/darker_gray"></RelativeLayout>
     </RelativeLayout>
 
     <RelativeLayout
@@ -73,11 +68,6 @@
                 android:textSize="15sp" />
         </RelativeLayout>
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_alignParentBottom="true"
-            android:background="@android:color/darker_gray"></RelativeLayout>
     </RelativeLayout>
 
     <RelativeLayout
@@ -110,11 +100,6 @@
                 android:textSize="15sp" />
         </RelativeLayout>
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_alignParentBottom="true"
-            android:background="@android:color/darker_gray"></RelativeLayout>
     </RelativeLayout>
 
     <RelativeLayout
@@ -148,11 +133,6 @@
                 android:textSize="15sp" />
         </RelativeLayout>
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_alignParentBottom="true"
-            android:background="@android:color/darker_gray"></RelativeLayout>
     </RelativeLayout>
 
     <RelativeLayout
@@ -186,11 +166,7 @@
                 android:textSize="15sp" />
         </RelativeLayout>
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_alignParentBottom="true"
-            android:background="@android:color/darker_gray"></RelativeLayout>
+
     </RelativeLayout>
 
     <RelativeLayout
@@ -221,11 +197,7 @@
                 android:textSize="15sp" />
         </LinearLayout>
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_alignParentBottom="true"
-            android:background="@android:color/darker_gray"></RelativeLayout>
+
     </RelativeLayout>
 
     <RelativeLayout
@@ -269,12 +241,6 @@
                     android:text="温度" />
             </RadioGroup>
         </RelativeLayout>
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_alignParentBottom="true"
-            android:background="@android:color/darker_gray"></RelativeLayout>
     </RelativeLayout>
 
     <RelativeLayout
@@ -306,11 +272,6 @@
                 android:textSize="15sp" />
         </RelativeLayout>
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_alignParentBottom="true"
-            android:background="@android:color/darker_gray"></RelativeLayout>
     </RelativeLayout>
 
     <RelativeLayout
@@ -368,11 +329,6 @@
             </RadioGroup>
         </RelativeLayout>
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_alignParentBottom="true"
-            android:background="@android:color/darker_gray"></RelativeLayout>
     </RelativeLayout>
 
     <RelativeLayout
@@ -404,11 +360,6 @@
                 android:textSize="15sp" />
         </LinearLayout>
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_alignParentBottom="true"
-            android:background="@android:color/darker_gray"></RelativeLayout>
     </RelativeLayout>
 
     <RelativeLayout
@@ -459,35 +410,20 @@
                     android:text="响两声" />
             </RadioGroup>
         </RelativeLayout>
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_alignParentBottom="true"
-            android:background="@android:color/darker_gray"></RelativeLayout>
     </RelativeLayout>
 
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-    <Button
-            android:id="@+id/SensorZero"
-            android:layout_width="160dp"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:text="传感器置0" />
-    </RelativeLayout>
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
         <Button
+            android:background="@drawable/button"
             android:id="@+id/Submit"
             android:layout_width="160dp"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
+            android:layout_marginTop="15dp"
             android:text="提交" />
     </RelativeLayout>
 

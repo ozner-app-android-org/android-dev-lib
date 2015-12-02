@@ -244,6 +244,7 @@ public class MXChipPair {
                 mdnsApi.startMdnsService("_easylink._tcp.local.", this);
                 wait(MDNSTimeout);
                 mdnsApi.stopMdnsService();
+
                 if (Helper.StringIsNullOrEmpty(deviceMAC)) {
                     callback.onPairFailure(new TimeoutException());
                     return;

@@ -14,8 +14,7 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.TimePicker.OnTimeChangedListener;
-import com.ozner.application.OznerBLEService.OznerBLEBinder;
-import ozner.xzy.test.R.id;
+
 import com.ozner.cup.Cup;
 import com.ozner.cup.CupSetting;
 import com.ozner.device.OznerDeviceManager;
@@ -23,9 +22,10 @@ import com.ozner.device.OznerDeviceManager;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import ozner.xzy.test.R.id;
+
 @SuppressLint("SimpleDateFormat")
 public class CupSetupActivity extends Activity implements View.OnClickListener {
-    public static final String RemindFragment_Key = "CupRemindSetup";
     Cup mCup = null;
     CupSetting mCupSetting = null;
     EditText cup_Name;
@@ -80,7 +80,7 @@ public class CupSetupActivity extends Activity implements View.OnClickListener {
         cup_Halo_Slow = (RadioButton) this.findViewById(id.Cup_Halo_Slow);
         cup_Halo_None = (RadioButton) this.findViewById(id.Cup_Halo_None);
         this.findViewById(id.Submit).setOnClickListener(this);
-        this.findViewById(id.SensorZero).setOnClickListener(this);
+
 
         this.findViewById(id.Cup_RemindStartPanel).setOnClickListener(this);
         this.findViewById(id.Cup_RemindEndPanel).setOnClickListener(this);
@@ -204,7 +204,7 @@ public class CupSetupActivity extends Activity implements View.OnClickListener {
             case id.Cup_RemindStartPanel: {
                 final TimePicker picker = new TimePicker(this);
 
-                SimpleDateFormat fmt = new SimpleDateFormat("hh:mm");
+                SimpleDateFormat fmt = new SimpleDateFormat("HH:mm");
                 picker.setIs24HourView(true);
                 picker.setOnTimeChangedListener(new OnTimeChangedListener() {
                     @Override
@@ -220,7 +220,7 @@ public class CupSetupActivity extends Activity implements View.OnClickListener {
                         .setPositiveButton("确定", new AlertDialog.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                SimpleDateFormat fmt = new SimpleDateFormat("hh:mm");
+                                SimpleDateFormat fmt = new SimpleDateFormat("HH:mm");
                                 StartTime = new Date(0, 0, 0, picker
                                         .getCurrentHour(), picker
                                         .getCurrentMinute());
@@ -231,7 +231,7 @@ public class CupSetupActivity extends Activity implements View.OnClickListener {
             break;
             case id.Cup_RemindEndPanel: {
                 final TimePicker picker = new TimePicker(this);
-                SimpleDateFormat fmt = new SimpleDateFormat("hh:mm");
+                SimpleDateFormat fmt = new SimpleDateFormat("HH:mm");
                 picker.setIs24HourView(true);
                 picker.setOnTimeChangedListener(new OnTimeChangedListener() {
                     @Override
@@ -247,7 +247,7 @@ public class CupSetupActivity extends Activity implements View.OnClickListener {
                         .setPositiveButton("确定", new AlertDialog.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                SimpleDateFormat fmt = new SimpleDateFormat("hh:mm");
+                                SimpleDateFormat fmt = new SimpleDateFormat("HH:mm");
                                 EndTime = new Date(0, 0, 0,
                                         picker.getCurrentHour(), picker
                                         .getCurrentMinute());

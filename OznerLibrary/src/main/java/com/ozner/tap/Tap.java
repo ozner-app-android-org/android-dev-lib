@@ -81,10 +81,27 @@ public class Tap extends OznerDevice {
      */
     public static boolean isBindMode(BluetoothIO io) {
         if (!TapManager.IsTap(io.getType())) return false;
-        if (io.getCustomData() != null) {
-            byte[] data = io.getCustomData();
+        if (io.getScanResponseData() != null) {
+            byte[] data = io.getScanResponseData();
             if (data.length > 0) {
                 return data[0] == 1;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    protected boolean doCheckAvailable(BaseDeviceIO io) {
+        if (io==null)
+        {
+            BluetoothIO bluetoothIO=(BluetoothIO)io;
+            if (((BluetoothIO) io).getScanResponseType()==0x10)
+            {
+                byte[] bytes=bluetoothIO.getScanResponseData();
+                if (bytes.length>8)
+                {
+                    return bytes[8]>0;
+                }
             }
         }
         return false;
@@ -381,7 +398,7 @@ public class Tap extends OznerDevice {
                         }
                         mLastDataTime = new Date();
 
-                        if ((mRecords.size()>0)&&(record.Index == 0)) {
+                        if ((mRecords.size()>0)&&(record.Index == record.Count)) {
                             synchronized (mRecords) {
                                 mTapRecordList.addRecord(mRecords.toArray(new RawRecord[mRecords.size()]));
                                 mRecords.clear();

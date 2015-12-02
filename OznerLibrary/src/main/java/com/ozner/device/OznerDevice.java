@@ -23,6 +23,9 @@ public abstract class OznerDevice extends XObject {
         this.Type = Type;
         this.setting = initSetting(Setting);
     }
+
+
+
     /**
      * 设备数值改变
      */
@@ -103,14 +106,29 @@ public abstract class OznerDevice extends XObject {
 
     protected abstract void doSetDeviceIO(BaseDeviceIO oldIO, BaseDeviceIO newIO);
 
+    /**
+     * 在后台模式时判断接口是否包含有效数据,如果是则连接,否不进行连接
+     * @param io 接口IO
+     * @return true包含数据
+     */
+    protected boolean doCheckAvailable(BaseDeviceIO io)
+    {
+        return true;
+    }
     public boolean Bind(BaseDeviceIO deviceIO) throws DeviceNotReadyException {
 
         if ((deviceIO!=null) && (!deviceIO.getClass().equals(getIOType())))
         {
             throw new ClassCastException();
         }
+
         if (this.deviceIO == deviceIO)
             return false;
+
+        if ((getRunningMode()==RunningMode.Background) && (deviceIO!=null))
+        {
+            if (!doCheckAvailable(deviceIO)) return false;
+        }
 
         if (Helper.StringIsNullOrEmpty(setting.name())) {
             setting.name(getDefaultName());

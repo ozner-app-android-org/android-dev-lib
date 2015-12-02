@@ -82,9 +82,9 @@ public class Cup extends OznerDevice {
      */
     public static boolean isBindMode(BluetoothIO io) {
         if (!CupManager.IsCup(io.getType())) return false;
-        if ((io.getCustomDataType() == AD_CustomType_Gravity) && (io.getCustomData() != null)) {
+        if ((io.getScanResponseType() == AD_CustomType_Gravity) && (io.getScanResponseData() != null)) {
             CupGravity gravity = new CupGravity();
-            gravity.FromBytes(io.getCustomData(), 0);
+            gravity.FromBytes(io.getScanResponseData(), 0);
             return gravity.IsHandstand();
         }
         return false;

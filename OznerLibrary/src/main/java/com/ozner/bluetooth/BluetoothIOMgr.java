@@ -46,8 +46,8 @@ public class BluetoothIOMgr extends IOManager {
                     bluetoothIO = (BluetoothIO) devices.get(device.getAddress());
             }
             if (bluetoothIO != null) {
+                bluetoothIO.updateScanResponse(scanRep.ScanResponseType, scanRep.ScanResponseData);
                 doAvailable(bluetoothIO);
-                bluetoothIO.updateCustomData(scanRep.CustomDataType, scanRep.CustomData);
             }
 
 

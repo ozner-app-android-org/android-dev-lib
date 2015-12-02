@@ -30,14 +30,15 @@ public abstract class BaseBluetoothDeviceManager extends BaseDeviceManager {
 
     protected abstract boolean chekcBindMode(String Model, int CustomType, byte[] CustomData);
 
+
     class Monitor extends BroadcastReceiver {
 
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(BluetoothScan.ACTION_SCANNER_FOUND)) {
                 if (chekcBindMode(intent.getStringExtra(BluetoothScan.Extra_Model),
-                        intent.getIntExtra(BluetoothScan.Extra_CustomType, 0),
-                        intent.getByteArrayExtra(BluetoothScan.Extra_CustomData))) {
+                        intent.getIntExtra(BluetoothScan.Extra_ScanResponseType, 0),
+                        intent.getByteArrayExtra(BluetoothScan.Extra_ScanResponseData))) {
                     String address = intent.getStringExtra(BluetoothScan.Extra_Address);
                     synchronized (bindDevices) {
                         if (!bindDevices.contains(address)) {

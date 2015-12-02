@@ -442,19 +442,19 @@ public class AirPurifier_MXChip extends AirPurifier {
 
 
 
-        private void requestStatus() {
-            HashSet<Byte> ps = new HashSet<>();
-            ps.add(PROPERTY_POWER);
-            ps.add(PROPERTY_SPEED);
-            ps.add(PROPERTY_LIGHT);
-            ps.add(PROPERTY_LOCK);
-            ps.add(PROPERTY_PM25);
-            ps.add(PROPERTY_TEMPERATURE);
-            ps.add(PROPERTY_VOC);
-            ps.add(PROPERTY_LIGHT_SENSOR);
-            ps.add(PROPERTY_FILTER);
-            requestProperty(ps, null);
-        }
+//        private void requestStatus() {
+//            HashSet<Byte> ps = new HashSet<>();
+//            ps.add(PROPERTY_POWER);
+//            ps.add(PROPERTY_SPEED);
+//            ps.add(PROPERTY_LIGHT);
+//            ps.add(PROPERTY_LOCK);
+//            ps.add(PROPERTY_PM25);
+//            ps.add(PROPERTY_TEMPERATURE);
+//            ps.add(PROPERTY_VOC);
+//            ps.add(PROPERTY_LIGHT_SENSOR);
+//            ps.add(PROPERTY_FILTER);
+//            requestProperty(ps, null);
+//        }
 
         private void setAutoReflash(short period, HashSet<Byte> propertys, OperateCallback<Void> cb) {
             byte[] bytes = new byte[3 + propertys.size()];
@@ -510,13 +510,12 @@ public class AirPurifier_MXChip extends AirPurifier {
         }
 
         private void doTime() {
-
             HashSet<Byte> list = new HashSet<>();
             list.add(PROPERTY_PM25);
             list.add(PROPERTY_LIGHT_SENSOR);
             list.add(PROPERTY_TEMPERATURE);
             list.add(PROPERTY_VOC);
-
+            list.add(PROPERTY_LIGHT_HUMIDITY);
             list.add(PROPERTY_POWER);
             list.add(PROPERTY_SPEED);
             list.add(PROPERTY_LIGHT);
@@ -533,8 +532,8 @@ public class AirPurifier_MXChip extends AirPurifier {
         {
             if (IO()!=null)
             {
-                Respone=false;
-                return IO().send(data, new SendOperateCallbackProxy(cb));
+                //Respone=false;
+                return IO().send(data, cb);
             }else
                 return false;
         }
@@ -601,6 +600,7 @@ public class AirPurifier_MXChip extends AirPurifier {
                                 case PROPERTY_PM25:
                                 case PROPERTY_TEMPERATURE:
                                 case PROPERTY_VOC:
+                                case PROPERTY_LIGHT_HUMIDITY:
                                 case PROPERTY_LIGHT_SENSOR: {
                                     Intent intent = new Intent(ACTION_AIR_PURIFIER_SENSOR_CHANGED);
                                     intent.putExtra(Extra_Address, Address());
@@ -645,33 +645,33 @@ public class AirPurifier_MXChip extends AirPurifier {
             }
         }
 
-        class SendOperateCallbackProxy implements OperateCallback<Void> {
-            OperateCallback<Void> callback;
-
-            public SendOperateCallbackProxy(OperateCallback<Void> callback) {
-                this.callback = callback;
-            }
-
-            @Override
-            public void onSuccess(Void var1) {
-                    if (callback != null) {
-                        if (Respone) {
-                            isOffline = false;
-                            callback.onSuccess(null);
-                        } else {
-                            isOffline = true;
-                            this.callback.onFailure(null);
-                        }
-                    }
-
-
-            }
-
-            @Override
-            public void onFailure(Throwable var1) {
-                callback.onFailure(var1);
-            }
-        }
+//        class SendOperateCallbackProxy implements OperateCallback<Void> {
+//            OperateCallback<Void> callback;
+//
+//            public SendOperateCallbackProxy(OperateCallback<Void> callback) {
+//                this.callback = callback;
+//            }
+//
+//            @Override
+//            public void onSuccess(Void var1) {
+//                    if (callback != null) {
+//                        if (Respone) {
+//                            isOffline = false;
+//                            callback.onSuccess(null);
+//                        } else {
+//                            isOffline = true;
+//                            this.callback.onFailure(null);
+//                        }
+//                    }
+//
+//
+//            }
+//
+//            @Override
+//            public void onFailure(Throwable var1) {
+//                callback.onFailure(var1);
+//            }
+//        }
 
 
     }

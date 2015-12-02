@@ -114,13 +114,13 @@ public class AddDeviceActivity extends Activity {
                         device.getType());
                 if (device instanceof BluetoothIO) {
                     BluetoothIO bluetoothIO = (BluetoothIO) device;
-                    ((TextView) convertView.findViewById(R.id.Device_Platfrom)).setText(
+                    ((TextView) convertView.findViewById(R.id.Device_Platform)).setText(
                             bluetoothIO.getPlatform());
                     ((TextView) convertView.findViewById(R.id.Device_Firmware)).setText(
                             fmt.format(new Date(bluetoothIO.getFirmware())));
                     ((TextView) convertView.findViewById(R.id.Device_Custom)).setText(
-                            ((BluetoothIO) device).getCustomData() != null ?
-                                    Helper.ConvertHexByteArrayToString(((BluetoothIO) device).getCustomData())
+                            ((BluetoothIO) device).getScanResponseData() != null ?
+                                    Helper.ConvertHexByteArrayToString(((BluetoothIO) device).getScanResponseData())
                                     : "");
                     if (CupManager.IsCup(device.getType())) {
                         if (Cup.isBindMode(bluetoothIO))

@@ -24,7 +24,7 @@ public class BluetoothScanRep {
     /**
      * 自定义数据类型
      */
-    public int CustomDataType;
+    public int ScanResponseType;
     /**
      * 自定义数据长度
      */
@@ -32,8 +32,8 @@ public class BluetoothScanRep {
     /**
      * 自定义数据 最大8个字节
      */
-    public byte[] CustomData;
-    public boolean Available;
+    public byte[] ScanResponseData;
+    //public boolean Available;
 
     public BluetoothScanRep() {
     }
@@ -50,9 +50,10 @@ public class BluetoothScanRep {
         Model = new String(data, 5, 6).trim();
         Firmware = new Date(data[11] + 2000 - 1900, data[12] - 1, data[13], data[14],
                 data[15], data[16]);
-        CustomDataType = data[17];
-        CustomDataLength = data[18];
-        CustomData = Arrays.copyOfRange(data, 19, 19 + CustomDataLength);
-        Available = data[27] != 0;
+        ScanResponseType = data[17];
+        //CustomDataLength = data[18];
+        ScanResponseData = Arrays.copyOfRange(data, 19, data.length-1);
+        //Available = data[27] != 0;
+
     }
 }

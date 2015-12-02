@@ -15,7 +15,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.ozner.application.OznerBLEService.OznerBLEBinder;
 import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.FirmwareTools;
@@ -62,6 +61,7 @@ public class TapActivity extends Activity implements View.OnClickListener, Firmw
         IntentFilter filter = new IntentFilter();
         filter.addAction(Tap.ACTION_BLUETOOTHTAP_RECORD_COMPLETE);
         filter.addAction(Tap.ACTION_BLUETOOTHTAP_SENSOR);
+        filter.addAction(OznerDeviceManager.ACTION_OZNER_MANAGER_DEVICE_CHANGE);
         filter.addAction(BaseDeviceIO.ACTION_DEVICE_CONNECTING);
         filter.addAction(BaseDeviceIO.ACTION_DEVICE_DISCONNECTED);
         filter.addAction(BaseDeviceIO.ACTION_DEVICE_CONNECTED);
@@ -82,11 +82,12 @@ public class TapActivity extends Activity implements View.OnClickListener, Firmw
 
     private void load() {
         ((TextView) findViewById(R.id.Device_Name)).setText(String.format("%s (%s)",mTap.getName(),mTap.connectStatus()));
+        ((TextView) findViewById(R.id.Address)).setText(mTap.Address());
 
         if (mTap.connectStatus()== BaseDeviceIO.ConnectStatus.Connected) {
             BluetoothIO io=(BluetoothIO)mTap.IO();
                     ((TextView) findViewById(R.id.Device_Model)).setText(io.getType());
-            ((TextView) findViewById(R.id.Device_Platfrom)).setText(io.getPlatform());
+            ((TextView) findViewById(R.id.Device_Platform)).setText(io.getPlatform());
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
             ((TextView) findViewById(R.id.Device_Firmware)).setText(sdf
                     .format(new Date(io.getFirmware())));
@@ -157,6 +158,7 @@ public class TapActivity extends Activity implements View.OnClickListener, Firmw
                 }
             }
         }
+        load();
         super.onActivityResult(requestCode, resultCode, data);
     }
 
@@ -182,7 +184,7 @@ public class TapActivity extends Activity implements View.OnClickListener, Firmw
             case R.id.Device_Setup: {
                 Intent intent = new Intent(this, TapSetupActivity.class);
                 intent.putExtra("Address", mTap.Address());
-                startActivity(intent);
+                startActivityForResult(intent,0);
             }
             break;
 

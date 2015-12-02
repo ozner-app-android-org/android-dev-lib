@@ -12,6 +12,7 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * Created by xzyxd on 2015/9/17.
@@ -22,7 +23,42 @@ public class UIXVolumeChartView extends UIXChartView {
 
     public UIXVolumeChartView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        setAdapter(adapter);
+        this.setMinimumHeight(Screen.dip2px(getContext(), 30));
     }
+
+    ChartAdapter testAdapter=new ChartAdapter() {
+        int[] data;
+        @Override
+        protected void init() {
+            data=new int[20];
+            Random random=new Random();
+            for (int i=0;i<data.length;i++)
+            {
+                data[i]=random.nextInt(2000);
+            }
+            super.init();
+        }
+
+        public int count() {
+            return data.length;
+        }
+
+        @Override
+        public int getValue(int Index) {
+            return data[Index];
+        }
+
+        @Override
+        public int getMax() {
+            return 400;
+        }
+
+        @Override
+        public ViewMode getViewMode() {
+            return ViewMode.Day;
+        }
+    };
 
     @Override
     protected void init() {

@@ -81,7 +81,6 @@ public class ServiceThread implements Runnable {
             output.append("HTTP/1.1 200 OK\n");
             output.append("Connection: keep-alive\r\n");
             output.append("Content-Type: application/json\n");
-            output.append("Connection: keep-alive\n");
             output.append("Content-Length:" + outputData.length());
             output.append("\r\n\r\n");
             output.append(outputData);

@@ -36,6 +36,7 @@ public class EasyLinkSender {
 
     public EasyLinkSender() {
         try {
+
             udpSocket = new DatagramSocket();
         } catch (SocketException e) {
             e.printStackTrace();
@@ -75,17 +76,6 @@ public class EasyLinkSender {
             byte[] data = new byte[2];
             int userlength = user_info.length;
 
-            if (userlength == 0) {
-                userlength++;
-                user_info = new byte[1];
-                user_info[0] = 0;
-            }
-            // if(null!=user_info){
-            // userlength = user_info.getBytes("UTF-8").length;
-            // userinfo = new byte[userlength];
-            // System.arraycopy(user_info.getBytes("UTF-8"), 0, userinfo, 0,
-            // userlength);
-            // }
 
             data[0] = (byte) ssid.length;
             data[1] = (byte) key.length;

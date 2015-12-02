@@ -19,7 +19,6 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import ozner.xzy.test.R.id;
 import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.cup.Cup;
 import com.ozner.cup.CupRecord;
@@ -31,6 +30,8 @@ import com.ozner.util.GetPathFromUri4kitkat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+
+import ozner.xzy.test.R.id;
 
 @SuppressLint("SimpleDateFormat")
 public class CupActivity extends Activity implements OnClickListener, FirmwareTools.FirmwareUpateInterface {
@@ -86,6 +87,7 @@ public class CupActivity extends Activity implements OnClickListener, FirmwareTo
         filter.addAction(Cup.ACTION_BLUETOOTHCUP_RECORD_COMPLETE);
         filter.addAction(BaseDeviceIO.ACTION_DEVICE_CONNECTED);
         filter.addAction(BaseDeviceIO.ACTION_DEVICE_CONNECTING);
+        filter.addAction(OznerDeviceManager.ACTION_OZNER_MANAGER_DEVICE_CHANGE);
         filter.addAction(BaseDeviceIO.ACTION_DEVICE_DISCONNECTED);
         filter.addAction(Cup.ACTION_BLUETOOTHCUP_SENSOR);
         this.registerReceiver(mMonitor, filter);
@@ -107,20 +109,32 @@ public class CupActivity extends Activity implements OnClickListener, FirmwareTo
         load();
         super.onCreate(savedInstanceState);
     }
-
+    private String getValue(int v) {
+        String text = String.valueOf(v);
+        if (v == 0xffff) {
+            text = "-";
+        }
+        return text;
+    }
+    private void setText(int id, String text) {
+        TextView tv = (TextView) findViewById(id);
+        if (tv != null) {
+            tv.setText(text);
+        }
+    }
     private void load() {
 
         ((TextView) findViewById(id.Device_Name)).setText(mCup.Setting().name()
                 + (mCup.connectStatus() == BaseDeviceIO.ConnectStatus.Connected ? "(设备已连接)" : "(设备未连接)"));
-        if (mCup.connectStatus()== BaseDeviceIO.ConnectStatus.Connected) {
-            BluetoothIO io=(BluetoothIO)mCup.IO();
+        setText(id.Address, "MAC:" + mCup.Address());
 
-                    ((TextView) findViewById(id.Device_Model)).setText(io.getType());
-            ((TextView) findViewById(id.Device_Platfrom)).setText(io.getPlatform());
+        if (mCup.connectStatus()== BaseDeviceIO.ConnectStatus.Connected) {
+            BluetoothIO io = (BluetoothIO) mCup.IO();
+            setText(id.Device_Model, "Model:" + io.getType());
+            setText(id.Device_Platform, "Platform:" + io.getPlatform());
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-            ((TextView) findViewById(id.Device_Firmware)).setText(sdf
-                    .format(new Date(io.getFirmware())));
-            ((TextView) findViewById(id.Device_Message)).setText(mCup.Sensor().toString());
+            setText(id.Device_Firmware, "Firmware:" + sdf.format(new Date(io.getFirmware())));
+            setText(id.Device_Message, "Sensor:" + mCup.Sensor().toString());
         }
 
     }
@@ -180,6 +194,7 @@ public class CupActivity extends Activity implements OnClickListener, FirmwareTo
                 }
             }
         }
+        load();
         super.onActivityResult(requestCode, resultCode, data);
     }
 
@@ -211,7 +226,7 @@ public class CupActivity extends Activity implements OnClickListener, FirmwareTo
             case id.Device_Setup: {
                 Intent intent = new Intent(this, CupSetupActivity.class);
                 intent.putExtra("Address", mCup.Address());
-                startActivity(intent);
+                startActivityForResult(intent,0);
             }
             break;
             case id.UpdateFirmware: {

@@ -86,18 +86,17 @@ public class TapFirmwareTools extends FirmwareTools {
                 if (verS == "") throw new FirmwareException("错误的文件");
                 if (dayS == "") throw new FirmwareException("错误的文件");
                 if (timeS == "") throw new FirmwareException("错误的文件");
+                Platform = verS.substring(0, 3);
+                if (!(Platform.equals("T01") || Platform.equals("T02") || (Platform.equals("T03")))) {
+                    throw new FirmwareException("错误的文件");
+                }
 
                 try {
-                    Platform = verS.substring(0, 3);
                     SimpleDateFormat df = new SimpleDateFormat("MMM dd yyyy HH:mm:ss", Locale.US);
                     Date date = df.parse(dayS + " " + timeS);
                     Firmware = date.getTime();
-                    if (!(Platform.equals("T01") || Platform.equals("T02") || (Platform.equals("T03")))) {
-                        throw new FirmwareException("错误的文件");
-                    }
                 } catch (Exception e) {
                     dbg.e(e.toString());
-
                 }
             }
             String Address = getAddress();

@@ -7,7 +7,6 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -41,8 +40,8 @@ public class BluetoothIO extends BaseDeviceIO {
 //     * 关闭中
 //     */
 //    public final static int STATE_DISCONNECTING = BluetoothGatt.STATE_DISCONNECTING;
-    byte[] customData = null;
-    int customDataType = 0;
+    byte[] scanResponseData = null;
+    int scanResponseType = 0;
     BluetoothDevice device;
     BluetoothProxy bluetoothProxy;
     String Platform = "";
@@ -73,17 +72,17 @@ public class BluetoothIO extends BaseDeviceIO {
         return Platform;
     }
 
-    public void updateCustomData(int customDataType, byte[] customData) {
-        this.customDataType = customDataType;
-        this.customData = customData;
+    public void updateScanResponse(int scanResponseType, byte[] scanResponseData) {
+        this.scanResponseType = scanResponseType;
+        this.scanResponseData = scanResponseData;
     }
 
-    public int getCustomDataType() {
-        return customDataType;
+    public int getScanResponseType() {
+        return scanResponseType;
     }
 
-    public byte[] getCustomData() {
-        return customData;
+    public byte[] getScanResponseData() {
+        return scanResponseData;
     }
 
 

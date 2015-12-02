@@ -223,6 +223,8 @@
         android:layout_height="wrap_content">
 
         <Button
+            android:background="@drawable/button"
+            android:layout_marginTop="15dp"
             android:id="@+id/Submit"
             android:layout_width="160dp"
             android:layout_height="wrap_content"

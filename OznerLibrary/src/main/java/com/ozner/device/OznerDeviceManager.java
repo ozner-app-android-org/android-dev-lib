@@ -387,6 +387,7 @@ public class OznerDeviceManager extends XObject {
         public void onDeviceAvailable(IOManager manager, BaseDeviceIO io) {
             if (io != null) {
                 OznerDevice device = getDevice(io.getAddress());
+
                 if (device != null) {
                     try {
                         device.Bind(io);

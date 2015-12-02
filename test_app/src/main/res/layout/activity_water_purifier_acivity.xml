@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    tools:context="ozner.xzy.test.AirPurifierAcivity"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin">
+    <TextView
+        android:id="@+id/Device_Name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Ozner Cup"
+        android:textColor="@android:color/secondary_text_dark"
+        android:textAppearance="@android:style/TextAppearance.Medium" />
+    <TextView
+        android:id="@+id/Address"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="11:22:33:44:55:66"
+        android:textAppearance="@android:style/TextAppearance.Small" />
+    <TextView
+        android:id="@+id/Model"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="11:22:33:44:55:66"
+        android:textAppearance="@android:style/TextAppearance.Small" />
+    <TextView
+        android:id="@+id/Type"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="11:22:33:44:55:66"
+        android:textAppearance="@android:style/TextAppearance.Small" />
+
+
+
+
+    <TextView
+        android:id="@+id/status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="设备状态:离线"
+        android:textAppearance="@android:style/TextAppearance.Small" />
+
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="3"
+        android:layout_marginTop="5dp"
+        android:orientation="horizontal">
+        <TextView
+            android:id="@+id/tds1"
+            android:layout_columnWeight="1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="TDS1:100"
+            android:textAppearance="@android:style/TextAppearance.Small"/>
+        <TextView
+            android:id="@+id/tds2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:text="TDS2:100"
+            android:textAppearance="@android:style/TextAppearance.Small" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"/>
+
+        <TextView
+            android:id="@+id/powerStatus"
+            android:layout_width="wrap_content"
+            android:layout_columnWeight="1"
+            android:layout_height="wrap_content"
+            android:text="电源:"
+            android:textAppearance="@android:style/TextAppearance.Small"  />
+
+        <TextView
+            android:id="@+id/hotStatus"
+            android:layout_width="wrap_content"
+            android:layout_columnWeight="1"
+            android:layout_height="wrap_content"
+            android:text="加热:"
+            android:textAppearance="@android:style/TextAppearance.Small"  />
+
+        <TextView
+            android:id="@+id/coolStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:text="制冷:"
+            android:textAppearance="@android:style/TextAppearance.Small"  />
+    </GridLayout>
+
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/power"
+            android:background="@drawable/button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+
+            android:text="电源" />
+
+        <Button
+            android:background="@drawable/button"
+
+            android:id="@+id/hot"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+
+            android:text="加热" />
+        <Button
+            android:background="@drawable/button"
+
+            android:id="@+id/cool"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:text="制冷" />
+
+        <Button
+            android:background="@drawable/button"
+
+            android:id="@+id/remove"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:text="解绑" />
+    </LinearLayout>
+
+
+
+    <TextView
+        android:id="@+id/sendStatus"
+        android:layout_marginTop="5dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="发送状态:" />
+</LinearLayout>
