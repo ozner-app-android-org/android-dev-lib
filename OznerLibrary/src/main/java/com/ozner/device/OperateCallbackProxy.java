@@ -5,7 +5,7 @@ package com.ozner.device;
  */
 public class OperateCallbackProxy<T> implements OperateCallback<T> {
 
-    private OperateCallback<T> callback;
+    public OperateCallback<T> callback;
 
     public OperateCallbackProxy(OperateCallback<T> callback) {
         this.callback = callback;

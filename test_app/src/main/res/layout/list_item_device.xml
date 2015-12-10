@@ -24,10 +24,16 @@
         android:text="10:20:30:40:50:60"
         android:textSize="16sp" />
 
-
     <TextView
         android:id="@+id/status"
         android:layout_below="@+id/mac"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Status:"
+        android:textSize="16sp" />
+    <TextView
+        android:id="@+id/text"
+        android:layout_below="@+id/status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="TDS:100"

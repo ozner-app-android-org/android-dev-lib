@@ -8,6 +8,7 @@ import com.ozner.util.ByteUtil;
  * @category 智能杯
  */
 public class TapSensor {
+    public static final int TAP_SENSOR_ERROR = 0xffff;
     public int Battery = 0;
     /**
      * 电池电压
@@ -29,8 +30,9 @@ public class TapSensor {
     /**
      * TDS
      */
-    public int TDSFix = 0;
-    public int TDS = 0;
+    public int TDSFix = TAP_SENSOR_ERROR;
+    public int TDS = TAP_SENSOR_ERROR;
+
     public TapSensor() {
     }
 
@@ -40,6 +42,7 @@ public class TapSensor {
      * @return 0-100%
      */
     public float getPower() {
+        if (BatteryFix == TAP_SENSOR_ERROR) return TAP_SENSOR_ERROR;
         if (BatteryFix > 3000) return 1;
         if (BatteryFix >= 2900) return 0.9f;
         if (BatteryFix >= 2800) return 0.7f;
@@ -54,10 +57,21 @@ public class TapSensor {
         return 0f;
     }
 
+    private static String getValue(int value) {
+        if (value == TAP_SENSOR_ERROR) return "-";
+        else return String.valueOf(value);
+    }
+
+    public void reset() {
+        Battery = TAP_SENSOR_ERROR;
+        BatteryFix = TAP_SENSOR_ERROR;
+        TDS = TAP_SENSOR_ERROR;
+        TDSFix = TAP_SENSOR_ERROR;
+    }
 
     @Override
     public String toString() {
-        return String.format("Battery:%d/%d TDS:%d/%d", Battery, BatteryFix, TDS, TDSFix);
+        return String.format("Battery:%d/%d TDS:%d/%d", getValue(Battery), getValue(BatteryFix), getValue(TDS), getValue(TDSFix));
     }
 
     public void FromBytes(byte[] data, int startIndex) {

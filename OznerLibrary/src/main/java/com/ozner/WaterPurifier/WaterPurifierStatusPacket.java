@@ -5,8 +5,8 @@ import com.ozner.util.ByteUtil;
 /**
  * Created by xzyxd on 2015/11/2.
  */
-public class WaterPurifierStatus {
-
+class WaterPurifierStatusPacket {
+    public final static int WaterPurifierError=0xffff;
     /**
      * 加热
      */
@@ -24,16 +24,9 @@ public class WaterPurifierStatus {
      */
     public Boolean Sterilization = false;
 
-    private int TDS1 = 0xffff;
-    private int TDS2 = 0xffff;
+    public int TDS1 = WaterPurifierError;
+    public int TDS2 = WaterPurifierError;
 
-    public int TDS1() {
-        return TDS1;
-    }
-
-    public int TDS2() {
-        return TDS2;
-    }
 
 
     public void fromBytes(byte[] bytes) {

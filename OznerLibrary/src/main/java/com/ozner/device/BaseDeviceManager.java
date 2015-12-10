@@ -14,25 +14,22 @@ public abstract class BaseDeviceManager extends XObject {
 
     public BaseDeviceManager(Context context) {
         super(context);
-        OznerDeviceManager.Instance().registerManager(this);
     }
+    protected abstract OznerDevice createDevice(String address, String type, String settings);
 
-
-    protected abstract OznerDevice getDevice(BaseDeviceIO io) throws DeviceNotReadyException;
-
-    protected abstract OznerDevice loadDevice(String address, String Type, String Setting);
-
-
-    protected void remove(OznerDevice device) {
-
+    public OznerDevice loadDevice(String address, String type, String settings) {
+        if (isMyDevice(type)) {
+            OznerDevice device = OznerDeviceManager.Instance().getDevice(address);
+            if (device == null) {
+                return  createDevice(address,type,settings);
+            }else
+                return device;
+        } else
+            return null;
     }
-
-    protected void update(OznerDevice device) {
-
+    public boolean checkIsBindMode(BaseDeviceIO io)
+    {
+        return false;
     }
-
-    protected void add(OznerDevice device) {
-    }
-
-    public abstract boolean isMyDevice(BaseDeviceIO io);
+    public abstract boolean isMyDevice(String type);
 }

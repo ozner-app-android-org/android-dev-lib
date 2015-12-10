@@ -16,7 +16,7 @@ public abstract class IOManager extends XObject {
     /**
      * 当前设备列表
      */
-    protected final HashMap<String, BaseDeviceIO> devices = new HashMap<>();
+    final HashMap<String, BaseDeviceIO> devices = new HashMap<>();
     IOManagerCallback ioManagerCallback;
 
     StatusCallbackImp statusCallback = new StatusCallbackImp();
@@ -34,6 +34,14 @@ public abstract class IOManager extends XObject {
     }
 
     protected void doAvailable(BaseDeviceIO io) {
+        synchronized (devices)
+        {
+            if (!devices.containsKey(io.getAddress()))
+            {
+                devices.put(io.getAddress(),io);
+            }
+        }
+
         io.registerStatusCallback(statusCallback);
         if (ioManagerCallback != null) {
             ioManagerCallback.onDeviceAvailable(this, io);
@@ -41,6 +49,14 @@ public abstract class IOManager extends XObject {
     }
 
     protected void doUnavailable(BaseDeviceIO io) {
+        synchronized (devices)
+        {
+            if (devices.containsKey(io.getAddress()))
+            {
+                devices.remove(io.getAddress());
+            }
+        }
+
         io.unRegisterStatusCallback(statusCallback);
         if (ioManagerCallback != null) {
             ioManagerCallback.onDeviceUnavailable(this, io);

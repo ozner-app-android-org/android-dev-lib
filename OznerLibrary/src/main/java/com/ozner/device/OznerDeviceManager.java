@@ -33,14 +33,13 @@ public class OznerDeviceManager extends XObject {
 
     static OznerDeviceManager instance;
     final HashMap<String, OznerDevice> devices = new HashMap<>();
-    final ArrayList<BaseDeviceManager> mManagers = new ArrayList<>();
+    final DeviceManagerList mManagers;
     final IOManagerCallbackImp ioManagerCallbackImp = new IOManagerCallbackImp();
 
     SQLiteDB sqLiteDB;
     String owner = "";
 
     IOManagerList ioManagerList;
-    DeviceManagerList deviceManagerList;
 
     public OznerDeviceManager(Context context) throws InstantiationException {
         super(context);
@@ -48,13 +47,12 @@ public class OznerDeviceManager extends XObject {
             throw new InstantiationException();
         }
         instance = this;
-
+        mManagers = new DeviceManagerList(context);
         sqLiteDB = new SQLiteDB(context);
         //导入老表
         importOldDB();
         ioManagerList = new IOManagerList(context);
         ioManagerList.setIoManagerCallback(ioManagerCallbackImp);
-        deviceManagerList = new DeviceManagerList(context);
     }
 
     public static OznerDeviceManager Instance() {
@@ -73,16 +71,14 @@ public class OznerDeviceManager extends XObject {
         return ioManagerList;
     }
 
-    public DeviceManagerList devcieManagerList() {
-        return deviceManagerList;
-    }
 
     /**
      * 获取用户对应的表名
      */
     private String getOwnerTableName() {
+
         if (Helper.StringIsNullOrEmpty(owner)) return null;
-        return Helper.MD5(owner.trim());
+        return "A" + Helper.MD5(owner.trim());
     }
 
     private void importOldDB() {
@@ -164,13 +160,11 @@ public class OznerDeviceManager extends XObject {
         synchronized (this) {
             devices.clear();
         }
+        CloseAll();
+        LoadDevices();
 
         String Sql = String.format("CREATE TABLE IF NOT EXISTS %s (Address VARCHAR PRIMARY KEY NOT NULL,Type Text NOT NULL,JSON TEXT)", getOwnerTableName());
         sqLiteDB.execSQLNonQuery(Sql, new String[]{});
-
-
-        CloseAll();
-        LoadDevices();
         dbg.i("Set Owner:%s", owner);
         context().sendBroadcast(new Intent(ACTION_OZNER_MANAGER_OWNER_CHANGE));
     }
@@ -188,7 +182,7 @@ public class OznerDeviceManager extends XObject {
                 String Model = v[1];
                 String Json = v[2];
                 if (!devices.containsKey(Address)) {
-                    for (BaseDeviceManager mgr : getManagers()) {
+                    for (BaseDeviceManager mgr : mManagers) {
                         OznerDevice device = mgr.loadDevice(Address, Model, Json);
                         if (device != null) {
                             devices.put(Address, device);
@@ -221,23 +215,18 @@ public class OznerDeviceManager extends XObject {
                 devices.remove(address);
             }
         }
-            Intent intent = new Intent(ACTION_OZNER_MANAGER_DEVICE_REMOVE);
-            intent.putExtra("Address", address);
-            context().sendBroadcast(intent);
+        Intent intent = new Intent(ACTION_OZNER_MANAGER_DEVICE_REMOVE);
+        intent.putExtra("Address", address);
+        context().sendBroadcast(intent);
 
-            ArrayList<BaseDeviceManager> list = getManagers();
-            for (BaseDeviceManager mgr : list) {
-                mgr.remove(device);
-            }
-
-            if (device.IO() != null) {
-                device.IO().close();
-            }
-            try {
-                device.Bind(null);
-            } catch (DeviceNotReadyException e) {
-                e.printStackTrace();
-            }
+//        if (device.IO() != null) {
+//            device.IO().close();
+//        }
+        try {
+            device.Bind(null);
+        } catch (DeviceNotReadyException e) {
+            e.printStackTrace();
+        }
 
     }
 
@@ -288,19 +277,28 @@ public class OznerDeviceManager extends XObject {
      * @return 返回NULL无对应的设备
      */
     public OznerDevice getDevice(BaseDeviceIO io) throws NotSupportDeviceException {
-        synchronized (mManagers) {
-            for (BaseDeviceManager mgr : mManagers) {
-                if (mgr.isMyDevice(io)) {
+        synchronized (devices)
+        {
+            if (devices.containsKey(io.getAddress()))
+            {
+                return devices.get(io.getAddress());
+            }
+        }
+        for (BaseDeviceManager mgr : mManagers) {
+            if (mgr.isMyDevice(io.Type)) {
+                OznerDevice device = mgr.loadDevice(io.getAddress(), io.Type, "");
+                if (device != null) {
                     try {
-                        return mgr.getDevice(io);
+                        device.Bind(io);
+                        return device;
                     } catch (DeviceNotReadyException e) {
                         e.printStackTrace();
                         return null;
                     }
                 }
             }
-            throw new NotSupportDeviceException();
         }
+        throw new NotSupportDeviceException();
     }
 
     public BaseDeviceIO[] getNotBindDevices() {
@@ -315,6 +313,33 @@ public class OznerDeviceManager extends XObject {
             }
         }
         return result.toArray(new BaseDeviceIO[result.size()]);
+    }
+
+    public OznerDevice getDevice(String address, String type, String settings) {
+
+        for (BaseDeviceManager mgr : mManagers) {
+            if (mgr.isMyDevice(type)) {
+                OznerDevice device = mgr.loadDevice(address, type, settings);
+                if (device != null) {
+                    return device;
+                }
+            }
+        }
+
+        return null;
+    }
+    
+    /**
+     * 判断设备是否处于可配对状态
+     */
+    public boolean checkisBindMode(BaseDeviceIO io)
+    {
+        for (BaseDeviceManager mgr : mManagers) {
+            if (mgr.isMyDevice(io.getType())) {
+                return mgr.checkIsBindMode(io);
+            }
+        }
+        return false;
     }
 
     /**
@@ -339,48 +364,26 @@ public class OznerDeviceManager extends XObject {
 
         String sql = String.format("INSERT OR REPLACE INTO %s (Address,Type,JSON) VALUES (?,?,?);", getOwnerTableName());
 
-            sqLiteDB.execSQLNonQuery(sql,
-                    new String[]{device.Address(), device.Type(),
-                            device.Setting().toString()});
+        sqLiteDB.execSQLNonQuery(sql,
+                new String[]{device.Address(), device.Type(),
+                        device.Setting().toString()});
 
-            Intent intent = new Intent();
-            intent.putExtra("Address", Address);
-            intent.setAction(isNew ? ACTION_OZNER_MANAGER_DEVICE_ADD
-                    : ACTION_OZNER_MANAGER_DEVICE_CHANGE);
-            context().sendBroadcast(intent);
-            device.UpdateSetting(); //刷新设置变更
-
-            ArrayList<BaseDeviceManager> list = getManagers();
-            if (isNew) {
-                for (BaseDeviceManager mgr : list) {
-                    mgr.add(device);
-                }
-            } else {
-                for (BaseDeviceManager mgr : list) {
-                    mgr.update(device);
-                }
-            }
-
+        Intent intent = new Intent();
+        intent.putExtra("Address", Address);
+        intent.setAction(isNew ? ACTION_OZNER_MANAGER_DEVICE_ADD
+                : ACTION_OZNER_MANAGER_DEVICE_CHANGE);
+        context().sendBroadcast(intent);
+        device.UpdateSetting(); //刷新设置变更
     }
 
-    private ArrayList<BaseDeviceManager> getManagers() {
-        ArrayList<BaseDeviceManager> list = new ArrayList<>();
-        synchronized (this) {
-            list.addAll(mManagers);
-        }
-        return list;
-    }
+//    private ArrayList<BaseDeviceManager> getManagers() {
+//        ArrayList<BaseDeviceManager> list = new ArrayList<>();
+//        synchronized (this) {
+//            list.addAll(mManagers);
+//        }
+//        return list;
+//    }
 
-    /**
-     * 注册一个设备管理器
-     */
-    public void registerManager(BaseDeviceManager manager) {
-        synchronized (mManagers) {
-            if (!mManagers.contains(manager)) {
-                mManagers.add(manager);
-            }
-        }
-    }
 
     class IOManagerCallbackImp implements IOManager.IOManagerCallback {
         @Override
@@ -412,7 +415,16 @@ public class OznerDeviceManager extends XObject {
             }
         }
     }
-
+//    /**
+//     * 注册一个设备管理器
+//     */
+//    public void registerManager(BaseDeviceManager manager) {
+//        synchronized (mManagers) {
+//            if (!mManagers.contains(manager)) {
+//                mManagers.add(manager);
+//            }
+//        }
+//    }
 //    /**
 //     * 注销设备管理器
 //     */

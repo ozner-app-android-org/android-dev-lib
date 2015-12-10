@@ -392,9 +392,9 @@ public class BluetoothIO extends BaseDeviceIO {
                     mGatt.close();
                     mLooper = null;
                     mHandler = null;
-                    doDisconnected();
                     //mGatt = null;
                 }
+                doDisconnected();
 
             }
         }

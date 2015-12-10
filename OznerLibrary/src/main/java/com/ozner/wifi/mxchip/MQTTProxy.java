@@ -119,9 +119,7 @@ public class MQTTProxy extends XObject {
 
     public interface MQTTListener {
         void onConnected(MQTTProxy proxy);
-
         void onDisconnected(MQTTProxy proxy);
-
         void onPublish(MQTTProxy proxy, String topic, byte[] data);
     }
 

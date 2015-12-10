@@ -1,22 +1,15 @@
 package ozner.xzy.test;
 
-import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.AttributeSet;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.ozner.AirPurifier.AirPurifier_MXChip;
 import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.OznerDevice;
-import com.ozner.device.OznerDeviceManager;
 
 /**
  * Created by zhiyongxu on 15/11/4.
@@ -25,6 +18,8 @@ public class DeviceItemView extends RelativeLayout {
     TextView name;
     TextView mac;
     TextView status;
+    TextView text;
+
     OznerDevice device = null;
     final Monitor monitor=new Monitor();
 
@@ -74,6 +69,8 @@ public class DeviceItemView extends RelativeLayout {
         name = (TextView) findViewById(R.id.name);
         mac = (TextView) findViewById(R.id.mac);
         status = (TextView) findViewById(R.id.status);
+        text = (TextView) findViewById(R.id.text);
+
 //        findViewById(R.id.delete).setOnClickListener(new OnClickListener() {
 //            @Override
 //            public void onClick(View view) {
@@ -97,7 +94,8 @@ public class DeviceItemView extends RelativeLayout {
     }
     private void update()
     {
-        status.setText(device.toString());
+        status.setText("Status:"+device.connectStatus().toString());
+        text.setText(device.toString());
     }
 
 
@@ -107,7 +105,8 @@ public class DeviceItemView extends RelativeLayout {
         this.device = device;
         name.setText(device.getName());
         mac.setText(device.Address());
-        status.setText(device.toString());
+        status.setText("Status:"+device.connectStatus().toString());
+        text.setText(device.toString());
     }
 
 }

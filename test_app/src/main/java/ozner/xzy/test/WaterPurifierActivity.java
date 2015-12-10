@@ -80,11 +80,11 @@ public class WaterPurifierActivity extends AppCompatActivity {
         setText(R.id.Type, "机型:"+waterPurifier.info().Type);
 
         setText(R.id.status, "设备状态:" + (waterPurifier.isOffline() ? "离线" : "在线"));
-        setText(R.id.tds1, "TDS1:" + getValue(waterPurifier.TDS1()));
-        setText(R.id.tds2, "TDS2:" + getValue(waterPurifier.TDS2()));
-        setText(R.id.powerStatus, "电源:" + (waterPurifier.Power() ? "开" : "关"));
-        setText(R.id.hotStatus, "加热:" + (waterPurifier.Hot() ? "开" : "关"));
-        setText(R.id.coolStatus, "制冷:" + (waterPurifier.Cool() ? "开" : "关"));
+        setText(R.id.tds1, "TDS1:" + getValue(waterPurifier.sensor().TDS1()));
+        setText(R.id.tds2, "TDS2:" + getValue(waterPurifier.sensor().TDS2()));
+        setText(R.id.powerStatus, "电源:" + (waterPurifier.status().Power() ? "开" : "关"));
+        setText(R.id.hotStatus, "加热:" + (waterPurifier.status().Hot() ? "开" : "关"));
+        setText(R.id.coolStatus, "制冷:" + (waterPurifier.status().Cool() ? "开" : "关"));
     }
 
 
@@ -126,17 +126,17 @@ public class WaterPurifierActivity extends AppCompatActivity {
             switch (view.getId()) {
                 case R.id.power:
                     sendStatus.setText("发送状态:正在发送");
-                    waterPurifier.setPower(!waterPurifier.Power(), this);
+                    waterPurifier.status().setPower(!waterPurifier.status().Power(), this);
                     break;
 
                 case R.id.cool:
                     sendStatus.setText("发送状态:正在发送");
-                    waterPurifier.setCool(!waterPurifier.Cool(), this);
+                    waterPurifier.status().setCool(!waterPurifier.status().Cool(), this);
                     break;
 
                 case R.id.hot:
                     sendStatus.setText("发送状态:正在发送");
-                    waterPurifier.setHot(!waterPurifier.Hot(), this);
+                    waterPurifier.status().setHot(!waterPurifier.status().Hot(), this);
                     break;
 
                 case R.id.remove: {

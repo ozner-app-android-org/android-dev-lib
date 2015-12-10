@@ -234,37 +234,37 @@ public class CupSetting extends DeviceSetting {
         put("beepMode", value);
     }
 
-    /**
-     * 是否自动推荐饮水量
-     */
-    public boolean autoTaget() {
-        return (Boolean) get("autoTaget", true);
-    }
-
-    /**
-     * 设置是否打开推荐饮水量
-     *
-     * @param value
-     */
-    public void autoTaget(boolean value) {
-        put("autoTaget", value);
-    }
-
-    /**
-     * 是否属于自己的水杯
-     */
-    public boolean isMe() {
-        return (Boolean) get("isMe", true);
-    }
-
-    /**
-     * 设置水杯是否属于自己
-     *
-     * @param value
-     */
-    public void isMe(boolean value) {
-        put("isMe", value);
-    }
+//    /**
+//     * 是否自动推荐饮水量
+//     */
+//    public boolean autoTaget() {
+//        return (Boolean) get("autoTaget", true);
+//    }
+//
+//    /**
+//     * 设置是否打开推荐饮水量
+//     *
+//     * @param value
+//     */
+//    public void autoTaget(boolean value) {
+//        put("autoTaget", value);
+//    }
+//
+//    /**
+//     * 是否属于自己的水杯
+//     */
+//    public boolean isMe() {
+//        return (Boolean) get("isMe", true);
+//    }
+//
+//    /**
+//     * 设置水杯是否属于自己
+//     *
+//     * @param value
+//     */
+//    public void isMe(boolean value) {
+//        put("isMe", value);
+//    }
 
 	/*
     // 构造方法通过sn来设置,并加载配置

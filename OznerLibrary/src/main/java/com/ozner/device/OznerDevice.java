@@ -24,8 +24,6 @@ public abstract class OznerDevice extends XObject {
         this.setting = initSetting(Setting);
     }
 
-
-
     /**
      * 设备数值改变
      */
@@ -94,6 +92,10 @@ public abstract class OznerDevice extends XObject {
     protected DeviceSetting initSetting(String Setting) {
         DeviceSetting setting = new DeviceSetting();
         setting.load(Setting);
+        if (Helper.StringIsNullOrEmpty(Setting().name()))
+        {
+            Setting().name(getDefaultName());
+        }
         return setting;
     }
 
@@ -130,18 +132,22 @@ public abstract class OznerDevice extends XObject {
             if (!doCheckAvailable(deviceIO)) return false;
         }
 
-        if (Helper.StringIsNullOrEmpty(setting.name())) {
-            setting.name(getDefaultName());
+        BaseDeviceIO old=this.deviceIO;
+
+        try {
+            doSetDeviceIO(old, deviceIO);
+        }catch (Exception e)
+        {
+
         }
 
-        doSetDeviceIO(this.deviceIO, deviceIO);
-
         if (this.deviceIO != null) {
-            this.deviceIO.close();
             this.deviceIO = null;
         }
 
-        this.deviceIO = deviceIO;
+        this.deviceIO=deviceIO;
+
+
         if (deviceIO != null) {
             deviceIO.open();
         }

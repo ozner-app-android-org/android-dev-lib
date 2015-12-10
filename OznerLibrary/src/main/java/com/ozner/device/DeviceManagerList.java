@@ -7,10 +7,12 @@ import com.ozner.WaterPurifier.WaterPurifierManager;
 import com.ozner.cup.CupManager;
 import com.ozner.tap.TapManager;
 
+import java.util.ArrayList;
+
 /**
  * Created by xzyxd on 2015/11/2.
  */
-public class DeviceManagerList {
+public class DeviceManagerList extends ArrayList<BaseDeviceManager> {
     CupManager cupManager;
     TapManager tapManager;
     WaterPurifierManager waterPurifierManager;
@@ -21,6 +23,12 @@ public class DeviceManagerList {
         tapManager = new TapManager(context);
         waterPurifierManager = new WaterPurifierManager(context);
         airPurifierManager = new AirPurifierManager(context);
+        add(cupManager);
+        add(tapManager);
+        add(waterPurifierManager);
+        add(airPurifierManager);
+
+
 
     }
 

@@ -15,9 +15,7 @@ import android.os.IBinder;
 import android.os.PowerManager;
 
 import com.ozner.XObject;
-import com.ozner.cup.CupManager;
 import com.ozner.device.OznerDeviceManager;
-import com.ozner.tap.TapManager;
 
 import java.util.List;
 
@@ -150,22 +148,6 @@ public class OznerBLEService extends Service implements ActivityLifecycleCallbac
     }
 
     public class OznerBLEBinder extends Binder {
-        /**
-         * 获取水杯管理器
-         */
-        public CupManager getCupManager() {
-            return mManager.devcieManagerList().cupManager();
-        }
-
-        /**
-         * 获取水龙头管理器
-         *
-         * @return
-         */
-        public TapManager getTapManager() {
-            return mManager.devcieManagerList().tapManager();
-        }
-
         /**
          * 获取设备管理器
          *

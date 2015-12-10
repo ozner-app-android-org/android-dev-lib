@@ -23,10 +23,9 @@ public class MXChipIO extends BaseDeviceIO {
     String out = null;
     String in = null;
 
-    public MXChipIO(Context context, MQTTProxy proxy, String Name, String Type, String address) {
+    public MXChipIO(Context context, MQTTProxy proxy, String Type, String address) {
         super(context, Type);
         this.address = address;
-        this.name = Name;
         this.proxy = proxy;
 
         proxy.registerListener(mxChipIOImp);
@@ -229,7 +228,6 @@ public class MXChipIO extends BaseDeviceIO {
                             succeed = true;
                             setObject();
                         }
-
                         @Override
                         public void onFailure(Throwable throwable) {
                             succeed = false;

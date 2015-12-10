@@ -20,7 +20,7 @@ import java.util.TimerTask;
  * Created by xzyxd on 2015/11/2.
  */
 public class WaterPurifier extends OznerDevice {
-    public static final String ACTION_WATER_PURIFIER_STATUS_CHANGE = "com.ozner.water.purifier.status.change";
+    public static final String ACTION_WATER_PURIFIER_STATUS_CHANGE = "com.ozner.water.purifier.statusPacket.change";
     private static final byte GroupCode_DeviceToApp = (byte) 0xFB;
     private static final byte GroupCode_AppToDevice = (byte) 0xFA;
     private static final byte GroupCode_DevceToServer = (byte) 0xFC;
@@ -29,9 +29,111 @@ public class WaterPurifier extends OznerDevice {
     private static final byte Opcode_RespondStatus = (byte) 0x01;
     private static final byte Opcode_ChangeStatus = (byte) 0x02;
     private static final byte Opcode_DeviceInfo = (byte) 0x03;
+    final WaterPurifierStatusPacket statusPacket = new WaterPurifierStatusPacket();
+
+    public class Sensor
+    {
+        public int TDS1()
+        {
+            return statusPacket.TDS1;
+        }
+        public int TDS2()
+        {
+            return statusPacket.TDS2;
+        }
+        @Override
+        public String toString() {
+            return String.format("TDS1:%d TDS2:%d", String.valueOf(TDS1()),String.valueOf(TDS2()));
+        }
+    }
+    public class Status
+    {
+        public boolean Power()
+        {
+            return statusPacket.Power;
+        }
+
+        /**
+         * 打开电源
+         *
+         * @param Power 开关
+         * @param cb    状态回调
+         */
+        public void setPower(boolean Power, OperateCallback<Void> cb) {
+            if (IO() == null) {
+                cb.onFailure(null);
+            }
+            statusPacket.Power = Power;
+            setStatusPacket(cb);
+        }
+        public boolean Hot() {
+            return statusPacket.Hot;
+        }
+
+        /**
+         * 打开加热
+         *
+         * @param Hot 开关
+         * @param cb  状态回调
+         */
+        public void setHot(boolean Hot, OperateCallback<Void> cb) {
+            if (IO() == null) {
+                cb.onFailure(null);
+            }
+            statusPacket.Hot = Hot;
+            setStatusPacket(cb);
+        }
+
+        public boolean Cool() {
+            return statusPacket.Cool;
+        }
+
+        /**
+         * 打开制冷
+         *
+         * @param Cool 开关
+         * @param cb   状态回调
+         */
+        public void setCool(boolean Cool, OperateCallback<Void> cb) {
+            if (IO() == null) {
+                cb.onFailure(null);
+            }
+            statusPacket.Cool = Cool;
+            setStatusPacket(cb);
+        }
+
+
+        public boolean Sterilization() {
+            return statusPacket.Sterilization;
+        }
+
+        /**
+         * 打开杀菌
+         *
+         * @param Sterilization 开关
+         * @param cb            状态回调
+         */
+        public void setSterilization(boolean Sterilization, OperateCallback<Void> cb) {
+            if (IO() == null) {
+                cb.onFailure(null);
+            }
+            statusPacket.Sterilization = Sterilization;
+            setStatusPacket(cb);
+        }
+
+        @Override
+        public String toString() {
+            return String.format("Power:%s Hot:%s Cool:%s Sterilization:%s",
+                    String.valueOf(Power()), String.valueOf(Hot()), String.valueOf(Cool()),
+                    String.valueOf(Sterilization()));
+        }
+    }
 
     private static String SecureCode = "16a21bd6";
-    final WaterPurifierStatus status = new WaterPurifierStatus();
+
+    final Sensor sensor=new Sensor();
+    final Status status=new Status();
+
     final WaterPurifierInfo info=new WaterPurifierInfo();
     final WaterPurifierImp waterPurifierImp = new WaterPurifierImp();
     boolean isOffline = true;
@@ -40,6 +142,17 @@ public class WaterPurifier extends OznerDevice {
     public WaterPurifier(Context context, String Address, String Model, String Setting) {
         super(context, Address, Model, Setting);
     }
+
+    public Sensor sensor()
+    {
+        return sensor;
+    }
+    public Status status()
+    {
+        return status;
+    }
+
+
     public WaterPurifierInfo info()
     {
         return info;
@@ -64,15 +177,15 @@ public class WaterPurifier extends OznerDevice {
         return bytes;
     }
 
+
+
     @Override
     public String toString() {
         if (isOffline())
         {
             return "offline";
         }else {
-            return String.format("Power:%s Hot:%s Cool:%s\nTDS1:%d TDS2:%d",
-                    String.valueOf(Power()), String.valueOf(Hot()), String.valueOf(Cool()),
-                    TDS1(), TDS2());
+            return String.format("Status:%s\nSensor:%s",status.toString(),sensor.toString());
         }
     }
 
@@ -114,98 +227,16 @@ public class WaterPurifier extends OznerDevice {
         super.doChangeRunningMode();
     }
 
-    public boolean Power() {
-        return status.Power;
-    }
-
-    /**
-     * 打开电源
-     *
-     * @param Power 开关
-     * @param cb    状态回调
-     */
-    public void setPower(boolean Power, OperateCallback<Void> cb) {
-        if (IO() == null) {
-            cb.onFailure(null);
-        }
-        status.Power = Power;
-        setStatus(cb);
-    }
 
 
-    public boolean Cool() {
-        return status.Cool;
-    }
-
-    /**
-     * 打开制冷
-     *
-     * @param Cool 开关
-     * @param cb   状态回调
-     */
-    public void setCool(boolean Cool, OperateCallback<Void> cb) {
-        if (IO() == null) {
-            cb.onFailure(null);
-        }
-        status.Cool = Cool;
-        setStatus(cb);
-    }
-
-
-    public int TDS1() {
-        return status.TDS1();
-    }
-
-    public int TDS2() {
-        return status.TDS2();
-    }
-
-    public boolean Hot() {
-        return status.Hot;
-    }
-
-    /**
-     * 打开加热
-     *
-     * @param Hot 开关
-     * @param cb  状态回调
-     */
-    public void setHot(boolean Hot, OperateCallback<Void> cb) {
-        if (IO() == null) {
-            cb.onFailure(null);
-        }
-        status.Hot = Hot;
-        setStatus(cb);
-    }
-
-    public boolean Sterilization() {
-        return status.Sterilization;
-    }
-
-    /**
-     * 打开杀菌
-     *
-     * @param Sterilization 开关
-     * @param cb            状态回调
-     */
-    public void setSterilization(boolean Sterilization, OperateCallback<Void> cb) {
-        if (IO() == null) {
-            cb.onFailure(null);
-        }
-        status.Sterilization = Sterilization;
-        setStatus(cb);
-    }
-
-
-    private void setStatus(OperateCallback<Void> cb) {
+    private void setStatusPacket(OperateCallback<Void> cb) {
         if (super.connectStatus() != BaseDeviceIO.ConnectStatus.Connected) {
             if (cb != null)
                 cb.onFailure(null);
             return;
         }
-
         IO().send(MakeWoodyBytes(GroupCode_AppToDevice, Opcode_ChangeStatus, Address(),
-                        status.toBytes()),
+                        statusPacket.toBytes()),
                 new OperateCallbackProxy<Void>(cb) {
                     @Override
                     public void onFailure(Throwable var1) { //失败时重新更新状态
@@ -287,7 +318,7 @@ public class WaterPurifier extends OznerDevice {
                         switch (opCode)
                         {
                             case Opcode_RespondStatus:
-                                status.fromBytes(bytes);
+                                statusPacket.fromBytes(bytes);
                                 Intent intent = new Intent(ACTION_WATER_PURIFIER_STATUS_CHANGE);
                                 intent.putExtra(Extra_Address, Address());
                                 context().sendBroadcast(intent);

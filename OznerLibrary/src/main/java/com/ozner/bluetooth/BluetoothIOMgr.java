@@ -37,20 +37,17 @@ public class BluetoothIOMgr extends IOManager {
     class ScanCallbackImp implements BluetoothScan.BluetoothScanCallback {
         @Override
         public void onFoundDevice(BluetoothDevice device, BluetoothScanRep scanRep) {
-            BluetoothIO bluetoothIO = null;
-            synchronized (devices) {
-                if (!devices.containsKey(device.getAddress())) {
+            try {
+                BluetoothIO bluetoothIO = (BluetoothIO) getAvailableDevice(device.getAddress());
+                if (bluetoothIO == null) {
                     bluetoothIO = new BluetoothIO(context(), device, scanRep.Model, scanRep.Platform, scanRep.Firmware == null ? 0 : scanRep.Firmware.getTime());
-                    devices.put(device.getAddress(), bluetoothIO);
-                } else
-                    bluetoothIO = (BluetoothIO) devices.get(device.getAddress());
-            }
-            if (bluetoothIO != null) {
+                }
                 bluetoothIO.updateScanResponse(scanRep.ScanResponseType, scanRep.ScanResponseData);
                 doAvailable(bluetoothIO);
+            }catch (Exception e)
+            {
+                e.printStackTrace();
             }
-
-
         }
     }
 

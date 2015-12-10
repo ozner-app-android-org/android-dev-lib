@@ -1,11 +1,12 @@
 package com.ozner.wifi.mxchip;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 
 import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.IOManager;
-
-import java.util.ArrayList;
 
 
 /**
@@ -23,15 +24,44 @@ public class MXChipIOManager extends IOManager {
     }
 
 
-    public MXChipIO createNewIO(String Name, String address, String Model) throws ClassCastException {
-
-        synchronized (devices) {
-            if (devices.containsKey(address)) {
-                return (MXChipIO) devices.get(address);
+    public MXChipIO createNewIO(String address, String Type) throws ClassCastException {
+        try {
+            MXChipIO mxChipIO = (MXChipIO) super.getAvailableDevice(address);
+            if (mxChipIO == null) {
+                mxChipIO = new MXChipIO(context(), proxy,  Type, address);
             }
-            MXChipIO io = new MXChipIO(context(), proxy, Name, Model, address);
-            devices.put(address, io);
-            return io;
+            if (proxy.isConnected())
+                doAvailable(mxChipIO);
+            return mxChipIO;
+        }catch (Exception e)
+        {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+    final static int delayedAvailableMessage=0x1000;
+
+    @Override
+    protected void doUnavailable(BaseDeviceIO io) {
+        super.doUnavailable(io);
+        Handler handler=new Handler(Looper.getMainLooper())
+        {
+            @Override
+            public void handleMessage(Message msg) {
+                if (msg.what==delayedAvailableMessage)
+                {
+                    if (proxy.isConnected()) {
+                        doAvailable((BaseDeviceIO) msg.obj);
+                    }
+                }
+            }
+        };
+        if (proxy.isConnected()) {
+            Message m = new Message();
+            m.what = delayedAvailableMessage;
+            m.obj = io;
+            handler.sendMessageDelayed(m, 5000); //如果IO被关闭了,MQTT还是连接中的情况下,重新激活IO
         }
     }
 
@@ -71,26 +101,26 @@ public class MXChipIOManager extends IOManager {
 
         @Override
         public void onConnected(MQTTProxy proxy) {
-            ArrayList<BaseDeviceIO> list;
-            synchronized (devices) {
-                list = new ArrayList<>(devices.values());
-            }
-
-            for (BaseDeviceIO io : list) {
-                doAvailable(io);
+            BaseDeviceIO[] list=MXChipIOManager.super.getAvailableDevices();
+            if (list!=null) {
+                for (BaseDeviceIO io : list) {
+                    if (io instanceof MXChipIO) {
+                        doAvailable(io);
+                    }
+                }
             }
 
         }
 
         @Override
         public void onDisconnected(MQTTProxy proxy) {
-            ArrayList<BaseDeviceIO> list;
-            synchronized (devices) {
-                list = new ArrayList<>(devices.values());
-            }
-
-            for (BaseDeviceIO io : list) {
-                doUnavailable(io);
+            BaseDeviceIO[] list=MXChipIOManager.super.getAvailableDevices();
+            if (list!=null) {
+                for (BaseDeviceIO io : list) {
+                    if (io instanceof MXChipIO) {
+                        doUnavailable(io);
+                    }
+                }
             }
         }
 

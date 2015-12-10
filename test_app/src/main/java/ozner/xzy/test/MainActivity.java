@@ -16,6 +16,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.getbase.floatingactionbutton.FloatingActionButton;
+import com.ozner.AirPurifier.AirPurifier_Bluetooth;
 import com.ozner.AirPurifier.AirPurifier_MXChip;
 import com.ozner.WaterPurifier.WaterPurifier;
 import com.ozner.application.OznerBLEService;
@@ -51,6 +52,13 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         if (device instanceof AirPurifier_MXChip)
         {
             Intent intent=new Intent(this,AirPurifierAcivity.class);
+            intent.putExtra("Address", device.Address());
+            startActivityForResult(intent,0);
+            return;
+        }
+        if (device instanceof AirPurifier_Bluetooth)
+        {
+            Intent intent=new Intent(this,BluetoothAirPurifierActivity.class);
             intent.putExtra("Address", device.Address());
             startActivityForResult(intent,0);
             return;

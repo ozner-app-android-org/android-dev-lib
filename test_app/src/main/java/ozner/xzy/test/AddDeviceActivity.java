@@ -14,7 +14,6 @@ import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.ozner.bluetooth.BaseBluetoothDeviceManager;
 import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.bluetooth.BluetoothScan;
 import com.ozner.cup.Cup;
@@ -49,7 +48,7 @@ public class AddDeviceActivity extends Activity {
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothScan.ACTION_SCANNER_FOUND);
-        filter.addAction(BaseBluetoothDeviceManager.ACTION_OZNER_BLUETOOTH_BIND_MODE);
+//        filter.addAction(BaseBluetoothDeviceManager.ACTION_OZNER_BLUETOOTH_BIND_MODE);
 
         this.registerReceiver(mMonitor, filter);
         setTitle("设备配对");
@@ -122,6 +121,7 @@ public class AddDeviceActivity extends Activity {
                             ((BluetoothIO) device).getScanResponseData() != null ?
                                     Helper.ConvertHexByteArrayToString(((BluetoothIO) device).getScanResponseData())
                                     : "");
+
                     if (CupManager.IsCup(device.getType())) {
                         if (Cup.isBindMode(bluetoothIO))
                             convertView.findViewById(R.id.addDeviceButton).setEnabled(true);

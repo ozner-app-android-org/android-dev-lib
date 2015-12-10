@@ -8,26 +8,27 @@ import com.ozner.util.ByteUtil;
  * @category 智能杯
  */
 public class CupSensor {
-    public int Battery = 0;
+    public static final int CUP_SENSOR_ERROR = 0xffff;
+    public int Battery = CUP_SENSOR_ERROR;
     /**
      * 电池电压
      */
-    public int BatteryFix = 0;
-    public int Temperature = 0;
+    public int BatteryFix = CUP_SENSOR_ERROR;
+    public int Temperature = CUP_SENSOR_ERROR;
     /**
      * 温度
      */
-    public int TemperatureFix = 0;
-    public int Weigh = 0;
+    public int TemperatureFix = CUP_SENSOR_ERROR;
+    public int Weigh = CUP_SENSOR_ERROR;
     /**
      * 重量
      */
-    public int WeighFix = 0;
-    public int TDS = 0;
+    public int WeighFix = CUP_SENSOR_ERROR;
+    public int TDS = CUP_SENSOR_ERROR;
     /**
      * TDS
      */
-    public int TDSFix = 0;
+    public int TDSFix = CUP_SENSOR_ERROR;
 
     public CupSensor() {
     }
@@ -47,10 +48,29 @@ public class CupSensor {
             return 0;
     }
 
+    public void reset() {
+        Battery = CUP_SENSOR_ERROR;
+        BatteryFix = CUP_SENSOR_ERROR;
+        Temperature = CUP_SENSOR_ERROR;
+        TemperatureFix = CUP_SENSOR_ERROR;
+        Weigh = CUP_SENSOR_ERROR;
+        WeighFix = CUP_SENSOR_ERROR;
+        TDS = CUP_SENSOR_ERROR;
+        TDSFix = CUP_SENSOR_ERROR;
+    }
+
+    private static String getValue(int value) {
+        if (value == CUP_SENSOR_ERROR) return "-";
+        else return String.valueOf(value);
+    }
+
     @Override
     public String toString() {
-        return String.format("Battery:%d/%d Temp:%d/%d Weigh:%d/%d TDS:%d/%d", Battery, BatteryFix, Temperature, TemperatureFix,
-                Weigh, WeighFix, TDS, TDSFix);
+        return String.format("Battery:%s/%s Temp:%s/%s Weigh:%s/%s TDS:%s/%s",
+                getValue(Battery), getValue(BatteryFix), getValue(Temperature),
+                getValue(TemperatureFix),
+                getValue(Weigh), getValue(WeighFix),
+                getValue(TDS), getValue(TDSFix));
     }
 
     public void FromBytes(byte[] data, int startIndex) {

@@ -278,6 +278,7 @@ public class Cup extends OznerDevice {
         @Override
         public void onDisconnected(BaseDeviceIO io) {
             cancelTimer();
+            Sensor().reset();
         }
 
         @Override

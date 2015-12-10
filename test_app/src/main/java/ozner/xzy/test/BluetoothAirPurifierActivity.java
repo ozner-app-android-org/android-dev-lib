@@ -11,7 +11,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.TextView;
 
+import com.ozner.AirPurifier.AirPurifier_Bluetooth;
 import com.ozner.AirPurifier.AirPurifier_MXChip;
+import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.OperateCallback;
 import com.ozner.device.OznerDevice;
@@ -19,38 +21,35 @@ import com.ozner.device.OznerDeviceManager;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
-public class AirPurifierAcivity extends AppCompatActivity {
+public class BluetoothAirPurifierActivity extends AppCompatActivity {
 
     TextView status;
-    TextView sendStatus;
     ControlImp controlImp = new ControlImp();
     final Monitor monitor = new Monitor();
+
+    TextView sendStatus;
     final Handler handler = new Handler();
-    AirPurifier_MXChip airPurifier;
+    AirPurifier_Bluetooth airPurifier;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_air_purifier_acivity);
-        airPurifier = (AirPurifier_MXChip) OznerDeviceManager.Instance().getDevice(getIntent().getStringExtra("Address"));
+        setContentView(R.layout.activity_bluetooth_air_purifier);
+        airPurifier = (AirPurifier_Bluetooth) OznerDeviceManager.Instance().getDevice(getIntent().getStringExtra("Address"));
         status = (TextView) findViewById(R.id.status);
         findViewById(R.id.power).setOnClickListener(controlImp);
-        findViewById(R.id.fanSpeed).setOnClickListener(controlImp);
-        findViewById(R.id.lock).setOnClickListener(controlImp);
         findViewById(R.id.resetFilter).setOnClickListener(controlImp);
-        findViewById(R.id.setup).setOnClickListener(controlImp);
+        findViewById(R.id.speak).setOnClickListener(controlImp);
         findViewById(R.id.remove).setOnClickListener(controlImp);
-
         sendStatus = (TextView) findViewById(R.id.sendStatus);
         loadStatus();
-
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(BaseDeviceIO.ACTION_DEVICE_CONNECTED);
         intentFilter.addAction(BaseDeviceIO.ACTION_DEVICE_CONNECTING);
         intentFilter.addAction(BaseDeviceIO.ACTION_DEVICE_DISCONNECTED);
         intentFilter.addAction(OznerDeviceManager.ACTION_OZNER_MANAGER_DEVICE_CHANGE);
-
         intentFilter.addAction(AirPurifier_MXChip.ACTION_AIR_PURIFIER_SENSOR_CHANGED);
         intentFilter.addAction(AirPurifier_MXChip.ACTION_AIR_PURIFIER_STATUS_CHANGED);
         this.registerReceiver(monitor, intentFilter);
@@ -81,54 +80,33 @@ public class AirPurifierAcivity extends AppCompatActivity {
     private void loadStatus() {
         setText(R.id.Device_Name, airPurifier.getName());
         setText(R.id.Address, airPurifier.Address());
-        setText(R.id.Version,"固件版本:"+getValue(airPurifier.airStatus().Version()));
+        BluetoothIO io=(BluetoothIO)airPurifier.IO();
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-        setText(R.id.status, "设备状态:" + (airPurifier.isOffline() ? "离线" : "在线"));
+        if (airPurifier.IO()==null)
+        {
+            setText(R.id.Version,"固件版本:-");
+        }else
+        {
+            Date time=new Date(io.getFirmware());
+            setText(R.id.Version,"固件版本:"+dateFormat.format(time));
+        }
 
+
+        setText(R.id.status, "设备状态:" + airPurifier.connectStatus().toString());
         setText(R.id.pm25, "PM2.5:" + getValue(airPurifier.sensor().PM25()));
-
         setText(R.id.temperature, "温度:" + getValue(airPurifier.sensor().Temperature()));
-
-        setText(R.id.voc, "VOC:" + getValue(airPurifier.sensor().VOC()));
-
-
-        setText(R.id.lightSensor, "环境光:" + getValue(airPurifier.sensor().Light()));
-
-
         setText(R.id.humidity, "湿度:" + getValue(airPurifier.sensor().Humidity()));
 
+        setText(R.id.A2DP, String.format( "A2DP Support:%b" , airPurifier.status().A2DP()));
+        setText(R.id.A2DPMAC, String.format("A2DP MAC:%s", airPurifier.status().A2DP_MAC()));
+        setText(R.id.A2DPEnable, String.format("A2DP Enable:%s", airPurifier.status().A2DP_Enable()));
 
-        setText(R.id.powerStatus, "电源:" + (airPurifier.airStatus().Power() ? "开" : "关"));
+        setText(R.id.powerStatus, "电源:" + (airPurifier.status().Power() ? "开" : "关"));
 
-        String speed = "自动";
-        switch (airPurifier.airStatus().speed()) {
-            case AirPurifier_MXChip.FAN_SPEED_AUTO:
-                speed = "自动";
-                break;
-            case AirPurifier_MXChip.FAN_SPEED_HIGH:
-                speed = "高";
-                break;
-            case AirPurifier_MXChip.FAN_SPEED_MID:
-                speed = "中";
-                break;
-            case AirPurifier_MXChip.FAN_SPEED_LOW:
-                speed = "低";
-                break;
-            case AirPurifier_MXChip.FAN_SPEED_SILENT:
-                speed = "静音";
-                break;
-            case AirPurifier_MXChip.FAN_SPEED_POWER:
-                speed = "强力";
-                break;
-        }
-        setText(R.id.speed, "风速:" + speed);
-
-        setText(R.id.light, "亮度:" + getValue(airPurifier.airStatus().Light()));
-
-        setText(R.id.lockStatus, "童锁:" + (airPurifier.airStatus().Lock() ? "开" : "关"));
         setText(R.id.workTime, "电机工作时间:" + String.valueOf(airPurifier.sensor().FilterStatus().workTime) + "分钟");
         setText(R.id.maxWorkTime, "最大工作时间:" + String.valueOf(airPurifier.sensor().FilterStatus().maxWorkTime) + "分钟");
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+
         setText(R.id.lastTime, "上次更换时间:" + dateFormat.format(airPurifier.sensor().FilterStatus().lastTime));
         setText(R.id.maxTime, "到期时间:" + dateFormat.format(airPurifier.sensor().FilterStatus().stopTime));
 
@@ -146,6 +124,7 @@ public class AirPurifierAcivity extends AppCompatActivity {
     }
 
     class ControlImp implements View.OnClickListener, OperateCallback<Void> {
+
         @Override
         public void onFailure(Throwable var1) {
             handler.post(new Runnable() {
@@ -167,44 +146,27 @@ public class AirPurifierAcivity extends AppCompatActivity {
                 }
             });
         }
-
         @Override
         public void onClick(View view) {
             switch (view.getId()) {
                 case R.id.power:
                     sendStatus.setText("发送状态:正在发送");
-                    airPurifier.airStatus().setPower(!airPurifier.airStatus().Power(),
-                            this);
+                    airPurifier.status().setPower(!airPurifier.status().Power(), this);
                     break;
 
-                case R.id.fanSpeed:
-                    int speedValue = airPurifier.airStatus().speed();
-                    speedValue++;
-                    if (speedValue > AirPurifier_MXChip.FAN_SPEED_POWER)
-                        speedValue = AirPurifier_MXChip.FAN_SPEED_AUTO;
-                    sendStatus.setText("发送状态:正在发送");
-                    airPurifier.airStatus().setSpeed(speedValue, this);
-                    break;
-
-                case R.id.lock:
-                    sendStatus.setText("发送状态:正在发送");
-                    airPurifier.airStatus().setLock(!airPurifier.airStatus().Lock(),
-                            this);
-                    break;
 
                 case R.id.resetFilter: {
                     sendStatus.setText("发送状态:正在发送");
                     airPurifier.ResetFilter(this);
                     break;
                 }
-                case R.id.setup: {
-                    Intent intent=new Intent(AirPurifierAcivity.this,AirPurifierSetupActivity.class);
-                    intent.putExtra("Address",airPurifier.Address());
-                    startActivityForResult(intent,0);
+                case R.id.speak:
+                {
+                    airPurifier.setA2DPEnable(true,this);
                     break;
                 }
                 case R.id.remove: {
-                    new android.app.AlertDialog.Builder(AirPurifierAcivity.this).setTitle("删除").setMessage("是否要删除设备")
+                    new android.app.AlertDialog.Builder(BluetoothAirPurifierActivity.this).setTitle("删除").setMessage("是否要删除设备")
                             .setPositiveButton("是", new android.app.AlertDialog.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
@@ -224,5 +186,5 @@ public class AirPurifierAcivity extends AppCompatActivity {
         }
 
     }
-}
 
+}

@@ -229,7 +229,7 @@ public class MXChipPair {
                                     tmp.substring(8, 10) + ":" +
                                     tmp.substring(10, 12);
                             MXChipIO io = OznerDeviceManager.Instance().ioManagerList().mxChipIOManager().
-                                    createNewIO(device.Type, mac, device.Type);
+                                    createNewIO(mac, device.Type);
                             if (io != null) {
                                 callback.onPairComplete(io);
                             } else
@@ -262,13 +262,11 @@ public class MXChipPair {
                 }
 
                 MXChipIO io = OznerDeviceManager.Instance().ioManagerList().mxChipIOManager().
-                        createNewIO(device.Type, deviceMAC, device.Type);
+                        createNewIO(deviceMAC, device.Type);
                 if (io != null) {
                     callback.onPairComplete(io);
                 } else
                     callback.onPairFailure(null);
-
-
             } catch (Exception e) {
                 callback.onPairFailure(e);
             } finally {
