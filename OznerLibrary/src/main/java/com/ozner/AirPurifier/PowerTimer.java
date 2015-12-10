@@ -11,9 +11,9 @@ public class PowerTimer {
     public final static int Monday = 0x01;
     public final static int Tuesday = 0x02;
     public final static int Wednesday = 0x04;
-    public final static int Trusday = 0x08;
-    public final static int Firday = 0x10;
-    public final static int Sturday = 0x20;
+    public final static int Thursday = 0x08;
+    public final static int Friday = 0x10;
+    public final static int Saturday = 0x20;
     public final static int Sunday = 0x40;
 
     /**
@@ -29,9 +29,9 @@ public class PowerTimer {
 
     /**
      * 周期,如用户选择 周一,周二,周五时该项数值为
-     * Monday | Tuesday | Firday
+     * Monday | Tuesday | Friday
      */
-    public byte Week = Monday | Tuesday | Wednesday | Trusday | Firday | Sturday | Sunday;
+    public byte Week = Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sunday;
 
     /**
      * 是否允许自动开关机

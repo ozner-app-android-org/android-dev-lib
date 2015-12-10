@@ -287,14 +287,18 @@ public class AirPurifier_MXChip extends AirPurifier {
     public final static int FAN_SPEED_SILENT = 4;
     public final static int FAN_SPEED_POWER = 5;
 
+    /**
+     * 重置滤芯
+     * @param cb
+     */
     public void ResetFilter(OperateCallback<Void> cb) {
         FilterStatus filterStatus = new FilterStatus();
         filterStatus.lastTime = new Date();
-        filterStatus.WorkTime = 0;
+        filterStatus.workTime = 0;
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.YEAR, 1);
         filterStatus.stopTime = calendar.getTime();
-        filterStatus.MaxWorkTime = 60 * 1000;
+        filterStatus.maxWorkTime = 60 * 1000;
         setProperty(PROPERTY_FILTER, filterStatus.toBytes(), cb);
     }
 
@@ -485,6 +489,7 @@ public class AirPurifier_MXChip extends AirPurifier {
                     list.add(PROPERTY_VERSION);
                     requestProperty(list, null);
                     waitObject(Timeout);
+
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
