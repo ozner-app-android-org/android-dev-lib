@@ -235,7 +235,7 @@ public class Cup extends OznerDevice {
     }
 
     @Override
-    public void UpdateSetting() {
+    public void updateSettings() {
 
         if ((IO() != null) && (IO().isReady()))
             sendSetting();

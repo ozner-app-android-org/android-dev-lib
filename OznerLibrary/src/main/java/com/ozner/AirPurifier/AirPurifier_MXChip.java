@@ -38,7 +38,7 @@ public class AirPurifier_MXChip extends AirPurifier {
     public static final byte PROPERTY_TEMPERATURE = 0x12;
     public static final byte PROPERTY_VOC = 0x13;
     public static final byte PROPERTY_LIGHT_SENSOR = 0x14;
-    public static final byte PROPERTY_LIGHT_HUMIDITY = 0x18;
+    public static final byte PROPERTY_HUMIDITY = 0x18;
 
     public static final byte PROPERTY_FILTER = 0x15;
     public static final byte PROPERTY_TIME = 0x16;
@@ -140,10 +140,15 @@ public class AirPurifier_MXChip extends AirPurifier {
     }
 
     @Override
-    public void UpdateSetting() {
+    public void saveSettings() {
         Setting().put("powerTimer", powerTimer.ToJSON());
+        super.saveSettings();
+    }
+
+    @Override
+    public void updateSettings() {
         setProperty(PROPERTY_POWER_TIMER, powerTimer.ToBytes(), null);
-        super.UpdateSetting();
+        super.updateSettings();
     }
 
     @Override
@@ -362,7 +367,7 @@ public class AirPurifier_MXChip extends AirPurifier {
          * @return 湿度%
          */
         public int Humidity() {
-            return getIntValueByShort(PROPERTY_LIGHT_HUMIDITY);
+            return getIntValueByShort(PROPERTY_HUMIDITY);
         }
         /**
          * PM2.5
@@ -485,7 +490,7 @@ public class AirPurifier_MXChip extends AirPurifier {
                     list.add(PROPERTY_DEVICE_TYPE);
                     list.add(PROPERTY_CONTROL_BOARD);
                     list.add(PROPERTY_MAIN_BOARD);
-                    list.add(PROPERTY_POWER_TIMER);
+                    //list.add(PROPERTY_POWER_TIMER);
                     list.add(PROPERTY_VERSION);
                     requestProperty(list, null);
                     waitObject(Timeout);
@@ -520,7 +525,7 @@ public class AirPurifier_MXChip extends AirPurifier {
             list.add(PROPERTY_LIGHT_SENSOR);
             list.add(PROPERTY_TEMPERATURE);
             list.add(PROPERTY_VOC);
-            list.add(PROPERTY_LIGHT_HUMIDITY);
+            list.add(PROPERTY_HUMIDITY);
             list.add(PROPERTY_POWER);
             list.add(PROPERTY_SPEED);
             list.add(PROPERTY_LIGHT);
@@ -605,7 +610,7 @@ public class AirPurifier_MXChip extends AirPurifier {
                                 case PROPERTY_PM25:
                                 case PROPERTY_TEMPERATURE:
                                 case PROPERTY_VOC:
-                                case PROPERTY_LIGHT_HUMIDITY:
+                                case PROPERTY_HUMIDITY:
                                 case PROPERTY_LIGHT_SENSOR: {
                                     Intent intent = new Intent(ACTION_AIR_PURIFIER_SENSOR_CHANGED);
                                     intent.putExtra(Extra_Address, Address());

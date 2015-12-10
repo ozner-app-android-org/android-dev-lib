@@ -16,14 +16,10 @@ import android.widget.TextView;
 
 import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.bluetooth.BluetoothScan;
-import com.ozner.cup.Cup;
-import com.ozner.cup.CupManager;
 import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.NotSupportDeviceException;
 import com.ozner.device.OznerDevice;
 import com.ozner.device.OznerDeviceManager;
-import com.ozner.tap.Tap;
-import com.ozner.tap.TapManager;
 import com.ozner.wifi.mxchip.Pair.Helper;
 
 import java.text.SimpleDateFormat;
@@ -122,18 +118,7 @@ public class AddDeviceActivity extends Activity {
                                     Helper.ConvertHexByteArrayToString(((BluetoothIO) device).getScanResponseData())
                                     : "");
 
-                    if (CupManager.IsCup(device.getType())) {
-                        if (Cup.isBindMode(bluetoothIO))
-                            convertView.findViewById(R.id.addDeviceButton).setEnabled(true);
-                        else
-                            convertView.findViewById(R.id.addDeviceButton).setEnabled(false);
-                    }
-                    if (TapManager.IsTap(device.getType())) {
-                        if (Tap.isBindMode(bluetoothIO))
-                            convertView.findViewById(R.id.addDeviceButton).setEnabled(true);
-                        else
-                            convertView.findViewById(R.id.addDeviceButton).setEnabled(false);
-                    }
+                    convertView.findViewById(R.id.addDeviceButton).setEnabled(OznerDeviceManager.Instance().checkisBindMode(device));
 
 
                 }

@@ -98,11 +98,17 @@ public abstract class OznerDevice extends XObject {
         }
         return setting;
     }
+    /**
+     * 通知设备将设置存储
+     */
+    public void saveSettings()
+    {
 
+    }
     /**
      * 通知设备设置变更
      */
-    public void UpdateSetting() {
+    public void updateSettings() {
     }
 
 

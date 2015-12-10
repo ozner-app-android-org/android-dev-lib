@@ -98,9 +98,9 @@ public class BluetoothAirPurifierActivity extends AppCompatActivity {
         setText(R.id.temperature, "温度:" + getValue(airPurifier.sensor().Temperature()));
         setText(R.id.humidity, "湿度:" + getValue(airPurifier.sensor().Humidity()));
 
-        setText(R.id.A2DP, String.format( "A2DP Support:%b" , airPurifier.status().A2DP()));
-        setText(R.id.A2DPMAC, String.format("A2DP MAC:%s", airPurifier.status().A2DP_MAC()));
-        setText(R.id.A2DPEnable, String.format("A2DP Enable:%s", airPurifier.status().A2DP_Enable()));
+        setText(R.id.A2DP, String.format( "A2DP Support:%b" , airPurifier.a2dp().support()));
+        setText(R.id.A2DPMAC, String.format("A2DP MAC:%s", airPurifier.a2dp().MAC()));
+        setText(R.id.A2DPEnable, String.format("A2DP Enable:%s", airPurifier.a2dp().enable()));
 
         setText(R.id.powerStatus, "电源:" + (airPurifier.status().Power() ? "开" : "关"));
 
@@ -162,7 +162,7 @@ public class BluetoothAirPurifierActivity extends AppCompatActivity {
                 }
                 case R.id.speak:
                 {
-                    airPurifier.setA2DPEnable(true,this);
+                    airPurifier.a2dp().setEnable(true, this);
                     break;
                 }
                 case R.id.remove: {

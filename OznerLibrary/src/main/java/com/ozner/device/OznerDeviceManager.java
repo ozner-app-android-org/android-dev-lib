@@ -360,7 +360,7 @@ public class OznerDeviceManager extends XObject {
             } else
                 isNew = true;
         }
-
+        device.saveSettings();
 
         String sql = String.format("INSERT OR REPLACE INTO %s (Address,Type,JSON) VALUES (?,?,?);", getOwnerTableName());
 
@@ -373,7 +373,7 @@ public class OznerDeviceManager extends XObject {
         intent.setAction(isNew ? ACTION_OZNER_MANAGER_DEVICE_ADD
                 : ACTION_OZNER_MANAGER_DEVICE_CHANGE);
         context().sendBroadcast(intent);
-        device.UpdateSetting(); //刷新设置变更
+        device.updateSettings(); //刷新设置变更
     }
 
 //    private ArrayList<BaseDeviceManager> getManagers() {

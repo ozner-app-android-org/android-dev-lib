@@ -2,6 +2,8 @@ package com.ozner.AirPurifier;
 
 import android.content.Context;
 
+import com.ozner.bluetooth.BluetoothIO;
+import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.BaseDeviceManager;
 import com.ozner.device.OznerDevice;
 import com.ozner.device.OznerDeviceManager;
@@ -24,6 +26,23 @@ public class AirPurifierManager extends BaseDeviceManager {
 //        }
 //        return false;
 //    }
+
+    @Override
+    public boolean checkIsBindMode(BaseDeviceIO io) {
+        if (IsBluetoothAirPurifier(io.getType()))
+        {
+            BluetoothIO bluetoothIO=(BluetoothIO)io;
+            if (bluetoothIO.getScanResponseType()==0x20)
+            {
+                if ((bluetoothIO.getScanResponseData()!=null) && (bluetoothIO.getScanResponseData().length>1))
+                {
+                    return bluetoothIO.getScanResponseData()[1]!=0;
+                }
+
+            }
+        }
+        return false;
+    }
 
     @Override
     public boolean isMyDevice(String type) {
@@ -56,7 +75,7 @@ public class AirPurifierManager extends BaseDeviceManager {
 
     public static boolean IsBluetoothAirPurifier(String Type) {
         if (Type == null) return false;
-        return Type.trim().equals("FLT001");
+        return Type.trim().equals("r");
     }
 
 //    @Override
