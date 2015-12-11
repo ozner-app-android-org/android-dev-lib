@@ -22,6 +22,10 @@ public abstract class OznerDevice extends XObject {
         this.address = Address;
         this.Type = Type;
         this.setting = initSetting(Setting);
+        if (Helper.StringIsNullOrEmpty(setting.name()))
+        {
+            setting.name(getDefaultName());
+        }
     }
 
     /**
@@ -92,9 +96,9 @@ public abstract class OznerDevice extends XObject {
     protected DeviceSetting initSetting(String Setting) {
         DeviceSetting setting = new DeviceSetting();
         setting.load(Setting);
-        if (Helper.StringIsNullOrEmpty(Setting().name()))
+        if (Helper.StringIsNullOrEmpty(setting.name()))
         {
-            Setting().name(getDefaultName());
+            setting.name(getDefaultName());
         }
         return setting;
     }

@@ -18,18 +18,16 @@ import org.fusesource.mqtt.client.Callback;
 public class MXChipIO extends BaseDeviceIO {
     final MXChipIOImp mxChipIOImp = new MXChipIOImp();
     String address = "";
-    String name = "";
     MQTTProxy proxy;
     String out = null;
     String in = null;
 
-    public MXChipIO(Context context, MQTTProxy proxy, String Type, String address) {
+    public MXChipIO(Context context, MQTTProxy proxy, String address,String Type) {
         super(context, Type);
         this.address = address;
         this.proxy = proxy;
-
         proxy.registerListener(mxChipIOImp);
-        doConnecting();
+
     }
 
 
@@ -82,10 +80,6 @@ public class MXChipIO extends BaseDeviceIO {
             return ConnectStatus.Disconnect;
     }
 
-    @Override
-    public String getName() {
-        return name;
-    }
 
     @Override
     public String getAddress() {
@@ -219,6 +213,7 @@ public class MXChipIO extends BaseDeviceIO {
         @Override
         public void run() {
             try {
+                doConnecting();
                 if (!proxy.isConnected()) return;
                 try {
                     succeed = false;

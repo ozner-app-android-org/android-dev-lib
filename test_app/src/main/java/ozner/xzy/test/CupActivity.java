@@ -22,6 +22,7 @@ import android.widget.Toast;
 import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.cup.Cup;
 import com.ozner.cup.CupRecord;
+import com.ozner.cup.CupRecordList;
 import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.FirmwareTools;
 import com.ozner.device.OznerDeviceManager;
@@ -91,8 +92,7 @@ public class CupActivity extends Activity implements OnClickListener, FirmwareTo
         filter.addAction(BaseDeviceIO.ACTION_DEVICE_DISCONNECTED);
         filter.addAction(Cup.ACTION_BLUETOOTHCUP_SENSOR);
         this.registerReceiver(mMonitor, filter);
-        adapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_list_item_1);
+        adapter = new ArrayAdapter<>(this,R.layout.list_text_item);
         record_now = (RadioButton) findViewById(id.record_now);
         record_hour = (RadioButton) findViewById(id.record_hour);
         record_day = (RadioButton) findViewById(id.record_day);
@@ -107,6 +107,7 @@ public class CupActivity extends Activity implements OnClickListener, FirmwareTo
         record_list.setAdapter(adapter);
 
         load();
+        loadRecord();
         super.onCreate(savedInstanceState);
     }
     private String getValue(int v) {
@@ -130,11 +131,14 @@ public class CupActivity extends Activity implements OnClickListener, FirmwareTo
 
         if (mCup.connectStatus()== BaseDeviceIO.ConnectStatus.Connected) {
             BluetoothIO io = (BluetoothIO) mCup.IO();
-            setText(id.Device_Model, "Model:" + io.getType());
-            setText(id.Device_Platform, "Platform:" + io.getPlatform());
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-            setText(id.Device_Firmware, "Firmware:" + sdf.format(new Date(io.getFirmware())));
-            setText(id.Device_Message, "Sensor:" + mCup.Sensor().toString());
+            if (io!=null) {
+                setText(id.Device_Model, "Model:" + io.getType());
+                setText(id.Device_Platform, "Platform:" + io.getPlatform());
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+                setText(id.Device_Firmware, "Firmware:" + sdf.format(new Date(io.getFirmware())));
+                setText(id.Device_Message, "Sensor:" + mCup.Sensor().toString());
+            }
+
         }
 
     }
@@ -204,7 +208,7 @@ public class CupActivity extends Activity implements OnClickListener, FirmwareTo
             case id.record_day:
             case id.record_hour:
             case id.record_now:
-                load();
+                loadRecord();
                 break;
 
             case id.Device_Remove:
@@ -235,6 +239,26 @@ public class CupActivity extends Activity implements OnClickListener, FirmwareTo
             }
         }
     }
+    private void loadRecord()
+    {
+        Date time=new Date(new Date().getTime()/ 86400000 * 86400000 );
+        adapter.clear();
+        CupRecordList.QueryInterval interval= CupRecordList.QueryInterval.Hour;
+        if (record_now.isChecked()) {
+            interval= CupRecordList.QueryInterval.Raw;
+        }
+        if (record_day.isChecked()) {
+            interval= CupRecordList.QueryInterval.Day;
+        }
+        if (record_hour.isChecked()) {
+            interval= CupRecordList.QueryInterval.Hour;
+        }
+        for (CupRecord record : mCup.Volume().getRecordByDate(time,interval))
+        {
+            adapter.add(record.toString());
+        }
+        adapter.notifyDataSetInvalidated();
+    }
 
     class Monitor extends BroadcastReceiver {
         @Override
@@ -252,24 +276,9 @@ public class CupActivity extends Activity implements OnClickListener, FirmwareTo
 
 
             if (action.equals(Cup.ACTION_BLUETOOTHCUP_RECORD_COMPLETE)) {
-                if (record_now.isChecked()) {
-                    adapter.clear();
-                    for (CupRecord r : mRecords) {
-                        adapter.add(r.toString());
-                    }
-                }
-                if (record_day.isChecked()) {
-                    adapter.clear();
-                    for (CupRecord r : mCup.Volume().getRecordsByDate(new Date(0))) {
-                        adapter.add(r.toString());
-                    }
-                }
-                if (record_hour.isChecked()) {
-                    adapter.clear();
-                    for (CupRecord r : mCup.Volume().getToday()) {
-                        adapter.add(r.toString());
-                    }
-                }
+
+                loadRecord();
+
                 return;
             }
         }

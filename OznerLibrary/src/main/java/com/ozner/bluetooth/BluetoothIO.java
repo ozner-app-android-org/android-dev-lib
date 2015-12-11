@@ -119,10 +119,6 @@ public class BluetoothIO extends BaseDeviceIO {
         return device.getAddress();
     }
 
-    @Override
-    public String getName() {
-        return device.getName();
-    }
 
     @Override
     public ConnectStatus connectStatus() {

@@ -57,7 +57,7 @@ public class AirPurifierManager extends BaseDeviceManager {
             } else if (IsWifiAirPurifier(type)) {
                 OznerDevice airPurifier = new AirPurifier_MXChip(context(), address, type, settings);
                 OznerDeviceManager.Instance().ioManagerList().mxChipIOManager()
-                        .createNewIO(airPurifier.Address(), airPurifier.Type());
+                        .addListenerAddress(airPurifier.Address(), airPurifier.Type());
                 return airPurifier;
             }
             return null;

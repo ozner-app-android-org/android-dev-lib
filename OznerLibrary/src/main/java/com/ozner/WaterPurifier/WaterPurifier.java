@@ -43,7 +43,7 @@ public class WaterPurifier extends OznerDevice {
         }
         @Override
         public String toString() {
-            return String.format("TDS1:%d TDS2:%d", String.valueOf(TDS1()),String.valueOf(TDS2()));
+            return String.format("TDS1:%d TDS2:%d", TDS1(),TDS2());
         }
     }
     public class Status

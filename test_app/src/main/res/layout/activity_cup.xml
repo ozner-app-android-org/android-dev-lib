@@ -46,10 +46,6 @@
             android:text="平台:"
             android:textAppearance="@android:style/TextAppearance.Small" />
 
-        <TextView
-            android:id="@+id/FirmwareText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
 
         <TextView
             android:id="@+id/Device_Firmware"

@@ -13,39 +13,57 @@ import java.util.Date;
  *         饮水记录
  */
 public class CupRecord {
-    public long id;
+
     /**
-     * 饮水时间
+     * 数据周期起始时间
      */
-    public Date time;
+    public Date start;
+
+    /**
+     * 数据周期结束时间
+     */
+    public Date end;
+
+
     /**
      * 饮水量
      */
-    public int Volume;
+    public int Volume = 0;
+
     /**
-     * 小于25度的次数
+     * TDS 值
      */
-    public int Temperature_25;
+    public int TDS = 0;
+
     /**
-     * 大于65度的饮水次数
+     * 温度最高值
      */
-    public int Temperature_65;
+    public int Temperature = 0;
+
     /**
-     * 25-65度的次数
+     * 水温低的次数
      */
-    public int Temperature_25_65;
+    public int Temperature_Low;
     /**
-     * TDS小于50的次数
+     * 水温中的次数
      */
-    public int TDS_50;
+    public int Temperature_Mid;
     /**
-     * TDS大于200的次数
+     * 水温高的次数
      */
-    public int TDS_200;
+    public int Temperature_High;
     /**
-     * TDS 50-200的次数
+     * TDS好的次数
      */
-    public int TDS_50_200;
+    public int TDS_Good;
+    /**
+     * TDS中的次数
+     */
+    public int TDS_Mid;
+    /**
+     * TDS差的次数
+     */
+    public int TDS_Bad;
 
     /**
      * TDS 最高值
@@ -55,43 +73,60 @@ public class CupRecord {
     /**
      * 温度最高值
      */
-    public int Temperature_High = 0;
+    public int Temperature_MAX = 0;
     /**
      * 饮水次数
      */
     public int Count = 0;
 
-
-    public void incTemp(int Temp) {
-        if (Temp < 20)
-            Temperature_25++;
-        else if (Temp > 50)
-            Temperature_65++;
-        else
-            Temperature_25_65++;
-
-        if (Temp > Temperature_High)
-            Temperature_High = Temp;
+    protected void calcRecord(DBRecord record)
+    {
+        if (start==null)
+            start=record.time;
+        end=record.time;
+        Volume+=record.volume;
+        TDS=record.tds;
+        Temperature=record.temperature;
+        TDS_High=Math.max(TDS_High,record.tds);
+        Temperature_MAX=Math.max(Temperature_MAX,record.temperature);
         Count++;
+        if (record.tds < 50)
+            TDS_High++;
+        else if (record.tds > 200)
+            TDS_Bad++;
+        else
+            TDS_Mid++;
+
+        if (record.temperature < 25)
+            Temperature_Low++;
+        else if (record.temperature > 65)
+            Temperature_High++;
+        else
+            Temperature_Mid++;
+
     }
 
-    public void incTDS(int TDS) {
-        if (TDS < 50)
-            TDS_50++;
-        else if (TDS > 200)
-            TDS_200++;
-        else
-            TDS_50_200++;
-        if (TDS > TDS_High)
-            TDS_High = TDS;
-    }
 
     @Override
     public String toString() {
-        return String.format("time:%s vol:%d t25:%d t25-65:%d t64:%d s50:%d s200:%d s50-200:%d tds_h:%d temp_h:%d count:%d",
-                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(time), Volume,
-                Temperature_25, Temperature_25_65, Temperature_65, TDS_50, TDS_200, TDS_50_200,
-                TDS_High, Temperature_High, Count);
+        if (start.equals(end))
+        {
+            return String.format("time:%s\nvol:%d tds:%d temp:%d count:%d\n" +
+                            "温度高:%d 温度中:%d 温度低:%d\n" +
+                            "TDS好:%d TDS中:%d TDS差:%d",
+                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(start),
+                    Volume,TDS,Temperature,Count,
+                    Temperature_High, Temperature_Mid, Temperature_Low,
+                    TDS_Good, TDS_Mid, TDS_Bad);
+        }else
+            return String.format("start:%s\nend:%s\nvol:%d tds:%d temp:%d count:%d\n" +
+                            "温度高:%d 温度中:%d 温度低:%d\n" +
+                            "TDS好:%d TDS中:%d TDS差:%d",
+                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(start),
+                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(end),
+                    Volume,TDS,Temperature,Count,
+                    Temperature_High, Temperature_Mid, Temperature_Low,
+                    TDS_Good, TDS_Mid, TDS_Bad);
     }
 
     @SuppressLint("NewApi")
@@ -99,13 +134,13 @@ public class CupRecord {
         try {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("Volume", Volume);
-            jsonObject.put("Temperature_25", Temperature_25);
-            jsonObject.put("Temperature_65", Temperature_65);
-            jsonObject.put("Temperature_25_65", Temperature_25_65);
-            jsonObject.put("TDS_50", TDS_50);
-            jsonObject.put("TDS_200", TDS_200);
-            jsonObject.put("TDS_50_200", TDS_50_200);
             jsonObject.put("Temperature_High", Temperature_High);
+            jsonObject.put("Temperature_Mid", Temperature_Mid);
+            jsonObject.put("Temperature_Low", Temperature_Low);
+            jsonObject.put("TDS_Good", TDS_Good);
+            jsonObject.put("TDS_Mid", TDS_Mid);
+            jsonObject.put("TDS_Bad", TDS_Bad);
+            jsonObject.put("Temperature_MAX", Temperature_MAX);
             jsonObject.put("TDS_High", TDS_High);
             jsonObject.put("Count", Count);
             return jsonObject.toString();
@@ -127,24 +162,24 @@ public class CupRecord {
                 Volume = object.getInt("Volume");
             }
 
-            if (object.has("Temperature_25")) {
-                Temperature_25 = object.getInt("Temperature_25");
+            if (object.has("Temperature_High")) {
+                Temperature_High = object.getInt("Temperature_High");
             }
-            if (object.has("Temperature_25_65")) {
-                Temperature_25_65 = object.getInt("Temperature_25_65");
+            if (object.has("Temperature_Mid")) {
+                Temperature_Mid = object.getInt("Temperature_Mid");
             }
-            if (object.has("Temperature_65")) {
-                Temperature_65 = object.getInt("Temperature_65");
+            if (object.has("Temperature_Low")) {
+                Temperature_Low = object.getInt("Temperature_Low");
             }
 
-            if (object.has("TDS_50")) {
-                TDS_50 = object.getInt("TDS_50");
+            if (object.has("TDS_Good")) {
+                TDS_Good = object.getInt("TDS_Good");
             }
-            if (object.has("TDS_200")) {
-                TDS_200 = object.getInt("TDS_200");
+            if (object.has("TDS_Mid")) {
+                TDS_Mid = object.getInt("TDS_Mid");
             }
-            if (object.has("TDS_50_200")) {
-                TDS_50_200 = object.getInt("TDS_50_200");
+            if (object.has("TDS_Bad")) {
+                TDS_Bad = object.getInt("TDS_Bad");
             }
             if (object.has("Count")) {
                 Count = object.getInt("Count");
@@ -152,8 +187,8 @@ public class CupRecord {
             if (object.has("TDS_High")) {
                 TDS_High = object.getInt("TDS_High");
             }
-            if (object.has("Temperature_High")) {
-                Temperature_High = object.getInt("Temperature_High");
+            if (object.has("Temperature_MAX")) {
+                Temperature_MAX = object.getInt("Temperature_MAX");
             }
         } catch (JSONException e) {
             // TODO Auto-generated catch block

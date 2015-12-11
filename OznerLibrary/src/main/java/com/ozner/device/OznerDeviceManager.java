@@ -59,14 +59,6 @@ public class OznerDeviceManager extends XObject {
         return instance;
     }
 
-    public void start() {
-        ioManagerList.Start();
-    }
-
-    public void stop() {
-        ioManagerList.Stop();
-    }
-
     public IOManagerList ioManagerList() {
         return ioManagerList;
     }
@@ -160,6 +152,10 @@ public class OznerDeviceManager extends XObject {
         synchronized (this) {
             devices.clear();
         }
+        if (Helper.StringIsNullOrEmpty(owner))
+            ioManagerList().Stop();
+
+        ioManagerList().Start();
         CloseAll();
         LoadDevices();
 

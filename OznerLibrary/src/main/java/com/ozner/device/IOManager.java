@@ -1,6 +1,7 @@
 package com.ozner.device;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.ozner.XObject;
 
@@ -41,7 +42,6 @@ public abstract class IOManager extends XObject {
                 devices.put(io.getAddress(),io);
             }
         }
-
         io.registerStatusCallback(statusCallback);
         if (ioManagerCallback != null) {
             ioManagerCallback.onDeviceAvailable(this, io);
@@ -75,6 +75,14 @@ public abstract class IOManager extends XObject {
      */
     public BaseDeviceIO[] getAvailableDevices() {
         synchronized (devices) {
+            return devices.values().toArray(new BaseDeviceIO[devices.size()]);
+        }
+    }
+
+    public final BaseDeviceIO[] getDevices()
+    {
+        synchronized (devices) {
+            Log.i("MxChipIOManager", "getDevices:"+String.valueOf(devices.size())+" "+this.getClass().getName());
             return devices.values().toArray(new BaseDeviceIO[devices.size()]);
         }
     }

@@ -104,7 +104,7 @@ public class AddDeviceActivity extends Activity {
             SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
             if (device != null) {
                 ((TextView) convertView.findViewById(R.id.Device_Name)).setText(
-                        device.getName() + "(" + device.getAddress() + ")");
+                        device.getType() + "(" + device.getAddress() + ")");
                 ((TextView) convertView.findViewById(R.id.Device_Model)).setText(
                         device.getType());
                 if (device instanceof BluetoothIO) {

@@ -205,7 +205,6 @@ public abstract class BaseDeviceIO extends XObject {
         return onInitCallback == null || onInitCallback.onIOInit();
     }
 
-    public abstract String getName();
 
     public abstract String getAddress();
 

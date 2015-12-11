@@ -32,7 +32,7 @@ public class WaterPurifierManager extends BaseDeviceManager {
         {
             WaterPurifier waterPurifier = new WaterPurifier(context(), address, type, settings);
             OznerDeviceManager.Instance().ioManagerList().mxChipIOManager()
-                    .createNewIO(waterPurifier.Address(), waterPurifier.Type());
+                    .addListenerAddress(waterPurifier.Address(), waterPurifier.Type());
             return waterPurifier;
         }else
             return null;

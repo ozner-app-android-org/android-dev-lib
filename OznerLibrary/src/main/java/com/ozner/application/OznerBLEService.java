@@ -77,18 +77,16 @@ public class OznerBLEService extends Service implements ActivityLifecycleCallbac
     public void onCreate() {
         super.onCreate();
         try {
+
             mManager = new OznerDeviceManager(getApplicationContext());
         } catch (InstantiationException e) {
             e.printStackTrace();
         }
         powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        mManager.start();
-
     }
 
     @Override
     public void onDestroy() {
-        mManager.stop();
         super.onDestroy();
     }
 
