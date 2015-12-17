@@ -43,11 +43,9 @@ public class AirPurifier_MXChip extends AirPurifier {
     public static final byte PROPERTY_FILTER = 0x15;
     public static final byte PROPERTY_TIME = 0x16;
     public static final byte PROPERTY_PERIOD=0x17;
-
     public static final byte PROPERTY_MODEL = 0x21;
 
     public static final byte PROPERTY_DEVICE_TYPE = 0x22;
-
     public static final byte PROPERTY_MAIN_BOARD = 0x23;
     public static final byte PROPERTY_CONTROL_BOARD = 0x24;
     public static final byte PROPERTY_MESSAGES = 0x25;
@@ -349,7 +347,7 @@ public class AirPurifier_MXChip extends AirPurifier {
         }
 
         public void setLock(boolean lock, OperateCallback<Void> cb) {
-            setProperty(PROPERTY_POWER, new byte[]{lock ? (byte) 1 : (byte) 0}, cb);
+            setProperty(PROPERTY_LOCK, new byte[]{lock ? (byte) 1 : (byte) 0}, cb);
         }
 
         @Override

@@ -42,7 +42,7 @@ public abstract class BaseDeviceIO extends XObject {
         super(context);
         this.Type = Type;
     }
-
+    public String name;
     public String getType() {
         return this.Type;
     }

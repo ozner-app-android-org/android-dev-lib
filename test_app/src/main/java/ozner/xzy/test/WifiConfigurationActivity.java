@@ -112,7 +112,7 @@ public class WifiConfigurationActivity extends Activity {
         if (io == null) {
             findViewById(R.id.deviceInfoPanel).setVisibility(View.INVISIBLE);
         } else {
-            ((TextView) this.findViewById(R.id.name)).setText("名称:" + "Wifi设备");
+            ((TextView) this.findViewById(R.id.name)).setText("名称:" + io.name);
             ((TextView) this.findViewById(R.id.type)).setText("类型:" + io.getType());
             ((TextView) this.findViewById(R.id.deviceId)).setText("设备MAC:" + io.getAddress());
             findViewById(R.id.deviceInfoPanel).setVisibility(View.VISIBLE);

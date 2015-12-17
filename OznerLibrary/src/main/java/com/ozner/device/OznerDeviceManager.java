@@ -199,6 +199,19 @@ public class OznerDeviceManager extends XObject {
     }
 
     /**
+     * 判断一个设备是否配对过
+     * @param address 设备MAC
+     * @return True配对过
+     */
+    public boolean hashDevice(String address)
+    {
+        synchronized (devices)
+        {
+            return devices.containsKey(address);
+        }
+    }
+
+    /**
      * 删除一个已经配对的设备
      */
     public void remove(OznerDevice device) {

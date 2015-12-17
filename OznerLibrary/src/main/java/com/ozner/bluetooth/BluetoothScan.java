@@ -209,6 +209,7 @@ public class BluetoothScan extends XObject implements LeScanCallback, Runnable {
             intent.putExtra(Extra_Firmware, rep.Firmware.getTime());
         intent.putExtra(Extra_ScanResponseType, rep.ScanResponseType);
         intent.putExtra(Extra_ScanResponseData, rep.ScanResponseData);
+
         //intent.putExtra(Extra_DataAvailable, rep.Available);
         mContext.sendBroadcast(intent);
     }

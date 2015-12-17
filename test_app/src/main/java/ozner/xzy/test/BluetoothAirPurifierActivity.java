@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.ozner.AirPurifier.AirPurifier_Bluetooth;
@@ -28,11 +29,11 @@ public class BluetoothAirPurifierActivity extends AppCompatActivity {
     TextView status;
     ControlImp controlImp = new ControlImp();
     final Monitor monitor = new Monitor();
-
+    SeekBar fanSeekBar=null;
     TextView sendStatus;
     final Handler handler = new Handler();
     AirPurifier_Bluetooth airPurifier;
-
+    int speedValue=50;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,6 +43,29 @@ public class BluetoothAirPurifierActivity extends AppCompatActivity {
         findViewById(R.id.power).setOnClickListener(controlImp);
         findViewById(R.id.resetFilter).setOnClickListener(controlImp);
         findViewById(R.id.speak).setOnClickListener(controlImp);
+        findViewById(R.id.fanSet).setOnClickListener(controlImp);
+
+        fanSeekBar=(SeekBar)findViewById(R.id.fanSpeed);
+        fanSeekBar.setMax(100);
+        fanSeekBar.setProgress(speedValue);
+        fanSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                speedValue=i;
+                setText(R.id.fanValue,String.valueOf(speedValue));
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
         findViewById(R.id.remove).setOnClickListener(controlImp);
         sendStatus = (TextView) findViewById(R.id.sendStatus);
         loadStatus();
@@ -92,7 +116,7 @@ public class BluetoothAirPurifierActivity extends AppCompatActivity {
             setText(R.id.Version,"固件版本:"+dateFormat.format(time));
         }
 
-
+        fanSeekBar.setProgress(airPurifier.status().RPM());
         setText(R.id.status, "设备状态:" + airPurifier.connectStatus().toString());
         setText(R.id.pm25, "PM2.5:" + getValue(airPurifier.sensor().PM25()));
         setText(R.id.temperature, "温度:" + getValue(airPurifier.sensor().Temperature()));
@@ -103,6 +127,8 @@ public class BluetoothAirPurifierActivity extends AppCompatActivity {
         setText(R.id.A2DPEnable, String.format("A2DP Enable:%s", airPurifier.a2dp().enable()));
 
         setText(R.id.powerStatus, "电源:" + (airPurifier.status().Power() ? "开" : "关"));
+        setText(R.id.RPMStatus, "风速:" + String.valueOf(airPurifier.status().RPM()));
+
 
         setText(R.id.workTime, "电机工作时间:" + String.valueOf(airPurifier.sensor().FilterStatus().workTime) + "分钟");
         setText(R.id.maxWorkTime, "最大工作时间:" + String.valueOf(airPurifier.sensor().FilterStatus().maxWorkTime) + "分钟");
@@ -163,6 +189,11 @@ public class BluetoothAirPurifierActivity extends AppCompatActivity {
                 case R.id.speak:
                 {
                     airPurifier.a2dp().setEnable(true, this);
+                    break;
+                }
+                case R.id.fanSet:
+                {
+                    airPurifier.status().setRPM((byte)speedValue,this);
                     break;
                 }
                 case R.id.remove: {

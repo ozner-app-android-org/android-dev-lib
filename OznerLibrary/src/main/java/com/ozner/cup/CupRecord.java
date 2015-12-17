@@ -1,10 +1,5 @@
 package com.ozner.cup;
 
-import android.annotation.SuppressLint;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -31,12 +26,12 @@ public class CupRecord {
     public int Volume = 0;
 
     /**
-     * TDS 值
+     * 最后一次TDS 值
      */
     public int TDS = 0;
 
     /**
-     * 温度最高值
+     * 最后一次温度
      */
     public int Temperature = 0;
 
@@ -91,7 +86,7 @@ public class CupRecord {
         Temperature_MAX=Math.max(Temperature_MAX,record.temperature);
         Count++;
         if (record.tds < 50)
-            TDS_High++;
+            TDS_Good++;
         else if (record.tds > 200)
             TDS_Bad++;
         else
@@ -129,70 +124,76 @@ public class CupRecord {
                     TDS_Good, TDS_Mid, TDS_Bad);
     }
 
-    @SuppressLint("NewApi")
-    public String toJSON() {
-        try {
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("Volume", Volume);
-            jsonObject.put("Temperature_High", Temperature_High);
-            jsonObject.put("Temperature_Mid", Temperature_Mid);
-            jsonObject.put("Temperature_Low", Temperature_Low);
-            jsonObject.put("TDS_Good", TDS_Good);
-            jsonObject.put("TDS_Mid", TDS_Mid);
-            jsonObject.put("TDS_Bad", TDS_Bad);
-            jsonObject.put("Temperature_MAX", Temperature_MAX);
-            jsonObject.put("TDS_High", TDS_High);
-            jsonObject.put("Count", Count);
-            return jsonObject.toString();
-        } catch (JSONException e) {
-            e.printStackTrace();
-            return "";
-        }
-    }
-
-    @SuppressLint("NewApi")
-    public void FromJSON(String json) {
-        if (json == null)
-            return;
-        if (json.isEmpty())
-            return;
-        try {
-            JSONObject object = new JSONObject(json);
-            if (object.has("Volume")) {
-                Volume = object.getInt("Volume");
-            }
-
-            if (object.has("Temperature_High")) {
-                Temperature_High = object.getInt("Temperature_High");
-            }
-            if (object.has("Temperature_Mid")) {
-                Temperature_Mid = object.getInt("Temperature_Mid");
-            }
-            if (object.has("Temperature_Low")) {
-                Temperature_Low = object.getInt("Temperature_Low");
-            }
-
-            if (object.has("TDS_Good")) {
-                TDS_Good = object.getInt("TDS_Good");
-            }
-            if (object.has("TDS_Mid")) {
-                TDS_Mid = object.getInt("TDS_Mid");
-            }
-            if (object.has("TDS_Bad")) {
-                TDS_Bad = object.getInt("TDS_Bad");
-            }
-            if (object.has("Count")) {
-                Count = object.getInt("Count");
-            }
-            if (object.has("TDS_High")) {
-                TDS_High = object.getInt("TDS_High");
-            }
-            if (object.has("Temperature_MAX")) {
-                Temperature_MAX = object.getInt("Temperature_MAX");
-            }
-        } catch (JSONException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-    }
+//    @SuppressLint("NewApi")
+//    public String toJSON() {
+//        try {
+//            JSONObject jsonObject = new JSONObject();
+//
+//            jsonObject.put("Volume", Volume);
+//            jsonObject.put("Temperature", Temperature);
+//            jsonObject.put("TDS", TDS);
+//
+//            jsonObject.put("Temperature_High", Temperature_High);
+//            jsonObject.put("Temperature_Mid", Temperature_Mid);
+//            jsonObject.put("Temperature_Low", Temperature_Low);
+//
+//            jsonObject.put("TDS_Good", TDS_Good);
+//            jsonObject.put("TDS_Mid", TDS_Mid);
+//            jsonObject.put("TDS_Bad", TDS_Bad);
+//
+//            jsonObject.put("Temperature_MAX", Temperature_MAX);
+//            jsonObject.put("TDS_High", TDS_High);
+//            jsonObject.put("Count", Count);
+//            return jsonObject.toString();
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//            return "";
+//        }
+//    }
+//
+//    @SuppressLint("NewApi")
+//    public void FromJSON(String json) {
+//        if (json == null)
+//            return;
+//        if (json.isEmpty())
+//            return;
+//        try {
+//            JSONObject object = new JSONObject(json);
+//            if (object.has("Volume")) {
+//                Volume = object.getInt("Volume");
+//            }
+//
+//            if (object.has("Temperature_High")) {
+//                Temperature_High = object.getInt("Temperature_High");
+//            }
+//            if (object.has("Temperature_Mid")) {
+//                Temperature_Mid = object.getInt("Temperature_Mid");
+//            }
+//            if (object.has("Temperature_Low")) {
+//                Temperature_Low = object.getInt("Temperature_Low");
+//            }
+//
+//            if (object.has("TDS_Good")) {
+//                TDS_Good = object.getInt("TDS_Good");
+//            }
+//            if (object.has("TDS_Mid")) {
+//                TDS_Mid = object.getInt("TDS_Mid");
+//            }
+//            if (object.has("TDS_Bad")) {
+//                TDS_Bad = object.getInt("TDS_Bad");
+//            }
+//            if (object.has("Count")) {
+//                Count = object.getInt("Count");
+//            }
+//            if (object.has("TDS_High")) {
+//                TDS_High = object.getInt("TDS_High");
+//            }
+//            if (object.has("Temperature_MAX")) {
+//                Temperature_MAX = object.getInt("Temperature_MAX");
+//            }
+//        } catch (JSONException e) {
+//            // TODO Auto-generated catch block
+//            e.printStackTrace();
+//        }
+//    }
 }

@@ -7,6 +7,7 @@ import android.os.Message;
 
 import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.IOManager;
+import com.ozner.device.OznerDeviceManager;
 
 import java.util.HashMap;
 
@@ -27,30 +28,19 @@ public class MXChipIOManager extends IOManager {
     }
 
 
-    public MXChipIO addListenerAddress(String address, String type) throws ClassCastException {
+    public MXChipIO createMXChipDevice(String address, String type) throws ClassCastException {
         synchronized (listenDeviceList) {
-            try {
-                if (!listenDeviceList.containsKey(address))
-                {
-                    listenDeviceList.put(address,type);
-                    if (proxy.isConnected()) {
-                        MXChipIO io=new MXChipIO(context(),proxy, address,type);
-                        doAvailable(io);
-                        return io;
-                    }else
-                    {
-                        return null;
-                    }
-                }else
-                {
-                    return new MXChipIO(context(),proxy, address,type);
-                }
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                return null;
-            }
+            if (!listenDeviceList.containsKey(address))
+                listenDeviceList.put(address, type);
         }
+
+        if (proxy.isConnected()) {
+            MXChipIO io =new MXChipIO(context(),proxy,address,type);
+            doAvailable(io);
+            return io;
+        }else
+            return null;
+
     }
 
     final static int delayedAvailableMessage=0x1000;
@@ -64,18 +54,31 @@ public class MXChipIOManager extends IOManager {
             public void handleMessage(Message msg) {
                 if (msg.what==delayedAvailableMessage)
                 {
-                    if (proxy.isConnected()) {
-                        doAvailable((BaseDeviceIO) msg.obj);
+                    String address=msg.obj.toString();
+                    synchronized (listenDeviceList) {
+                        if (listenDeviceList.containsKey(address)) {
+                            String type = listenDeviceList.get(address);
+                            if (OznerDeviceManager.Instance().hashDevice(address)) {
+                                MXChipIO io = createMXChipDevice(address,type);
+                                doAvailable(io);
+                            }
+                        }
                     }
                 }
             }
         };
 
-        if (proxy.isConnected()) {
-            Message m = new Message();
-            m.what = delayedAvailableMessage;
-            m.obj = io.getAddress();
-            handler.sendMessageDelayed(m, 5000); //如果IO被关闭了,MQTT还是连接中的情况下,重新激活IO
+        if (!OznerDeviceManager.Instance().hashDevice(io.getAddress()))
+        {
+            listenDeviceList.remove(io.getAddress());
+        }
+        else {
+            if (proxy.isConnected()) {
+                Message m = new Message();
+                m.what = delayedAvailableMessage;
+                m.obj = io.getAddress();
+                handler.sendMessageDelayed(m, 5000); //如果IO被关闭了,MQTT还是连接中的情况下,重新激活IO
+            }
         }
     }
 

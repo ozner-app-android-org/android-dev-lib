@@ -54,6 +54,7 @@ public class CupRecordList {
             }
         }
     }
+
     private DBRecord getRecord(String[] dbResult)
     {
         DBRecord record=new DBRecord();
