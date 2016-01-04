@@ -36,7 +36,7 @@ public class AirPurifierManager extends BaseDeviceManager {
             {
                 if ((bluetoothIO.getScanResponseData()!=null) && (bluetoothIO.getScanResponseData().length>1))
                 {
-                    return bluetoothIO.getScanResponseData()[1]!=0;
+                    return bluetoothIO.getScanResponseData()[0]!=0;
                 }
 
             }
@@ -57,7 +57,7 @@ public class AirPurifierManager extends BaseDeviceManager {
             } else if (IsWifiAirPurifier(type)) {
                 OznerDevice airPurifier = new AirPurifier_MXChip(context(), address, type, settings);
                 OznerDeviceManager.Instance().ioManagerList().mxChipIOManager()
-                        .addListenerAddress(airPurifier.Address(), airPurifier.Type());
+                        .createMXChipDevice(airPurifier.Address(), airPurifier.Type());
                 return airPurifier;
             }
             return null;
@@ -75,7 +75,7 @@ public class AirPurifierManager extends BaseDeviceManager {
 
     public static boolean IsBluetoothAirPurifier(String Type) {
         if (Type == null) return false;
-        return Type.trim().equals("r");
+        return Type.trim().equals("FLT001");
     }
 
 //    @Override

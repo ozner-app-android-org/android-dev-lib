@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.text.format.Time;
 
 import com.ozner.bluetooth.BluetoothIO;
+import com.ozner.device.AutoUpdateClass;
 import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.DeviceSetting;
 import com.ozner.device.OznerDevice;
@@ -12,19 +13,17 @@ import com.ozner.oznerlibrary.R;
 import com.ozner.util.ByteUtil;
 import com.ozner.util.dbg;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.TreeSet;
 
 /**
  * 水杯对象
  * Created by zhiyongxu on 15/10/28.
  */
 public class Cup extends OznerDevice {
-
+    private static final int defaultAutoUpdatePeriod = 5000;
     /**
      * 收到单条饮水记录
      */
@@ -50,13 +49,9 @@ public class Cup extends OznerDevice {
     static final byte opCode_FrontMode = (byte) 0x21;
     final CupSensor mSensor = new CupSensor();
     final CupFirmwareTools firmwareTools = new CupFirmwareTools();
-    final TreeSet<RawRecord> mRawRecords = new TreeSet<>();
-    final BluetoothIOImp bluetoothIOImp = new BluetoothIOImp();
+    final CupImp cupIMP = new CupImp(defaultAutoUpdatePeriod);
     CupRecordList mCupRecordList;
-    Date mLastDataTime = new Date();
-    Timer autoUpdateTimer = null;
-    int RequestCount = 0;
-    HashSet<String> dataHash = new HashSet<>();
+
 
     public Cup(Context context, String Address, String Type, String Setting) {
         super(context, Address, Type, Setting);
@@ -66,14 +61,13 @@ public class Cup extends OznerDevice {
 
     @Override
     public String toString() {
-        if (connectStatus()== BaseDeviceIO.ConnectStatus.Connected)
-        {
+        if (connectStatus() == BaseDeviceIO.ConnectStatus.Connected) {
             return Sensor().toString();
-        }else
-        {
+        } else {
             return connectStatus().toString();
         }
     }
+
     /**
      * 判断设备是否处于配对状态
      *
@@ -106,17 +100,17 @@ public class Cup extends OznerDevice {
     protected void doSetDeviceIO(BaseDeviceIO oldIO, BaseDeviceIO newIO) {
         if (oldIO != null) {
             oldIO.setOnInitCallback(null);
-            oldIO.unRegisterStatusCallback(bluetoothIOImp);
+            oldIO.unRegisterStatusCallback(cupIMP);
             oldIO.setOnTransmissionsCallback(null);
             oldIO.setCheckTransmissionsCompleteCallback(null);
             firmwareTools.bind(null);
         }
-        cancelTimer();
+        cupIMP.stop();
         if (newIO != null) {
-            newIO.setOnTransmissionsCallback(bluetoothIOImp);
-            newIO.setOnInitCallback(bluetoothIOImp);
-            newIO.registerStatusCallback(bluetoothIOImp);
-            newIO.setCheckTransmissionsCompleteCallback(bluetoothIOImp);
+            newIO.setOnTransmissionsCallback(cupIMP);
+            newIO.setOnInitCallback(cupIMP);
+            newIO.registerStatusCallback(cupIMP);
+            newIO.setCheckTransmissionsCompleteCallback(cupIMP);
             firmwareTools.bind((BluetoothIO) newIO);
         }
     }
@@ -144,53 +138,12 @@ public class Cup extends OznerDevice {
         return setting;
     }
 
-    private boolean sendTime() {
-        dbg.i("开始设置时间:%s", IO().getAddress());
-        Time time = new Time();
-        time.setToNow();
-        byte[] data = new byte[6];
-        data[0] = (byte) (time.year - 2000);
-        data[1] = (byte) (time.month + 1);
-        data[2] = (byte) time.monthDay;
-        data[3] = (byte) time.hour;
-        data[4] = (byte) time.minute;
-        data[5] = (byte) time.second;
-        return send(opCode_UpdateTime, data);
-    }
 
     @Override
     protected void doChangeRunningMode() {
-        sendBackground();
+        cupIMP.sendBackground();
     }
 
-    private void sendBackground() {
-        if (getRunningMode() == RunningMode.Foreground) {
-            send(opCode_FrontMode, null);
-        }
-    }
-
-    private boolean sendSetting() {
-        CupSetting setting = Setting();
-        if (setting == null)
-            return false;
-        byte[] data = new byte[19];
-        ByteUtil.putInt(data, setting.remindStart(), 0);
-        ByteUtil.putInt(data, setting.remindEnd(), 4);
-        data[8] = (byte) setting.remindInterval();
-        ByteUtil.putInt(data, setting.haloColor(), 9);
-        data[13] = (byte) setting.haloMode();
-        data[14] = (byte) setting.haloSpeed();
-        data[15] = (byte) setting.haloConter();
-        data[16] = (byte) setting.beepMode();
-        data[17] = 0;// (byte) (isNewCup ? 1 : 0);
-        data[18] = 0;
-        dbg.i(IO().getAddress() + " 写入提醒数据", context());
-        return send(opCode_SetRemind, data);
-    }
-
-    private boolean send(byte opCode, byte[] data) {
-        return IO() != null && IO().send(BluetoothIO.makePacket(opCode, data));
-    }
 
     /**
      * 设置光环颜色
@@ -216,83 +169,102 @@ public class Cup extends OznerDevice {
         return IO().send(BluetoothIO.makePacket(opCode_SetRemind, data));
     }
 
-    private void doTime() {
-        if (IO() == null) return;
-        if (mLastDataTime != null) {
-            //如果上几次接收饮水记录的时间小于2秒,不进入定时循环,等待下条饮水记录
-            Date dt = new Date();
-            if ((dt.getTime() - mLastDataTime.getTime()) < 2000) {
-                return;
-            }
-        }
-        if ((RequestCount % 2) == 0) {
-            requestSensor();
-        } else {
-            requestRecord();
-        }
-        RequestCount++;
-
-    }
 
     @Override
     public void updateSettings() {
 
         if ((IO() != null) && (IO().isReady()))
-            sendSetting();
+            cupIMP.sendSetting();
 
     }
 
-    private void requestSensor() {
-        if (IO() != null) {
-            IO().send(BluetoothIO.makePacket(opCode_ReadSensor, null));
-            dbg.i("请求传感器");
-        }
-    }
 
-    private void requestRecord() {
-        if (IO() != null) {
-            if (IO().send(BluetoothIO.makePacket(opCode_ReadRecord, null))) {
-                dbg.i("请求记录");
-            }
-        }
-    }
-
-    private void cancelTimer() {
-        if (autoUpdateTimer != null) {
-            autoUpdateTimer.cancel();
-            autoUpdateTimer.purge();
-            autoUpdateTimer = null;
-        }
-    }
-
-
-    class BluetoothIOImp implements
+    class CupImp extends AutoUpdateClass implements
             BluetoothIO.OnInitCallback,
             BluetoothIO.OnTransmissionsCallback,
             BluetoothIO.StatusCallback,
             BluetoothIO.CheckTransmissionsCompleteCallback {
+        Date mLastDataTime = new Date();
+        int RequestCount = 0;
+        HashSet<String> dataHash = new HashSet<>();
+        final ArrayList<RawRecord> mRawRecords = new ArrayList<>();
+
+        public CupImp(long period) {
+            super(period);
+        }
+
+        private boolean sendTime() {
+            dbg.i("开始设置时间:%s", IO().getAddress());
+            Time time = new Time();
+            time.setToNow();
+            byte[] data = new byte[6];
+            data[0] = (byte) (time.year - 2000);
+            data[1] = (byte) (time.month + 1);
+            data[2] = (byte) time.monthDay;
+            data[3] = (byte) time.hour;
+            data[4] = (byte) time.minute;
+            data[5] = (byte) time.second;
+            return send(opCode_UpdateTime, data);
+        }
+
+        private void sendBackground() {
+            if (getRunningMode() == RunningMode.Foreground) {
+                send(opCode_FrontMode, null);
+            }
+        }
+
+        private boolean sendSetting() {
+            CupSetting setting = Setting();
+            if (setting == null)
+                return false;
+            byte[] data = new byte[19];
+            ByteUtil.putInt(data, setting.remindStart(), 0);
+            ByteUtil.putInt(data, setting.remindEnd(), 4);
+            data[8] = (byte) setting.remindInterval();
+            ByteUtil.putInt(data, setting.haloColor(), 9);
+            data[13] = (byte) setting.haloMode();
+            data[14] = (byte) setting.haloSpeed();
+            data[15] = (byte) setting.haloConter();
+            data[16] = (byte) setting.beepMode();
+            data[17] = 0;// (byte) (isNewCup ? 1 : 0);
+            data[18] = 0;
+            dbg.i(IO().getAddress() + " 写入提醒数据", context());
+            return send(opCode_SetRemind, data);
+        }
+
+        private boolean send(byte opCode, byte[] data) {
+            return IO() != null && IO().send(BluetoothIO.makePacket(opCode, data));
+        }
+
+        private void requestSensor() {
+            if (IO() != null) {
+                IO().send(BluetoothIO.makePacket(opCode_ReadSensor, null));
+                dbg.i("请求传感器");
+            }
+        }
+
+        private void requestRecord() {
+            if (IO() != null) {
+                if (IO().send(BluetoothIO.makePacket(opCode_ReadRecord, null))) {
+                    dbg.i("请求记录");
+                }
+            }
+        }
+
         @Override
         public void onConnected(BaseDeviceIO io) {
         }
 
         @Override
         public void onDisconnected(BaseDeviceIO io) {
-            cancelTimer();
+            stop();
             Sensor().reset();
         }
 
         @Override
         public void onReady(BaseDeviceIO io) {
             if (getRunningMode() == RunningMode.Foreground) {
-                if (autoUpdateTimer != null)
-                    cancelTimer();
-                autoUpdateTimer = new Timer();
-                autoUpdateTimer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        doTime();
-                    }
-                }, 100, 5000);
+                start(100);
             } else {
                 requestRecord();
             }
@@ -352,7 +324,7 @@ public class Cup extends OznerDevice {
                         }
 
                         mLastDataTime = new Date();
-                        if ((mRawRecords.size()>0) && (rawRecord.Index == rawRecord.Count)) {
+                        if ((mRawRecords.size() > 0) && (rawRecord.Index == rawRecord.Count)) {
                             dbg.i("收到记录完成");
                             synchronized (mRawRecords) {
                                 mCupRecordList.addRecord(mRawRecords.toArray(new RawRecord[mRawRecords.size()]));
@@ -397,6 +369,24 @@ public class Cup extends OznerDevice {
                 return (dt.getTime() - mLastDataTime.getTime()) >= 2000;
             } else
                 return true;
+        }
+
+        @Override
+        protected void doTime() {
+            if (IO() == null) return;
+            if (mLastDataTime != null) {
+                //如果上几次接收饮水记录的时间小于2秒,不进入定时循环,等待下条饮水记录
+                Date dt = new Date();
+                if ((dt.getTime() - mLastDataTime.getTime()) < 2000) {
+                    return;
+                }
+            }
+            if ((RequestCount % 2) == 0) {
+                requestSensor();
+            } else {
+                requestRecord();
+            }
+            RequestCount++;
         }
     }
 }

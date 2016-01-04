@@ -74,6 +74,11 @@
             android:label="@string/title_activity_bluetooth_air_purifier"
             android:theme="@style/AppTheme" >
         </activity>
+        <activity
+            android:name=".WaterReplenishmentMeterActivity"
+            android:label="@string/title_activity_water_replenishment_meter"
+            android:theme="@style/AppTheme" >
+        </activity>
     </application>
 
 </manifest>

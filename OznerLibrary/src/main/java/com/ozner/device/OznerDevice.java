@@ -40,6 +40,7 @@ public abstract class OznerDevice extends XObject {
         context().sendBroadcast(intent);
     }
 
+
     protected abstract String getDefaultName();
 
     public abstract Class<?> getIOType();

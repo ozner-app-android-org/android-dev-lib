@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.ozner.AirPurifier.AirPurifierManager;
 import com.ozner.WaterPurifier.WaterPurifierManager;
+import com.ozner.WaterReplenishmentMeter.WaterReplenishmentMeterMgr;
 import com.ozner.cup.CupManager;
 import com.ozner.tap.TapManager;
 
@@ -17,19 +18,19 @@ public class DeviceManagerList extends ArrayList<BaseDeviceManager> {
     TapManager tapManager;
     WaterPurifierManager waterPurifierManager;
     AirPurifierManager airPurifierManager;
-
+    WaterReplenishmentMeterMgr waterReplenishmentMeterMgr;
     public DeviceManagerList(Context context) {
         cupManager = new CupManager(context);
         tapManager = new TapManager(context);
         waterPurifierManager = new WaterPurifierManager(context);
         airPurifierManager = new AirPurifierManager(context);
+        waterReplenishmentMeterMgr = new WaterReplenishmentMeterMgr(context);
+
         add(cupManager);
         add(tapManager);
         add(waterPurifierManager);
         add(airPurifierManager);
-
-
-
+        add(waterReplenishmentMeterMgr);
     }
 
     public TapManager tapManager() {
@@ -47,4 +48,8 @@ public class DeviceManagerList extends ArrayList<BaseDeviceManager> {
     public AirPurifierManager airPurifierManager() {
         return airPurifierManager;
     }
+    public WaterReplenishmentMeterMgr waterReplenishmentMeterMgr() {
+        return waterReplenishmentMeterMgr;
+    }
+
 }

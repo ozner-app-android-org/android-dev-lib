@@ -19,6 +19,7 @@ import com.getbase.floatingactionbutton.FloatingActionButton;
 import com.ozner.AirPurifier.AirPurifier_Bluetooth;
 import com.ozner.AirPurifier.AirPurifier_MXChip;
 import com.ozner.WaterPurifier.WaterPurifier;
+import com.ozner.WaterReplenishmentMeter.WaterReplenishmentMeter;
 import com.ozner.application.OznerBLEService;
 import com.ozner.cup.Cup;
 import com.ozner.device.OznerDevice;
@@ -66,6 +67,13 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         if (device instanceof WaterPurifier)
         {
             Intent intent=new Intent(this,WaterPurifierActivity.class);
+            intent.putExtra("Address", device.Address());
+            startActivityForResult(intent,0);
+            return;
+        }
+        if (device instanceof WaterReplenishmentMeter)
+        {
+            Intent intent=new Intent(this,WaterReplenishmentMeterActivity.class);
             intent.putExtra("Address", device.Address());
             startActivityForResult(intent,0);
             return;

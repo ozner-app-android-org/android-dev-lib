@@ -5,4 +5,5 @@
     <string name="tap_name">浩泽智能水探头</string>
     <string name="water_purifier_name">浩泽智能净水器</string>
     <string name="air_purifier_name">浩泽智能空气净化器</string>
+    <string name="water_replenishment_meter">补水仪</string>
 </resources>

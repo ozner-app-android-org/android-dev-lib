@@ -6,7 +6,12 @@ package com.ozner.device;
 public class OperateCallbackProxy<T> implements OperateCallback<T> {
 
     public OperateCallback<T> callback;
+    public Object param;
 
+    public OperateCallbackProxy(OperateCallback<T> callback,Object param) {
+        this.param=param;
+        this.callback = callback;
+    }
     public OperateCallbackProxy(OperateCallback<T> callback) {
         this.callback = callback;
     }

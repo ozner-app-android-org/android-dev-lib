@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import com.ozner.device.AutoUpdateClass;
 import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.DeviceSetting;
 import com.ozner.device.OperateCallback;
@@ -16,14 +17,12 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  * Created by xzyxd on 2015/11/2.
  */
 public class AirPurifier_MXChip extends AirPurifier {
-
+    private static final int defaultAutoUpdatePeriod=5000;
     public static final byte CMD_SET_PROPERTY=(byte)0x2;
     public static final byte CMD_REQUEST_PROPERTY=(byte)0x1;
     public static final byte CMD_RECV_PROPERTY=(byte)0x4;
@@ -54,12 +53,12 @@ public class AirPurifier_MXChip extends AirPurifier {
     public static final int ErrorValue = 0xffff;
     private static final int Timeout=2000;
     private static String SecureCode = "580c2783";
-    final AirPurifierImp airPurifierImp = new AirPurifierImp();
+    final AirPurifierImp airPurifierImp = new AirPurifierImp(defaultAutoUpdatePeriod);
     final HashMap<Byte, byte[]> property = new HashMap<>();
     final PowerTimer powerTimer = new PowerTimer();
     final FilterStatus filterStatus = new FilterStatus();
     boolean isOffline = true;
-    Timer autoUpdateTimer = null;
+
     Sensor sensor = new Sensor();
     AirStatus airStatus = new AirStatus();
     private String getValue(int value)
@@ -183,8 +182,8 @@ public class AirPurifier_MXChip extends AirPurifier {
         if (super.connectStatus() != BaseDeviceIO.ConnectStatus.Connected) {
             if (cb != null)
                 cb.onFailure(null);
-            return;
         }
+
         byte[] bytes = new byte[14 + propertys.size()];
         bytes[0] = (byte) 0xfb;
         ByteUtil.putShort(bytes, (short) bytes.length, 1);
@@ -420,12 +419,15 @@ public class AirPurifier_MXChip extends AirPurifier {
         }
     }
 
-    class AirPurifierImp implements
+    class AirPurifierImp extends AutoUpdateClass implements
             BaseDeviceIO.OnTransmissionsCallback,
             BaseDeviceIO.StatusCallback,
             BaseDeviceIO.OnInitCallback {
+
         private boolean Respone=false;
-        public AirPurifierImp() {
+
+        public AirPurifierImp(long period) {
+            super(period);
         }
 
         @Override
@@ -435,7 +437,7 @@ public class AirPurifier_MXChip extends AirPurifier {
 
         @Override
         public void onDisconnected(BaseDeviceIO io) {
-            cancelTimer();
+            stop();
             isOffline = true;
 
         }
@@ -505,20 +507,14 @@ public class AirPurifier_MXChip extends AirPurifier {
         @Override
         public void onReady(BaseDeviceIO io) {
             if (getRunningMode() == RunningMode.Foreground) {
-                if (autoUpdateTimer != null)
-                    cancelTimer();
-                autoUpdateTimer = new Timer();
-                autoUpdateTimer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        doTime();
-                    }
-                }, 1000, 5000);
+                start(1000);
             }
         }
 
-        private void doTime() {
+        @Override
+        protected void doTime() {
             HashSet<Byte> list = new HashSet<>();
+            //list.add(PROPERTY_FILTER);
             list.add(PROPERTY_PM25);
             list.add(PROPERTY_LIGHT_SENSOR);
             list.add(PROPERTY_TEMPERATURE);
@@ -644,14 +640,6 @@ public class AirPurifier_MXChip extends AirPurifier {
         }
 
 
-
-        private void cancelTimer() {
-            if (autoUpdateTimer != null) {
-                autoUpdateTimer.cancel();
-                autoUpdateTimer.purge();
-                autoUpdateTimer = null;
-            }
-        }
 
 //        class SendOperateCallbackProxy implements OperateCallback<Void> {
 //            OperateCallback<Void> callback;

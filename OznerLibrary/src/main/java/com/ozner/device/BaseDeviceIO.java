@@ -50,6 +50,14 @@ public abstract class BaseDeviceIO extends XObject {
     public boolean isReady() {
         return isReady;
     }
+    public void clearLastRecvPacket()
+    {
+        synchronized (this)
+        {
+            lastRecvPacket=null;
+        }
+    }
+
     /**
      * 获取最后一次收到的数据包
      */
