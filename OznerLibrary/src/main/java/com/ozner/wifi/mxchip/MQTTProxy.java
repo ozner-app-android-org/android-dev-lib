@@ -44,7 +44,7 @@ public class MQTTProxy extends XObject {
             mqtt.setVersion("3.1.1");
 //        mqtt.setConnectAttemptsMax(10L);//客户端首次连接到服务器时，连接的最大重试次数，超出该次数客户端将返回错误。-1意为无重试上限，默认为-1
             mqtt.setReconnectAttemptsMax(-1);//客户端已经连接到服务器，但因某种原因连接断开时的最大重试次数，超出该次数客户端将返回错误。-1意为无重试上限，默认为-1
-            mqtt.setReconnectDelay(10L);//首次重连接间隔毫秒数，默认为10ms
+            mqtt.setReconnectDelay(100L);//首次重连接间隔毫秒数，默认为10ms
             mqtt.setReconnectDelayMax(30000L);//重连接间隔毫秒数，默认为30000ms
             mqtt.setReconnectBackOffMultiplier(2);//设置重连接指数回归。设置为1则停用指数回归，默认为2
 
@@ -60,6 +60,7 @@ public class MQTTProxy extends XObject {
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
+
         connection = mqtt.callbackConnection();
         connection.listener(mqttImp);
     }
@@ -95,26 +96,30 @@ public class MQTTProxy extends XObject {
     }
 
     public boolean subscribe(String topic, Callback<byte[]> callback) {
-        if (!connected) {
-            return false;
-        } else {
 
-            connection.subscribe(new Topic[]{new Topic(topic, QoS.AT_MOST_ONCE)}, callback);
-            return true;
-        }
+            if (!connected) {
+                return false;
+            } else {
+
+                connection.subscribe(new Topic[]{new Topic(topic, QoS.AT_MOST_ONCE)}, callback);
+                return true;
+            }
+
     }
 
     public boolean unsubscribe(String topic) {
-        if (!connected) {
-            return false;
-        } else {
-            connection.unsubscribe(new UTF8Buffer[]{new UTF8Buffer(topic)}, null);
-            return true;
-        }
+            if (!connected) {
+                return false;
+            } else {
+                connection.unsubscribe(new UTF8Buffer[]{new UTF8Buffer(topic)}, null);
+                return true;
+            }
     }
 
     public void publish(String topic, byte[] data, OperateCallback<Void> cb) {
-        connection.publish(topic, data, QoS.AT_LEAST_ONCE, false, new CallbackProxy<>(cb));
+
+            connection.publish(topic, data, QoS.AT_MOST_ONCE, false, new CallbackProxy<>(cb));
+
     }
 
     public interface MQTTListener {

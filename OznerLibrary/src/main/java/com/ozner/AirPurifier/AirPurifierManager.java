@@ -36,7 +36,7 @@ public class AirPurifierManager extends BaseDeviceManager {
             {
                 if ((bluetoothIO.getScanResponseData()!=null) && (bluetoothIO.getScanResponseData().length>1))
                 {
-                    return bluetoothIO.getScanResponseData()[0]!=0;
+                    return bluetoothIO.getScanResponseData()[1]!=0;
                 }
 
             }

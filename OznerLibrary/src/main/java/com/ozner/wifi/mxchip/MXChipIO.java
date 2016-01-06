@@ -117,7 +117,8 @@ public class MXChipIO extends BaseDeviceIO {
                         setObject();
                     }
                 });
-                waitObject(Timeout);
+                if (!succeed)
+                    waitObject(Timeout);
                 if (succeed) {
                     doSend(data);
                 }

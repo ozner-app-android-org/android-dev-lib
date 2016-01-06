@@ -105,15 +105,15 @@ public class AirPurifierAcivity extends AppCompatActivity {
             case AirPurifier_MXChip.FAN_SPEED_AUTO:
                 speed = "自动";
                 break;
-            case AirPurifier_MXChip.FAN_SPEED_HIGH:
-                speed = "高";
-                break;
-            case AirPurifier_MXChip.FAN_SPEED_MID:
-                speed = "中";
-                break;
-            case AirPurifier_MXChip.FAN_SPEED_LOW:
-                speed = "低";
-                break;
+//            case AirPurifier_MXChip.FAN_SPEED_HIGH:
+//                speed = "高";
+//                break;
+//            case AirPurifier_MXChip.FAN_SPEED_MID:
+//                speed = "中";
+//                break;
+//            case AirPurifier_MXChip.FAN_SPEED_LOW:
+//                speed = "低";
+//                break;
             case AirPurifier_MXChip.FAN_SPEED_SILENT:
                 speed = "静音";
                 break;
@@ -167,7 +167,8 @@ public class AirPurifierAcivity extends AppCompatActivity {
                 }
             });
         }
-
+        int[] SpeedValues={AirPurifier_MXChip.FAN_SPEED_AUTO,AirPurifier_MXChip.FAN_SPEED_POWER,AirPurifier_MXChip.FAN_SPEED_SILENT};
+        int sv=0;
         @Override
         public void onClick(View view) {
             switch (view.getId()) {
@@ -179,11 +180,20 @@ public class AirPurifierAcivity extends AppCompatActivity {
 
                 case R.id.fanSpeed:
                     int speedValue = airPurifier.airStatus().speed();
-                    speedValue++;
-                    if (speedValue > AirPurifier_MXChip.FAN_SPEED_POWER)
-                        speedValue = AirPurifier_MXChip.FAN_SPEED_AUTO;
+                    switch (speedValue)
+                    {
+                        case AirPurifier_MXChip.FAN_SPEED_AUTO:
+                            speedValue=AirPurifier_MXChip.FAN_SPEED_POWER;
+                            break;
+                        case AirPurifier_MXChip.FAN_SPEED_POWER:
+                            speedValue=AirPurifier_MXChip.FAN_SPEED_SILENT;
+                            break;
+                        case AirPurifier_MXChip.FAN_SPEED_SILENT:
+                            speedValue=AirPurifier_MXChip.FAN_SPEED_AUTO;
+                            break;
+                    }
                     sendStatus.setText("发送状态:正在发送");
-                    airPurifier.airStatus().setSpeed(speedValue, this);
+                     airPurifier.airStatus().setSpeed(speedValue, this);
                     break;
 
                 case R.id.lock:

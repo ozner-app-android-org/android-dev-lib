@@ -8,6 +8,7 @@ import com.ozner.device.AutoUpdateClass;
 import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.DeviceSetting;
 import com.ozner.device.OperateCallback;
+import com.ozner.device.OperateCallbackProxy;
 import com.ozner.oznerlibrary.R;
 import com.ozner.util.ByteUtil;
 import com.ozner.util.Helper;
@@ -216,7 +217,20 @@ public class AirPurifier_MXChip extends AirPurifier {
         System.arraycopy(macs, 0, bytes, 4, 6);
         bytes[12] = propertyId;
         System.arraycopy(value, 0, bytes, 13, value.length);
-        airPurifierImp.send(bytes, cb);
+        airPurifierImp.send(bytes, new OperateCallbackProxy<Void>(cb)
+        {
+            @Override
+            public void onSuccess(Void var1) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                airPurifierImp.doTime();
+                super.onSuccess(var1);
+            }
+        });
+
     }
 
     private int getIntValueByShort(byte property) {
@@ -283,9 +297,9 @@ public class AirPurifier_MXChip extends AirPurifier {
     }
 
     public final static int FAN_SPEED_AUTO = 0;
-    public final static int FAN_SPEED_HIGH = 1;
-    public final static int FAN_SPEED_MID = 2;
-    public final static int FAN_SPEED_LOW = 3;
+//    public final static int FAN_SPEED_HIGH = 1;
+//    public final static int FAN_SPEED_MID = 2;
+//    public final static int FAN_SPEED_LOW = 3;
     public final static int FAN_SPEED_SILENT = 4;
     public final static int FAN_SPEED_POWER = 5;
 
@@ -514,7 +528,7 @@ public class AirPurifier_MXChip extends AirPurifier {
         @Override
         protected void doTime() {
             HashSet<Byte> list = new HashSet<>();
-            //list.add(PROPERTY_FILTER);
+            list.add(PROPERTY_FILTER);
             list.add(PROPERTY_PM25);
             list.add(PROPERTY_LIGHT_SENSOR);
             list.add(PROPERTY_TEMPERATURE);

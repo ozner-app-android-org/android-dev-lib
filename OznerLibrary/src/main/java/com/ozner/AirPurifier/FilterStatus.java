@@ -8,8 +8,8 @@ import java.util.Date;
  * Created by zhiyongxu on 15/11/11.
  */
 public class FilterStatus {
-    public Date lastTime=new Date();
-    public Date stopTime=new Date();
+    public Date lastTime=new Date(0);
+    public Date stopTime=new Date(0);
     public int workTime =0;
     public int maxWorkTime = 0;
     public byte[] toBytes()
