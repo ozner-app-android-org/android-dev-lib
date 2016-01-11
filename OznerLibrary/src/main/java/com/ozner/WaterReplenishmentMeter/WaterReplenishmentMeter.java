@@ -8,6 +8,9 @@ import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.OperateCallback;
 import com.ozner.device.OznerDevice;
 import com.ozner.oznerlibrary.R;
+import com.ozner.util.ByteUtil;
+import com.ozner.util.Helper;
+
 /**
  * Created by zhiyongxu on 15/12/21.
  */
@@ -89,9 +92,9 @@ public class WaterReplenishmentMeter extends OznerDevice {
 
     class TestRunnableProxy  implements BluetoothIO.BluetoothRunnable
     {
-        OperateCallback<Float> cb;
+        OperateCallback<String> cb;
         TestParts testParts;
-        public TestRunnableProxy(TestParts testParts,OperateCallback<Float> cb)
+        public TestRunnableProxy(TestParts testParts,OperateCallback<String> cb)
         {
             this.testParts=testParts;
             this.cb=cb;
@@ -126,9 +129,15 @@ public class WaterReplenishmentMeter extends OznerDevice {
                     byte[] bytes = IO().getLastRecvPacket();
                     if ((bytes != null) && (bytes.length >= 3)) {
                         if (bytes[0] == opCode_TestResp) {
-                            short sv= (short) (((bytes[2] & 0xFF) << 8) + (bytes[1] & 0xFF));
+                            short sv= ByteUtil.getShort(bytes,1);
                             float value = sv / 10.0f;
-                            cb.onSuccess(new Float(value));
+                            short v1= (short) (((bytes[1] & 0xFF) << 8) + (bytes[2] & 0xFF));
+                            short v2= (short) (((bytes[2] & 0xFF) << 8) + (bytes[1] & 0xFF));
+
+                            String s=String.format("原始:%02X %02X %02X 高前低后:%d 低前高后:%d"
+                                    ,bytes[0],bytes[1],bytes[2],v1,v2);
+
+                            cb.onSuccess(s);
                             return;
                         }
                     }
@@ -149,7 +158,7 @@ public class WaterReplenishmentMeter extends OznerDevice {
      * @param testParts 测试部位
      * @param cb 结果回调
      */
-    public void startTest(TestParts testParts,OperateCallback<Float> cb) {
+    public void startTest(TestParts testParts,OperateCallback<String> cb) {
 
         if ((IO()==null) || (!IO().isReady()))
         {

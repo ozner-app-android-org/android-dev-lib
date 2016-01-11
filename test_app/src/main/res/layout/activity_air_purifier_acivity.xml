@@ -32,6 +32,20 @@
         android:textAppearance="@android:style/TextAppearance.Small" />
 
     <TextView
+        android:id="@+id/DeviceType"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="设备类型:11"
+        android:textAppearance="@android:style/TextAppearance.Small" />
+
+    <TextView
+        android:id="@+id/Model"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="型号:11"
+        android:textAppearance="@android:style/TextAppearance.Small" />
+
+    <TextView
         android:id="@+id/status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -80,7 +94,6 @@
             android:textAppearance="@android:style/TextAppearance.Small" />
         <TextView
             android:layout_columnWeight="1"
-
             android:id="@+id/humidity"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -88,9 +101,14 @@
             android:textAppearance="@android:style/TextAppearance.Small" />
 
         <TextView
+            android:layout_columnWeight="1"
+            android:id="@+id/totalClean"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_columnWeight="1"/>
+            android:text="净化量:200"
+            android:textAppearance="@android:style/TextAppearance.Small" />
+
+
 
         <TextView
             android:id="@+id/powerStatus"
@@ -122,6 +140,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="童锁:true"
+            android:textAppearance="@android:style/TextAppearance.Small"  />
+        <TextView
+            android:id="@+id/wifiStatus"
+            android:layout_columnWeight="1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Wifi:80%"
             android:textAppearance="@android:style/TextAppearance.Small"  />
     </GridLayout>
 

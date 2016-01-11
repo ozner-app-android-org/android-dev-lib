@@ -30,7 +30,7 @@ public class WaterReplenishmentMeterMgr extends BaseDeviceManager {
     }
     public static boolean IsWaterReplenishmentMeter(String Type) {
         if (Type == null) return false;
-        return Type.trim().equals("SBY001");
+        return Type.trim().equals("BSY001");
     }
 
     @Override

@@ -39,6 +39,8 @@ public class AirPurifier_MXChip extends AirPurifier {
     public static final byte PROPERTY_VOC = 0x13;
     public static final byte PROPERTY_LIGHT_SENSOR = 0x14;
     public static final byte PROPERTY_HUMIDITY = 0x18;
+    public static final byte PROPERTY_TOTAL_CLEAN=0x19;
+    public static final byte PROPERTY_WIFI=0x1a;
 
     public static final byte PROPERTY_FILTER = 0x15;
     public static final byte PROPERTY_TIME = 0x16;
@@ -314,7 +316,7 @@ public class AirPurifier_MXChip extends AirPurifier {
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.YEAR, 1);
         filterStatus.stopTime = calendar.getTime();
-        filterStatus.maxWorkTime = 60 * 1000;
+        filterStatus.maxWorkTime = 129600; //60 * 1000;
         setProperty(PROPERTY_FILTER, filterStatus.toBytes(), cb);
     }
 
@@ -363,10 +365,17 @@ public class AirPurifier_MXChip extends AirPurifier {
             setProperty(PROPERTY_LOCK, new byte[]{lock ? (byte) 1 : (byte) 0}, cb);
         }
 
+        /**
+         * WIFI信号强度
+         * @return 0-100%
+         */
+        public int Wifi() {return  getIntValueByByte(PROPERTY_WIFI);}
+
+
         @Override
         public String toString() {
-            return String.format("Power:%s Speed:%s Light:%s Lock:%s",
-                    String.valueOf(Power()),getValue(speed()),getValue(Light()),String.valueOf(Lock()));
+            return String.format("Power:%s Speed:%s Light:%s Lock:%s Wifi:%s%%",
+                    String.valueOf(Power()),getValue(speed()),getValue(Light()),String.valueOf(Lock()),getValue(Wifi()));
         }
     }
 
@@ -416,6 +425,14 @@ public class AirPurifier_MXChip extends AirPurifier {
             return getIntValueByShort(PROPERTY_LIGHT_SENSOR);
         }
 
+
+        /**
+         * 总净化量
+         * @return
+         */
+        public int TotalClean(){
+            return getIntValueByInt(PROPERTY_TOTAL_CLEAN);
+        }
         /**
          * 滤芯状态,如果没收到返回NULL
          *
@@ -427,9 +444,9 @@ public class AirPurifier_MXChip extends AirPurifier {
 
         @Override
         public String toString() {
-            return String.format("PM2.5:%s VOC:%s Light:%s\nTemperature:%s Humidity:%s%%",
+            return String.format("PM2.5:%s VOC:%s Light:%s\nTemperature:%s Humidity:%s%% TotalClean:%s",
                     getValue(PM25()),getValue(VOC()),getValue(Light()),
-                    getValue(Temperature()),getValue(Humidity()));
+                    getValue(Temperature()),getValue(Humidity()),getValue(TotalClean()));
         }
     }
 
@@ -538,6 +555,9 @@ public class AirPurifier_MXChip extends AirPurifier {
             list.add(PROPERTY_SPEED);
             list.add(PROPERTY_LIGHT);
             list.add(PROPERTY_LOCK);
+            list.add(PROPERTY_WIFI);
+            list.add(PROPERTY_TOTAL_CLEAN);
+
             requestProperty(list, null);
         }
 

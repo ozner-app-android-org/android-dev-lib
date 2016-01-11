@@ -176,12 +176,12 @@ public class WaterReplenishmentMeterActivity extends Activity implements View.On
                 break;
             case R.id.Device_Test: {
                 setText(R.id.Device_Message,"正在测试...");
-                waterReplenishmentMeter.startTest(WaterReplenishmentMeter.TestParts.Face, new OperateCallback<Float>() {
+                waterReplenishmentMeter.startTest(WaterReplenishmentMeter.TestParts.Face, new OperateCallback<String>() {
                     @Override
-                    public void onSuccess(Float var1) {
+                    public void onSuccess(String var1) {
                         Message msg=new Message();
                         msg.what=0x1234;
-                        msg.obj=String.format("测试结果:%f",var1);
+                        msg.obj=String.format("测试结果:%s",var1);
                         TestHandler.sendMessage(msg);
                     }
 

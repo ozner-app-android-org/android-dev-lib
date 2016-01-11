@@ -82,6 +82,8 @@ public class AirPurifierAcivity extends AppCompatActivity {
         setText(R.id.Device_Name, airPurifier.getName());
         setText(R.id.Address, airPurifier.Address());
         setText(R.id.Version,"固件版本:"+getValue(airPurifier.airStatus().Version()));
+        setText(R.id.DeviceType,"设备类型:"+airPurifier.DeviceType());
+        setText(R.id.Model,"型号:"+airPurifier.Model());
 
         setText(R.id.status, "设备状态:" + (airPurifier.isOffline() ? "离线" : "在线"));
 
@@ -99,6 +101,8 @@ public class AirPurifierAcivity extends AppCompatActivity {
 
 
         setText(R.id.powerStatus, "电源:" + (airPurifier.airStatus().Power() ? "开" : "关"));
+        setText(R.id.wifiStatus, "Wifi:" + getValue(airPurifier.airStatus().Wifi()));
+        setText(R.id.totalClean, "净化量:" + getValue(airPurifier.sensor().TotalClean()));
 
         String speed = "自动";
         switch (airPurifier.airStatus().speed()) {

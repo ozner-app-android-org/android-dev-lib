@@ -89,6 +89,14 @@ public class WifiConfigurationActivity extends Activity {
         });
 
         loadWifi();
+//        MXChipIO io = OznerDeviceManager.Instance().ioManagerList().mxChipIOManager().
+//                createMXChipDevice("C8:93:46:4F:84:03", "FOG_HAOZE_AIR");
+//        io.name="Air";
+//        try {
+//            OznerDeviceManager.Instance().save(OznerDeviceManager.Instance().getDevice(io));
+//        } catch (NotSupportDeviceException e) {
+//            e.printStackTrace();
+//        }
 
     }
 
