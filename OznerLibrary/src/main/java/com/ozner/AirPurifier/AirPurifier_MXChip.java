@@ -182,7 +182,7 @@ public class AirPurifier_MXChip extends AirPurifier {
     }
 
     private void requestProperty(HashSet<Byte> propertys, OperateCallback<Void> cb) {
-        if (super.connectStatus() != BaseDeviceIO.ConnectStatus.Connected) {
+        if (super.connectStatus() == BaseDeviceIO.ConnectStatus.Disconnect) {
             if (cb != null)
                 cb.onFailure(null);
         }
@@ -204,7 +204,7 @@ public class AirPurifier_MXChip extends AirPurifier {
     }
 
     private void setProperty(byte propertyId, byte[] value, OperateCallback<Void> cb) {
-        if (super.connectStatus() != BaseDeviceIO.ConnectStatus.Connected) {
+        if (super.connectStatus() == BaseDeviceIO.ConnectStatus.Disconnect) {
             if (cb != null)
                 cb.onFailure(null);
             return;

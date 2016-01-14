@@ -92,9 +92,9 @@ public class WaterReplenishmentMeter extends OznerDevice {
 
     class TestRunnableProxy  implements BluetoothIO.BluetoothRunnable
     {
-        OperateCallback<String> cb;
+        OperateCallback<Float> cb;
         TestParts testParts;
-        public TestRunnableProxy(TestParts testParts,OperateCallback<String> cb)
+        public TestRunnableProxy(TestParts testParts,OperateCallback<Float> cb)
         {
             this.testParts=testParts;
             this.cb=cb;
@@ -129,15 +129,9 @@ public class WaterReplenishmentMeter extends OznerDevice {
                     byte[] bytes = IO().getLastRecvPacket();
                     if ((bytes != null) && (bytes.length >= 3)) {
                         if (bytes[0] == opCode_TestResp) {
-                            short sv= ByteUtil.getShort(bytes,1);
-                            float value = sv / 10.0f;
-                            short v1= (short) (((bytes[1] & 0xFF) << 8) + (bytes[2] & 0xFF));
-                            short v2= (short) (((bytes[2] & 0xFF) << 8) + (bytes[1] & 0xFF));
+                            float value=(bytes[1]*0xff+bytes[2])/10.0f;
 
-                            String s=String.format("原始:%02X %02X %02X 高前低后:%d 低前高后:%d"
-                                    ,bytes[0],bytes[1],bytes[2],v1,v2);
-
-                            cb.onSuccess(s);
+                            cb.onSuccess(value);
                             return;
                         }
                     }
@@ -158,7 +152,7 @@ public class WaterReplenishmentMeter extends OznerDevice {
      * @param testParts 测试部位
      * @param cb 结果回调
      */
-    public void startTest(TestParts testParts,OperateCallback<String> cb) {
+    public void startTest(TestParts testParts,OperateCallback<Float> cb) {
 
         if ((IO()==null) || (!IO().isReady()))
         {
