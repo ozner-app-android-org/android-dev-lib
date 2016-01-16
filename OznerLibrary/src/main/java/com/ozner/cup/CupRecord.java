@@ -9,6 +9,11 @@ import java.util.Date;
  */
 public class CupRecord {
 
+    public static final int TDS_Good_Value=50;
+    public static final int TDS_Bad_Value=200;
+    public static final int Temperature_Low_Value=25;
+    public static final int Temperature_High_Value=50;
+
     /**
      * 数据周期起始时间
      */
@@ -85,16 +90,17 @@ public class CupRecord {
         TDS_High=Math.max(TDS_High,record.tds);
         Temperature_MAX=Math.max(Temperature_MAX,record.temperature);
         Count++;
-        if (record.tds < 50)
+
+        if (record.tds < TDS_Good_Value)
             TDS_Good++;
-        else if (record.tds > 200)
+        else if (record.tds > TDS_Bad_Value)
             TDS_Bad++;
         else
             TDS_Mid++;
 
-        if (record.temperature < 25)
+        if (record.temperature < Temperature_Low_Value)
             Temperature_Low++;
-        else if (record.temperature > 65)
+        else if (record.temperature > Temperature_High_Value)
             Temperature_High++;
         else
             Temperature_Mid++;
