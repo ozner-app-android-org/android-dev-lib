@@ -98,6 +98,11 @@ public class TapActivity extends Activity implements View.OnClickListener, Firmw
             ((TextView) findViewById(R.id.Device_Message)).setText("");
         }
 
+        adapter.clear();
+        for (TapRecord r : mTap.TapRecordList().getRecordsByDate(new Date(0))) {
+            adapter.add(r.toString());
+        }
+
     }
 
     @Override

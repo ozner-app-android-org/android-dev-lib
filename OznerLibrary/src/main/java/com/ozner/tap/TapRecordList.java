@@ -37,7 +37,7 @@ public class TapRecordList {
         db.execSQLNonQuery("delete from DayTable where sn=?", new String[]{Address});
         for (TapRecord tapRecord : tapRecords) {
             db.execSQLNonQuery(
-                    "insert into DayTable (sn,time,json,updateflag) values (?,?,?,0);",
+                    "insert into DayTable (sn,time,json,updateflag) values (?,?,?,1);",
                     new Object[]{Address,
                             tapRecord.time.getTime(),
                             tapRecord.toJSON()});

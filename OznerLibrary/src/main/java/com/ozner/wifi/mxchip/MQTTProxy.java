@@ -32,9 +32,10 @@ public class MQTTProxy extends XObject {
         super(context);
         try {
             mqtt.setHost(host);
-            mqtt.setClientId("v1-app-" + Helper.rndString(12)); //用于设置客户端会话的ID。在setCleanSession(false);被调用时，MQTT服务器利用该ID获得相应的会话。此ID应少于23个字符，默认根据本机地址、端口和时间自动生成
+            String clientId="v1-app-" + Helper.rndString(12);
+            mqtt.setClientId(clientId); //用于设置客户端会话的ID。在setCleanSession(false);被调用时，MQTT服务器利用该ID获得相应的会话。此ID应少于23个字符，默认根据本机地址、端口和时间自动生成
             mqtt.setCleanSession(false); //若设为false，MQTT服务器将持久化客户端会话的主体订阅和ACK位置，默认为true
-            mqtt.setKeepAlive((short) 60);//定义客户端传来消息的最大时间间隔秒数，服务器可以据此判断与客户端的连接是否已经断开，从而避免TCP/IP超时的长时间等待
+            //mqtt.setKeepAlive((short) 60);//定义客户端传来消息的最大时间间隔秒数，服务器可以据此判断与客户端的连接是否已经断开，从而避免TCP/IP超时的长时间等待
             mqtt.setUserName("admin");//服务器认证用户名
             mqtt.setPassword("admin");//服务器认证密码
 //        mqtt.setWillTopic("willTopic");//设置“遗嘱”消息的话题，若客户端与服务器之间的连接意外中断，服务器将发布客户端的“遗嘱”消息
@@ -51,7 +52,7 @@ public class MQTTProxy extends XObject {
             //Socket设置说明
             mqtt.setReceiveBufferSize(65536);//设置socket接收缓冲区大小，默认为65536（64k）
             mqtt.setSendBufferSize(65536);//设置socket发送缓冲区大小，默认为65536（64k）
-            mqtt.setTrafficClass(8);//设置发送数据包头的流量类型或服务类型字段，默认为8，意为吞吐量最大化传输
+            //mqtt.setTrafficClass(8);//设置发送数据包头的流量类型或服务类型字段，默认为8，意为吞吐量最大化传输
 
             //带宽限制设置说明
             mqtt.setMaxReadRate(0);//设置连接的最大接收速率，单位为bytes/s。默认为0，即无限制

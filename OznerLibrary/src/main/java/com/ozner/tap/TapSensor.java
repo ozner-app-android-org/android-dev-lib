@@ -71,7 +71,7 @@ public class TapSensor {
 
     @Override
     public String toString() {
-        return String.format("Battery:%d/%d TDS:%d/%d", getValue(Battery), getValue(BatteryFix), getValue(TDS), getValue(TDSFix));
+        return String.format("Battery:%s/%s TDS:%s/%s", getValue(Battery), getValue(BatteryFix), getValue(TDS), getValue(TDSFix));
     }
 
     public void FromBytes(byte[] data, int startIndex) {
