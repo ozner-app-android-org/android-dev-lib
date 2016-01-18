@@ -35,8 +35,8 @@ public class MQTTProxy extends XObject {
             String clientId="v1-app-" + Helper.rndString(12);
             mqtt.setClientId(clientId); //用于设置客户端会话的ID。在setCleanSession(false);被调用时，MQTT服务器利用该ID获得相应的会话。此ID应少于23个字符，默认根据本机地址、端口和时间自动生成
             mqtt.setCleanSession(false); //若设为false，MQTT服务器将持久化客户端会话的主体订阅和ACK位置，默认为true
-            //mqtt.setKeepAlive((short) 60);//定义客户端传来消息的最大时间间隔秒数，服务器可以据此判断与客户端的连接是否已经断开，从而避免TCP/IP超时的长时间等待
-            mqtt.setUserName("admin");//服务器认证用户名
+            mqtt.setKeepAlive((short) 30);//定义客户端传来消息的最大时间间隔秒数，服务器可以据此判断与客户端的连接是否已经断开，从而避免TCP/IP超时的长时间等待
+            mqtt.setUserName("admin"+ Helper.rndString(12));//服务器认证用户名
             mqtt.setPassword("admin");//服务器认证密码
 //        mqtt.setWillTopic("willTopic");//设置“遗嘱”消息的话题，若客户端与服务器之间的连接意外中断，服务器将发布客户端的“遗嘱”消息
 //        mqtt.setWillMessage("willMessage");//设置“遗嘱”消息的内容，默认是长度为零的消息
@@ -185,7 +185,14 @@ public class MQTTProxy extends XObject {
             }
 
             for (MQTTListener listener : list) {
-                listener.onPublish(MQTTProxy.this, utf8Buffer.toString(), buffer.toByteArray());
+                try {
+                    listener.onPublish(MQTTProxy.this, utf8Buffer.toString(), buffer.toByteArray());
+                }catch (Exception e)
+                {
+                    e.printStackTrace();
+                    continue;
+                }
+
             }
         }
 

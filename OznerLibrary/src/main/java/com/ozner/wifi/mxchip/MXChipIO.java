@@ -204,6 +204,8 @@ public class MXChipIO extends BaseDeviceIO {
 
         public void close() {
             if (isRuning()) {
+
+                proxy.unregisterListener(mxChipIOImp);
                 setObject();
                 if (looper != null)
                     looper.quit();

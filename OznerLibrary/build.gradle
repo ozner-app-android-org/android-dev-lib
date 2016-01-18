@@ -21,8 +21,6 @@ android {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.alibaba:fastjson:1.2.7'
-    compile files('libs/mqtt-client-1.7-uber.jar')
     compile 'com.android.support:support-v13:23.1.0'
-    compile files('libs/jetty-8.1.15.jar')
-    compile files('libs/classes.dex.dex2jar.jar')
+    compile 'org.fusesource.mqtt-client:mqtt-client:1.12'
 }
