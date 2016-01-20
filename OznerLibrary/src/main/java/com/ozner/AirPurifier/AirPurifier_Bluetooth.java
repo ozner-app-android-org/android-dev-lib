@@ -80,7 +80,7 @@ public class AirPurifier_Bluetooth extends AirPurifier {
 
     @Override
     protected String getDefaultName() {
-        return context().getString(R.string.air_purifier_name);
+        return context().getString(R.string.air_bluetooth_purifier_name);
     }
 
     @Override

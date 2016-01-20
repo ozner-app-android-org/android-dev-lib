@@ -421,7 +421,8 @@ public class BluetoothIO extends BaseDeviceIO {
         }
 
         public boolean postSend(byte[] data, OperateCallback<Void> callback) {
-            if (Thread.currentThread().getId() == thread.getId()) {
+
+            if ((thread!=null) && (Thread.currentThread().getId() == thread.getId()))  {
                 try {
                     if (send(data)) {
                         if (callback != null) {

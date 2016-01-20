@@ -634,6 +634,11 @@ public class AirPurifier_MXChip extends AirPurifier {
 
                                 case PROPERTY_FILTER: {
                                     filterStatus.fromBytes(set.get(id));
+
+                                    if (filterStatus.lastTime.getTime()==0)
+                                    {
+                                        AirPurifier_MXChip.this.ResetFilter(null);
+                                    }
                                 }
                                 case PROPERTY_PM25:
                                 case PROPERTY_TEMPERATURE:
