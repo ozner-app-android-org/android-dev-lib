@@ -634,8 +634,8 @@ public class AirPurifier_MXChip extends AirPurifier {
 
                                 case PROPERTY_FILTER: {
                                     filterStatus.fromBytes(set.get(id));
-
-                                    if (filterStatus.lastTime.getTime()==0)
+                                    //两个上次更换时间在2000年以前,直接重置
+                                    if (filterStatus.lastTime.getTime()<=946684800)
                                     {
                                         AirPurifier_MXChip.this.ResetFilter(null);
                                     }
