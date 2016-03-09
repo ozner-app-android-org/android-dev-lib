@@ -12,7 +12,6 @@ public class MusicCapFirmwareTools extends FirmwareTools {
     public MusicCapFirmwareTools() {
         super();
     }
-
     @Override
     protected void loadFile(String path) throws Exception {
         File file = new File(path);
@@ -20,9 +19,10 @@ public class MusicCapFirmwareTools extends FirmwareTools {
         Size = (int) file.length();
         if (Size > 127 * 1024) throw new FirmwareException("文件太大");
 
-        if ((Size % 256) != 0) {
-            Size = (Size / 256) * 256 + 256;
-        }
+        //if ((Size % 256) != 0) {
+        //    Size = (Size / 256) * 256 + 256;
+        //}
+
         bytes = new byte[Size];
 
         FileInputStream fs = new FileInputStream(path);
@@ -51,7 +51,7 @@ public class MusicCapFirmwareTools extends FirmwareTools {
         } else
             return false;
     }
-
+    static  final  byte packetSize=16;
     @Override
     protected boolean startFirmwareUpdate() throws InterruptedException {
         try {
@@ -60,27 +60,36 @@ public class MusicCapFirmwareTools extends FirmwareTools {
                 onFirmwareFail();
                 return false;
             }
-            if (eraseMCU()) {
 
-                for (int i = 0; i < Size; i += 16) {
+
+            if (eraseMCU()) {
+                int po=0;
+
+                while(po<Size) {
+                    int t=Size-po;
+                    byte len=(byte)(t>packetSize?packetSize:t);
                     byte[] data = new byte[20];
                     data[0] = (byte) 0xc1;
-                    short p = (short) (i / 16);
+                    short p = (short) (po / packetSize);
                     ByteUtil.putShort(data, p, 1);
-                    System.arraycopy(bytes, i, data, 3, 16);
+                    data[3]=len;
+                    System.arraycopy(bytes, po, data, 4, 16);
                     if (!deviceIO.send(data)) {
                         onFirmwareFail();
                         return false;
                     } else {
-                        onFirmwarePosition(i, Size);
+                        onFirmwarePosition(po, Size);
                     }
+                    po+=len;
                 }
             }
             Thread.sleep(1000);
-            byte[] data = new byte[19];
+            byte[] data = new byte[9];
+            data[0]=(byte)0xc3;
             ByteUtil.putInt(data, Size, 1);
             ByteUtil.putInt(data, Checksum, 5);
-            if (deviceIO.send(BluetoothIO.makePacket((byte) 0xc3, data))) {
+
+            if (deviceIO.send( data)) {
                 onFirmwareComplete();
                 Thread.sleep(5000);
                 return true;
@@ -94,6 +103,7 @@ public class MusicCapFirmwareTools extends FirmwareTools {
             return false;
         }
     }
+
 
 
 }

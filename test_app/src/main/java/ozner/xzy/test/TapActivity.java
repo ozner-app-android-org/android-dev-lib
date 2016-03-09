@@ -88,7 +88,7 @@ public class TapActivity extends Activity implements View.OnClickListener, Firmw
             BluetoothIO io=(BluetoothIO)mTap.IO();
                     ((TextView) findViewById(R.id.Device_Model)).setText(io.getType());
             ((TextView) findViewById(R.id.Device_Platform)).setText(io.getPlatform());
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             ((TextView) findViewById(R.id.Device_Firmware)).setText(sdf
                     .format(new Date(io.getFirmware())));
             ((TextView) findViewById(R.id.Device_Message)).setText(mTap.Sensor().toString());

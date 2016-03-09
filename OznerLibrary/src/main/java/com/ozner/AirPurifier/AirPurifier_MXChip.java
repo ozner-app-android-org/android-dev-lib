@@ -224,7 +224,8 @@ public class AirPurifier_MXChip extends AirPurifier {
             @Override
             public void onSuccess(Void var1) {
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(200);
+
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -644,6 +645,7 @@ public class AirPurifier_MXChip extends AirPurifier {
                                 case PROPERTY_TEMPERATURE:
                                 case PROPERTY_VOC:
                                 case PROPERTY_HUMIDITY:
+                                case PROPERTY_TOTAL_CLEAN:
                                 case PROPERTY_LIGHT_SENSOR: {
                                     Intent intent = new Intent(ACTION_AIR_PURIFIER_SENSOR_CHANGED);
                                     intent.putExtra(Extra_Address, Address());

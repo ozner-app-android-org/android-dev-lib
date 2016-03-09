@@ -18,6 +18,7 @@ import android.widget.ListView;
 import com.getbase.floatingactionbutton.FloatingActionButton;
 import com.ozner.AirPurifier.AirPurifier_Bluetooth;
 import com.ozner.AirPurifier.AirPurifier_MXChip;
+import com.ozner.MusicCap.MusicCap;
 import com.ozner.WaterPurifier.WaterPurifier;
 import com.ozner.WaterReplenishmentMeter.WaterReplenishmentMeter;
 import com.ozner.application.OznerBLEService;
@@ -43,6 +44,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
             startActivityForResult(intent, 0);
             return;
         }
+
         if (device instanceof Cup)
         {
             Intent intent=new Intent(this,CupActivity.class);
@@ -50,6 +52,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
             startActivityForResult(intent,0);
             return;
         }
+
         if (device instanceof AirPurifier_MXChip)
         {
             Intent intent=new Intent(this,AirPurifierAcivity.class);
@@ -74,6 +77,13 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         if (device instanceof WaterReplenishmentMeter)
         {
             Intent intent=new Intent(this,WaterReplenishmentMeterActivity.class);
+            intent.putExtra("Address", device.Address());
+            startActivityForResult(intent,0);
+            return;
+        }
+        if (device instanceof MusicCap)
+        {
+            Intent intent=new Intent(this,MusicCapActivity.class);
             intent.putExtra("Address", device.Address());
             startActivityForResult(intent,0);
             return;

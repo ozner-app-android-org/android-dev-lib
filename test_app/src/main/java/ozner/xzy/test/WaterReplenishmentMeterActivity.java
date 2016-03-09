@@ -50,7 +50,7 @@ public class WaterReplenishmentMeterActivity extends Activity implements View.On
         this.registerReceiver(mMonitor, filter);
 
         findViewById(R.id.Device_Remove).setOnClickListener(this);
-        findViewById(R.id.Device_Test).setOnClickListener(this);
+//        findViewById(R.id.Device_Test).setOnClickListener(this);
         findViewById(R.id.UpdateFirmware).setOnClickListener(this);
 
         load();
@@ -62,11 +62,12 @@ public class WaterReplenishmentMeterActivity extends Activity implements View.On
                 waterReplenishmentMeter.getName(), waterReplenishmentMeter.connectStatus()));
         ((TextView) findViewById(R.id.Address)).setText(waterReplenishmentMeter.Address());
         setText(R.id.Device_StatusText,waterReplenishmentMeter.toString());
+
         if (waterReplenishmentMeter.connectStatus() == BaseDeviceIO.ConnectStatus.Connected) {
             BluetoothIO io = (BluetoothIO) waterReplenishmentMeter.IO();
             ((TextView) findViewById(R.id.Device_Model)).setText(io.getType());
             ((TextView) findViewById(R.id.Device_Platform)).setText(io.getPlatform());
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             ((TextView) findViewById(R.id.Device_Firmware)).setText(sdf
                     .format(new Date(io.getFirmware())));
         } else
@@ -76,6 +77,8 @@ public class WaterReplenishmentMeterActivity extends Activity implements View.On
         }
 
     }
+
+
     private void setText(int id, String text) {
         TextView tv = (TextView) findViewById(id);
         if (tv != null) {
@@ -174,27 +177,27 @@ public class WaterReplenishmentMeterActivity extends Activity implements View.On
                             }
                         }).show();
                 break;
-            case R.id.Device_Test: {
-                setText(R.id.Device_Message,"正在测试...");
-                waterReplenishmentMeter.startTest(WaterReplenishmentMeter.TestParts.Face, new OperateCallback<Float>() {
-                    @Override
-                    public void onSuccess(Float var1) {
-                        Message msg=new Message();
-                        msg.what=0x1234;
-                        msg.obj=String.format("测试结果:%s",var1);
-                        TestHandler.sendMessage(msg);
-                    }
-
-                    @Override
-                    public void onFailure(Throwable var1) {
-                        Message msg=new Message();
-                        msg.what=0x1234;
-                        msg.obj="测试失败";
-                        TestHandler.sendMessage(msg);
-                    }
-                });
-            }
-            break;
+//            case R.id.Device_Test: {
+//                setText(R.id.Device_Message,"正在测试...");
+//                waterReplenishmentMeter.startTest(WaterReplenishmentMeter.TestParts.Face, new OperateCallback<Float>() {
+//                    @Override
+//                    public void onSuccess(Float var1) {
+//                        Message msg=new Message();
+//                        msg.what=0x1234;
+//                        msg.obj=String.format("测试结果:%s",var1);
+//                        TestHandler.sendMessage(msg);
+//                    }
+//
+//                    @Override
+//                    public void onFailure(Throwable var1) {
+//                        Message msg=new Message();
+//                        msg.what=0x1234;
+//                        msg.obj="测试失败";
+//                        TestHandler.sendMessage(msg);
+//                    }
+//                });
+//            }
+//            break;
 
             case R.id.UpdateFirmware: {
                 updateFirmware();
@@ -212,7 +215,6 @@ public class WaterReplenishmentMeterActivity extends Activity implements View.On
             OznerDevice device = OznerDeviceManager.Instance().getDevice(Address);
             if (device != null)
                 dbg.i("广播:%s Name:%s", Address, device.getName());
-
 
             if (!Address.equals(waterReplenishmentMeter.Address()))
                 return;

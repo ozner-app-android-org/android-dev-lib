@@ -41,7 +41,7 @@ public class BluetoothScan extends XObject implements LeScanCallback, Runnable {
     /**
      * 找到设备广播,附加设备的MAC地址
      */
-    public final static String ACTION_SCANNER_FOUND = "com.ozner.bluetooth.sanner.found";
+    public final static String ACTION_SCANNER_FOUND = "com.ozner.bluetooth.scanner.found";
 
 
     //
@@ -81,6 +81,7 @@ public class BluetoothScan extends XObject implements LeScanCallback, Runnable {
         BluetoothAdapter adapter = bluetoothManager.getAdapter();
         if (adapter == null) return;
         try {
+            if (!adapter.isEnabled()) return;
             while (isScanning) {
                 synchronized (BluetoothSynchronizedObject.getLockObject()) {
                     synchronized (mFoundDevice) {
@@ -181,6 +182,7 @@ public class BluetoothScan extends XObject implements LeScanCallback, Runnable {
                                 rep.ScanResponseType = AD_CustomType_Gravity;
                             }
                         }
+
                         if (flag == GAP_ADTYPE_SERVICE_DATA) {
                             byte[] data = Arrays.copyOfRange(scanRecord, pos + 1, pos + len);
                             //BluetoothScanRep rep = new BluetoothScanRep();

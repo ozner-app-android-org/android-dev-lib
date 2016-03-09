@@ -132,7 +132,7 @@ public class AirPurifierAcivity extends AppCompatActivity {
         setText(R.id.lockStatus, "童锁:" + (airPurifier.airStatus().Lock() ? "开" : "关"));
         setText(R.id.workTime, "电机工作时间:" + String.valueOf(airPurifier.sensor().FilterStatus().workTime) + "分钟");
         setText(R.id.maxWorkTime, "最大工作时间:" + String.valueOf(airPurifier.sensor().FilterStatus().maxWorkTime) + "分钟");
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         setText(R.id.lastTime, "上次更换时间:" + dateFormat.format(airPurifier.sensor().FilterStatus().lastTime));
         setText(R.id.maxTime, "到期时间:" + dateFormat.format(airPurifier.sensor().FilterStatus().stopTime));
 

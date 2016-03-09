@@ -1,6 +1,7 @@
 package com.ozner.wifi.mxchip;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -28,6 +29,14 @@ import java.util.Date;
  * 庆科配网工具类
  */
 public class MXChipPair {
+    /**
+     * 找到设备广播,附加设备的MAC地址
+     */
+    public final static String ACTION_SCANNER_FOUND = "com.ozner.bluetooth.sanner.found";
+    public static final String Extra_Address = "Address";
+    public static final String Extra_Model = "getType";
+
+
     /**
      * 默认1分钟配网超时
      */
@@ -107,6 +116,9 @@ public class MXChipPair {
 
     public static class TimeoutException extends Exception {
     }
+
+
+
 
     static class MXChipPairImp implements FTC_Listener, Runnable, JmdnsListener {
 

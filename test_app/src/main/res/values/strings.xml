@@ -13,5 +13,5 @@
     <string name="title_activity_air_purifier_acivity">AirPurifierAcivity</string>
     <string name="title_activity_bluetooth_air_purifier">BluetoothAirPurifierActivity</string>
     <string name="title_activity_water_replenishment_meter">Water Replenishment Meter</string>
-
+    <string name="title_music_cap">Music Cap</string>
 </resources>

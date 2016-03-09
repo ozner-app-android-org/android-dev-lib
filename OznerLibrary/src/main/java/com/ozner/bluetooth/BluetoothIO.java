@@ -405,7 +405,7 @@ public class BluetoothIO extends BaseDeviceIO {
                 }
             }
             waitObject(10000);
-            Thread.sleep(100);
+            //Thread.sleep(100);
             return checkStatus();
         }
 

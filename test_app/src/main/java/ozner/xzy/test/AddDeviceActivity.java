@@ -20,17 +20,21 @@ import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.NotSupportDeviceException;
 import com.ozner.device.OznerDevice;
 import com.ozner.device.OznerDeviceManager;
+import com.ozner.wifi.mxchip.MXChipIOManager;
+import com.ozner.wifi.mxchip.MXChipPair;
 import com.ozner.wifi.mxchip.Pair.Helper;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class AddDeviceActivity extends Activity {
     ListView list;
     ListAdapter adapter;
     Monitor mMonitor = new Monitor();
-
+    Timer scanTimer;
 
     @Override
     protected void onDestroy() {
@@ -44,6 +48,7 @@ public class AddDeviceActivity extends Activity {
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothScan.ACTION_SCANNER_FOUND);
+        filter.addAction(MXChipIOManager.ACTION_SCANNER_FOUND);
 //        filter.addAction(BaseBluetoothDeviceManager.ACTION_OZNER_BLUETOOTH_BIND_MODE);
 
         this.registerReceiver(mMonitor, filter);
@@ -52,6 +57,21 @@ public class AddDeviceActivity extends Activity {
         adapter = new ListAdapter(this);
         list = (ListView) findViewById(R.id.deviceList);
         list.setAdapter(adapter);
+        scanTimer=new Timer();
+        scanTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                synchronized (OznerDeviceManager.Instance().ioManagerList().mxChipIOManager()) {
+                    OznerDeviceManager.Instance().ioManagerList().mxChipIOManager().startScan();
+                    try {
+                        Thread.sleep(5000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    OznerDeviceManager.Instance().ioManagerList().mxChipIOManager().stopScan();
+                }
+            }
+        },0,5000);
     }
 
     class Monitor extends BroadcastReceiver {
@@ -101,7 +121,7 @@ public class AddDeviceActivity extends Activity {
                 convertView = mInflater.inflate(R.layout.add_device_item, null);
             }
             BaseDeviceIO device = (BaseDeviceIO) getItem(position);
-            SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+            SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             if (device != null) {
                 ((TextView) convertView.findViewById(R.id.Device_Name)).setText(
                         device.getType() + "(" + device.getAddress() + ")");

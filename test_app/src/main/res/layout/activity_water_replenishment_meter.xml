@@ -70,9 +70,10 @@
             <TextView
                 android:id="@+id/Update_Message"
                 android:layout_width="wrap_content"
+
                 android:layout_height="wrap_content"
-                android:text="test"
-                android:textAppearance="@android:style/TextAppearance.Medium" />
+                android:text="updateMesssage"
+                android:textAppearance="@android:style/TextAppearance.Small" />
         </LinearLayout>
 
 
@@ -83,14 +84,14 @@
         android:layout_alignParentTop="true"
         android:orientation="horizontal">
 
-        <Button
-            android:background="@drawable/button"
-            android:id="@+id/Device_Test"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="2dp"
-            android:layout_marginRight="2dp"
-            android:text="测试" />
+        <!--<Button-->
+            <!--android:background="@drawable/button"-->
+            <!--android:id="@+id/Device_Test"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_marginLeft="2dp"-->
+            <!--android:layout_marginRight="2dp"-->
+            <!--android:text="测试" />-->
 
 
 

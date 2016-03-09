@@ -1,6 +1,8 @@
 package com.ozner.WaterReplenishmentMeter;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 
 import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.device.AutoUpdateClass;
@@ -22,6 +24,8 @@ public class WaterReplenishmentMeter extends OznerDevice {
 
     private static final byte opCode_StartTest = 0x32;
     private static final byte opCode_TestResp = 0x33;
+    private static final byte opCode_Testing = 0x34;
+
 
     public enum TestParts {Face,Hand,Eye,Other}
 
@@ -90,80 +94,89 @@ public class WaterReplenishmentMeter extends OznerDevice {
             return String.valueOf(value);
     }
 
-    class TestRunnableProxy  implements BluetoothIO.BluetoothRunnable
-    {
-        OperateCallback<Float> cb;
-        TestParts testParts;
-        public TestRunnableProxy(TestParts testParts,OperateCallback<Float> cb)
-        {
-            this.testParts=testParts;
-            this.cb=cb;
-        }
+//    class TestRunnableProxy  implements BluetoothIO.BluetoothRunnable
+//    {
+//        OperateCallback<Float> cb;
+//        TestParts testParts;
+//        public TestRunnableProxy(TestParts testParts,OperateCallback<Float> cb)
+//        {
+//            this.testParts=testParts;
+//            this.cb=cb;
+//        }
+//
+//        @Override
+//        public void run() {
+//            if ((IO()==null) || (!IO().isReady()))
+//            {
+//                cb.onFailure(null);
+//                return ;
+//            }
+//            byte[] data=new byte[1];
+//
+//            switch (testParts)
+//            {
+//                case Face:data[0]=0;
+//                    break;
+//                case Hand:data[0]=1;
+//                    break;
+//                case Eye:data[0]=2;
+//                    break;
+//                case Other:
+//                    data[0] = 4;
+//                    break;
+//            }
+//            IO().clearLastRecvPacket();
+//            if (IO().send(BluetoothIO.makePacket(opCode_StartTest, data))) {
+//                try {
+//                    waitObject(10000);
+//
+//                    byte[] bytes = IO().getLastRecvPacket();
+//                    if ((bytes != null) && (bytes.length >= 3)) {
+//                        if (bytes[0] == opCode_TestResp) {
+//                            float value=(bytes[1]*0xff+bytes[2])/10.0f;
+//
+//                            cb.onSuccess(value);
+//                            return;
+//                        }
+//                    }
+//
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//
+//            }
+//            cb.onFailure(null);
+//
+//        }
+//    }
 
-        @Override
-        public void run() {
-            if ((IO()==null) || (!IO().isReady()))
-            {
-                cb.onFailure(null);
-                return ;
-            }
-            byte[] data=new byte[1];
-
-            switch (testParts)
-            {
-                case Face:data[0]=0;
-                    break;
-                case Hand:data[0]=1;
-                    break;
-                case Eye:data[0]=2;
-                    break;
-                case Other:
-                    data[0] = 4;
-                    break;
-            }
-            IO().clearLastRecvPacket();
-            if (IO().send(BluetoothIO.makePacket(opCode_StartTest, data))) {
-                try {
-                    waitObject(10000);
-
-                    byte[] bytes = IO().getLastRecvPacket();
-                    if ((bytes != null) && (bytes.length >= 3)) {
-                        if (bytes[0] == opCode_TestResp) {
-                            float value=(bytes[1]*0xff+bytes[2])/10.0f;
-
-                            cb.onSuccess(value);
-                            return;
-                        }
-                    }
-
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-            }
-            cb.onFailure(null);
-
-        }
-    }
-
-    /**
-     * 开始测试
-     *
-     * @param testParts 测试部位
-     * @param cb 结果回调
-     */
-    public void startTest(TestParts testParts,OperateCallback<Float> cb) {
-
-        if ((IO()==null) || (!IO().isReady()))
-        {
-            cb.onFailure(null);
-            return ;
-        }
-        ((BluetoothIO)IO()).post(new TestRunnableProxy(testParts,cb));
-    }
+//    /**
+//     * 开始测试
+//     *
+//     * @param testParts 测试部位
+//     * @param cb 结果回调
+//     */
+//    public void startTest(TestParts testParts,OperateCallback<Float> cb) {
+//
+//        if ((IO()==null) || (!IO().isReady()))
+//        {
+//            cb.onFailure(null);
+//            return ;
+//        }
+//        ((BluetoothIO)IO()).post(new TestRunnableProxy(testParts,cb));
+//    }
 
     public class Status {
         boolean power = false;
+        boolean testing=false;
+        int testValue=0;
+        float battery;
+        public void reset()
+        {
+            testValue=0;
+            battery=-1;
+            testing=false;
+        }
 
         /**
          * 电源状态
@@ -177,17 +190,33 @@ public class WaterReplenishmentMeter extends OznerDevice {
         /**
          * 电量百分比
          */
-        public float battery;
-
         public float battery() {
             return battery;
         }
 
+        /**
+         * 正在测试中
+         * @return true测试中
+         */
+        public boolean isTesting()
+        {
+            return testing;
+        }
+
+        /**
+         * 测试结果
+         * @return
+         */
+        public int testValue()
+        {
+            return testValue;
+        }
 
         @Override
         public String toString() {
-            return String.format("Power:%b Battery:%f", power(), battery());
+            return String.format("Power:%b Battery:%f Testing:%b TestValue:%d", power(), battery(),isTesting(),testValue());
         }
+
 
     }
 
@@ -233,6 +262,7 @@ public class WaterReplenishmentMeter extends OznerDevice {
         public void onIOSend(byte[] bytes) {
 
         }
+        private Handler testHandler=new Handler(Looper.getMainLooper());
 
         @Override
         public void onIORecv(byte[] bytes) {
@@ -247,26 +277,47 @@ public class WaterReplenishmentMeter extends OznerDevice {
                     doUpdate();
                     break;
                 }
+                case opCode_Testing:
+                {
+                    status.testing=true;
+                    status.testValue=0;
+                    doUpdate();
+                    testHandler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (status.testing) {
+                                status.testing = false;
+                                doUpdate();
+                            }
+                        }
+                    },5000);
+
+                    break;
+                }
                 case opCode_TestResp:
                 {
-                    setObject();
+                    status.testValue=ByteUtil.getShort(bytes,1);
+                    status.testing=false;
+                    doUpdate();
+                    break;
                 }
-                break;
             }
         }
 
         @Override
         public void onConnected(BaseDeviceIO io) {
-
+            status.reset();
         }
 
         @Override
         public void onDisconnected(BaseDeviceIO io) {
+            status.reset();
             stop();
         }
 
         @Override
         public void onReady(BaseDeviceIO io) {
+            status.reset();
             requestStatus();
             if (getRunningMode() == RunningMode.Foreground) {
                 start(100);

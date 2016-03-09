@@ -24,7 +24,7 @@ public class TapManager extends BaseDeviceManager {
     }
 
     public static boolean IsTap(String Type) {
-        return Type.equals("SC001");
+        return Type.equals("SC001") || Type.equals("SCP001");
     }
 
     @Override

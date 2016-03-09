@@ -29,6 +29,10 @@ public class MXChipIO extends BaseDeviceIO {
         proxy.registerListener(mxChipIOImp);
 
     }
+    public void startScan()
+    {
+
+    }
 
 
     /**
