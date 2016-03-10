@@ -24,9 +24,13 @@ public class TapManager extends BaseDeviceManager {
     }
 
     public static boolean IsTap(String Type) {
-        return Type.equals("SC001") || Type.equals("SCP001");
+        return Type.equals("SC001") || IsTDSPen(Type);
     }
-
+    public static boolean IsTDSPen(String Type)
+    {
+        return Type.equals("SCP001");
+    }
+    
     @Override
     public boolean isMyDevice(String type) {
         return IsTap(type);
