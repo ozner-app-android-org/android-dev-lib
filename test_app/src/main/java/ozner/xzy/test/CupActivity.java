@@ -84,6 +84,7 @@ public class CupActivity extends Activity implements OnClickListener, FirmwareTo
         mCup = (Cup)OznerDeviceManager.Instance().getDevice(getIntent().getStringExtra("Address"));
         if (mCup == null)
             return;
+        mCup.firmwareTools().setFirmwareUpateInterface(this);
         IntentFilter filter = new IntentFilter();
         filter.addAction(Cup.ACTION_BLUETOOTHCUP_RECORD_COMPLETE);
         filter.addAction(BaseDeviceIO.ACTION_DEVICE_CONNECTED);

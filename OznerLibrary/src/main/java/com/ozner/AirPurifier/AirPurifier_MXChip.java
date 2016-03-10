@@ -60,8 +60,8 @@ public class AirPurifier_MXChip extends AirPurifier {
     final HashMap<Byte, byte[]> property = new HashMap<>();
     final PowerTimer powerTimer = new PowerTimer();
     final FilterStatus filterStatus = new FilterStatus();
-    boolean isOffline = true;
-
+    boolean mIsOffline = true;
+    int reqeustCount=0;
     Sensor sensor = new Sensor();
     AirStatus airStatus = new AirStatus();
     private String getValue(int value)
@@ -157,7 +157,14 @@ public class AirPurifier_MXChip extends AirPurifier {
     }
 
     public boolean isOffline() {
-        return isOffline;
+        return mIsOffline;
+    }
+    private void setOffline(boolean isOffline)
+    {
+        if (isOffline!=mIsOffline) {
+            mIsOffline = isOffline;
+            doUpdate();
+        }
     }
 
     @Override
@@ -171,6 +178,8 @@ public class AirPurifier_MXChip extends AirPurifier {
             oldIO.setOnTransmissionsCallback(null);
             oldIO.unRegisterStatusCallback(airPurifierImp);
             oldIO.setOnInitCallback(null);
+            mIsOffline=true;
+            doUpdate();
         }
         if (newIO != null) {
             MXChipIO io = (MXChipIO) newIO;
@@ -290,7 +299,7 @@ public class AirPurifier_MXChip extends AirPurifier {
 
     @Override
     public String toString() {
-        if (isOffline)
+        if (mIsOffline)
         {
             return "Offline";
         }else
@@ -470,8 +479,7 @@ public class AirPurifier_MXChip extends AirPurifier {
         @Override
         public void onDisconnected(BaseDeviceIO io) {
             stop();
-            isOffline = true;
-
+            mIsOffline=true;
         }
 
         private void setNowTime() {
@@ -512,7 +520,7 @@ public class AirPurifier_MXChip extends AirPurifier {
         @Override
         public boolean onIOInit() {
             try {
-                isOffline = true;
+                mIsOffline=true;
                 try {
                     setNowTime();
                     waitObject(Timeout);
@@ -571,6 +579,11 @@ public class AirPurifier_MXChip extends AirPurifier {
         {
             if (IO()!=null)
             {
+                reqeustCount++;
+                if (reqeustCount>=3)
+                {
+                    setOffline(true);
+                }
                 //Respone=false;
                 return IO().send(data, cb);
             }else
@@ -582,6 +595,8 @@ public class AirPurifier_MXChip extends AirPurifier {
             if ((bytes == null) || (bytes.length <= 0)) {
                 return;
             }
+            reqeustCount=0;
+            setOffline(false);
             try {
                 if (bytes[0] != (byte) 0xFA) return;
                 int len = ByteUtil.getShort(bytes, 1);
@@ -589,7 +604,6 @@ public class AirPurifier_MXChip extends AirPurifier {
                 byte cmd = bytes[3];
                 switch (cmd) {
                     case CMD_RECV_PROPERTY:
-                        isOffline = false;
                         int count = bytes[12];
                         int p = 13;
                         HashMap<Byte, byte[]> set = new HashMap<>();

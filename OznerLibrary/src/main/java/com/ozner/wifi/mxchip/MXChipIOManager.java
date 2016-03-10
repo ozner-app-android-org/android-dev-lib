@@ -149,6 +149,7 @@ public class MXChipIOManager extends IOManager {
         {
             listenDeviceList.remove(io.getAddress());
         }
+
         else {
             if (proxy.isConnected()) {
                 Message m = new Message();
@@ -157,6 +158,7 @@ public class MXChipIOManager extends IOManager {
                 handler.sendMessageDelayed(m, 5000); //如果IO被关闭了,MQTT还是连接中的情况下,重新激活IO
             }
         }
+        super.doUnavailable(io);
     }
 
 
