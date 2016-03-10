@@ -30,7 +30,7 @@ public class TapManager extends BaseDeviceManager {
     {
         return Type.equals("SCP001");
     }
-    
+
     @Override
     public boolean isMyDevice(String type) {
         return IsTap(type);

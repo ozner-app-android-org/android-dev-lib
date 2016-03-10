@@ -168,6 +168,10 @@ public class CupFirmwareTools extends FirmwareTools {
                         onFirmwarePosition(i, Size);
                     }
                 }
+            }else
+            {
+                onFirmwareFail();
+                return false;
             }
             Thread.sleep(1000);
             byte[] data = new byte[19];

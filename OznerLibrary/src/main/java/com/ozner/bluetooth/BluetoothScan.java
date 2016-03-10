@@ -81,20 +81,22 @@ public class BluetoothScan extends XObject implements LeScanCallback, Runnable {
         BluetoothAdapter adapter = bluetoothManager.getAdapter();
         if (adapter == null) return;
         try {
-            if (!adapter.isEnabled()) return;
+
             while (isScanning) {
-                synchronized (BluetoothSynchronizedObject.getLockObject()) {
-                    synchronized (mFoundDevice) {
-                        mFoundDevice.clear();
+                if (adapter.isEnabled()) {
+                    synchronized (BluetoothSynchronizedObject.getLockObject()) {
+                        synchronized (mFoundDevice) {
+                            mFoundDevice.clear();
+                        }
+                        if (adapter.getState() == BluetoothAdapter.STATE_OFF) {
+                            Thread.sleep(1000);
+                            continue;
+                        }
+                        adapter.startLeScan(this);
+                        Thread.sleep(scanPeriod);
+                        adapter.stopLeScan(this);
+                        //dbg.i("扫描结束");
                     }
-                    if (adapter.getState() == BluetoothAdapter.STATE_OFF) {
-                        Thread.sleep(1000);
-                        continue;
-                    }
-                    adapter.startLeScan(this);
-                    Thread.sleep(scanPeriod);
-                    adapter.stopLeScan(this);
-                    //dbg.i("扫描结束");
                 }
                 Thread.sleep(scanPeriod);
                 synchronized (mFoundDevice) {
