@@ -17,7 +17,7 @@ import com.ozner.util.Helper;
  * Created by zhiyongxu on 15/12/21.
  */
 public class WaterReplenishmentMeter extends OznerDevice {
-    private static final int defaultAutoUpdatePeriod=5000;
+    private static final int defaultAutoUpdatePeriod = 5000;
 
     private static final byte opCode_RequestStatus = 0x20;
     private static final byte opCode_StatusResp = 0x21;
@@ -27,15 +27,17 @@ public class WaterReplenishmentMeter extends OznerDevice {
     private static final byte opCode_Testing = 0x34;
 
 
-    public enum TestParts {Face,Hand,Eye,Other}
+    public enum TestParts {Face, Hand, Eye, Other}
 
     final WaterReplenishmentMeterIMP waterReplenishmentMeterIMP = new WaterReplenishmentMeterIMP(defaultAutoUpdatePeriod);
 
     final Status status = new Status();
     WaterReplenishmentMeterFirmwareTools firmwareTools = new WaterReplenishmentMeterFirmwareTools();
+
     public WaterReplenishmentMeterFirmwareTools firmwareTools() {
         return firmwareTools;
     }
+
     /**
      * 返回设备状态
      *
@@ -49,7 +51,6 @@ public class WaterReplenishmentMeter extends OznerDevice {
     public WaterReplenishmentMeter(Context context, String Address, String Type, String Setting) {
         super(context, Address, Type, Setting);
     }
-
 
 
     @Override
@@ -150,7 +151,7 @@ public class WaterReplenishmentMeter extends OznerDevice {
 //        }
 //    }
 
-//    /**
+    //    /**
 //     * 开始测试
 //     *
 //     * @param testParts 测试部位
@@ -165,17 +166,48 @@ public class WaterReplenishmentMeter extends OznerDevice {
 //        }
 //        ((BluetoothIO)IO()).post(new TestRunnableProxy(testParts,cb));
 //    }
+    public class TestValue {
+        /**
+         * 水份
+         */
+        public float moisture;
+        /**
+         * 油份
+         */
+        public float oil;
+    }
+
+
+    public static double[][] testValueTable =
+            {
+                    {8, 200, 0, 0, 0, 0, 0, 0},
+                    {200, 250, 0.082, 16.4, 20.5, 0.036, 7.2, 9.0},
+                    {250, 300, 0.081, 20.3, 24.3, 0.0355, 8.9, 10.7},
+                    {300, 350, 0.08, 24.0, 28.0, 0.035, 10.5, 12.3},
+                    {350, 380, 0.079, 27.7, 30.0, 0.0345, 12.1, 13.1},
+                    {380, 450, 0.079, 30.0, 35.6, 0.034, 12.9, 15.3},
+                    {450, 500, 0.078, 35.1, 39.0, 0.0335, 15.1, 16.8},
+                    {500, 550, 0.077, 38.5, 42.4, 0.033, 16.5, 18.2},
+                    {550, 600, 0.0765, 42.1, 45.9, 0.0325, 17.9, 19.5},
+                    {600, 650, 0.076, 45.6, 49.4, 0.032, 19.2, 20.8},
+                    {650, 700, 0.0755, 49.1, 52.9, 0.0315, 20.5, 22.1},
+                    {700, 750, 0.075, 52.5, 56.3, 0.031, 21.7, 23.3},
+                    {750, 800, 0.0745, 55.9, 59.6, 0.0305, 22.9, 24.4},
+                    {800, 850, 0.074, 59.2, 62.9, 0.03, 24.0, 25.5},
+                    {850, 900, 0.0735, 62.5, 66.2, 0.0295, 25.1, 26.6},
+                    {900, 1023, 0.073, 65.7, 74.7, 0.029, 26.1, 29.7},
+            };
 
     public class Status {
         boolean power = false;
-        boolean testing=false;
-        int testValue=0;
+        boolean testing = false;
+        int adc = 0;
         float battery;
-        public void reset()
-        {
-            testValue=0;
-            battery=-1;
-            testing=false;
+
+
+        public void reset() {
+            battery = -1;
+            testing = false;
         }
 
         /**
@@ -196,25 +228,37 @@ public class WaterReplenishmentMeter extends OznerDevice {
 
         /**
          * 正在测试中
+         *
          * @return true测试中
          */
-        public boolean isTesting()
-        {
+        public boolean isTesting() {
             return testing;
         }
 
         /**
          * 测试结果
+         *
          * @return
          */
-        public int testValue()
-        {
-            return testValue;
+        public TestValue testValue() {
+            TestValue tv=new TestValue();
+            tv.moisture=0;
+            tv.oil=0;
+            for (double[] value : testValueTable ) {
+                if (adc>=value[0] && adc<=value[1])
+                {
+                    tv.moisture=(float)(Math.abs(value[1]-value[0])*value[2]+value[3]);
+                    tv.oil=(float)(Math.abs(value[1]-value[0])*value[5]+value[6]);
+                    return tv;
+                }
+            }
+            return tv;
         }
+
 
         @Override
         public String toString() {
-            return String.format("Power:%b Battery:%f Testing:%b TestValue:%d", power(), battery(),isTesting(),testValue());
+            return String.format("Power:%b Battery:%f Testing:%b TestValue:%d", power(), battery(), isTesting(), testValue());
         }
 
 
@@ -225,8 +269,7 @@ public class WaterReplenishmentMeter extends OznerDevice {
             BaseDeviceIO.StatusCallback,
             BaseDeviceIO.OnInitCallback,
             BaseDeviceIO.OnTransmissionsCallback,
-            BaseDeviceIO.CheckTransmissionsCompleteCallback
-    {
+            BaseDeviceIO.CheckTransmissionsCompleteCallback {
 
         public WaterReplenishmentMeterIMP(long period) {
             super(period);
@@ -239,9 +282,6 @@ public class WaterReplenishmentMeter extends OznerDevice {
         }
 
 
-
-
-
         private boolean send(byte opCode, byte[] data, OperateCallback<Void> cb) {
             return IO() != null && IO().send(BluetoothIO.makePacket(opCode, data), cb);
         }
@@ -249,8 +289,6 @@ public class WaterReplenishmentMeter extends OznerDevice {
         private boolean requestStatus() {
             return send(opCode_RequestStatus, null, null);
         }
-
-
 
 
         @Override
@@ -262,7 +300,8 @@ public class WaterReplenishmentMeter extends OznerDevice {
         public void onIOSend(byte[] bytes) {
 
         }
-        private Handler testHandler=new Handler(Looper.getMainLooper());
+
+        private Handler testHandler = new Handler(Looper.getMainLooper());
 
         @Override
         public void onIORecv(byte[] bytes) {
@@ -273,14 +312,13 @@ public class WaterReplenishmentMeter extends OznerDevice {
             switch (opCode) {
                 case opCode_StatusResp: {
                     status.power = bytes[1] == 1;
-                    status.battery=bytes[2]/100.0f;
+                    status.battery = bytes[2] / 100.0f;
                     doUpdate();
                     break;
                 }
-                case opCode_Testing:
-                {
-                    status.testing=true;
-                    status.testValue=0;
+                case opCode_Testing: {
+                    status.testing = true;
+                    status.adc=0;
                     doUpdate();
                     testHandler.postDelayed(new Runnable() {
                         @Override
@@ -290,14 +328,12 @@ public class WaterReplenishmentMeter extends OznerDevice {
                                 doUpdate();
                             }
                         }
-                    },5000);
-
+                    }, 6000);
                     break;
                 }
-                case opCode_TestResp:
-                {
-                    status.testValue=ByteUtil.getShort(bytes,1);
-                    status.testing=false;
+                case opCode_TestResp: {
+                    status.adc=ByteUtil.getShort(bytes, 1);
+                    status.testing = false;
                     doUpdate();
                     break;
                 }
