@@ -175,6 +175,11 @@ public class WaterReplenishmentMeter extends OznerDevice {
          * 油份
          */
         public float oil;
+
+        @Override
+        public String toString() {
+            return String.format("moisture:%f oil:%f",moisture,oil);
+        }
     }
 
 
@@ -258,7 +263,7 @@ public class WaterReplenishmentMeter extends OznerDevice {
 
         @Override
         public String toString() {
-            return String.format("Power:%b Battery:%f Testing:%b TestValue:%d", power(), battery(), isTesting(), testValue());
+            return String.format("Power:%b Battery:%f Testing:%b %s", power(), battery(), isTesting(), testValue().toString());
         }
 
 
