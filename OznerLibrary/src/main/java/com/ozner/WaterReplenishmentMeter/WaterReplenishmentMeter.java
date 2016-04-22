@@ -7,11 +7,11 @@ import android.os.Looper;
 import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.device.AutoUpdateClass;
 import com.ozner.device.BaseDeviceIO;
+import com.ozner.device.DeviceSetting;
 import com.ozner.device.OperateCallback;
 import com.ozner.device.OznerDevice;
 import com.ozner.oznerlibrary.R;
 import com.ozner.util.ByteUtil;
-import com.ozner.util.Helper;
 
 /**
  * Created by zhiyongxu on 15/12/21.
@@ -25,6 +25,8 @@ public class WaterReplenishmentMeter extends OznerDevice {
     private static final byte opCode_StartTest = 0x32;
     private static final byte opCode_TestResp = 0x33;
     private static final byte opCode_Testing = 0x34;
+    private static final byte opCode_SendSetting = 0x35;
+
 
 
     public enum TestParts {Face, Hand, Eye, Other}
@@ -82,6 +84,12 @@ public class WaterReplenishmentMeter extends OznerDevice {
         }
     }
 
+    @Override
+    protected DeviceSetting initSetting(String Setting) {
+        DeviceSetting setting = new WaterReplenishmentSetting();
+        setting.load(Setting);
+        return setting;
+    }
 
     @Override
     public String toString() {
@@ -95,7 +103,12 @@ public class WaterReplenishmentMeter extends OznerDevice {
             return String.valueOf(value);
     }
 
-//    class TestRunnableProxy  implements BluetoothIO.BluetoothRunnable
+    @Override
+    public void updateSettings() {
+        if ((IO() != null) && (IO().isReady()))
+            waterReplenishmentMeterIMP.sendSetting();
+    }
+    //    class TestRunnableProxy  implements BluetoothIO.BluetoothRunnable
 //    {
 //        OperateCallback<Float> cb;
 //        TestParts testParts;
@@ -185,22 +198,33 @@ public class WaterReplenishmentMeter extends OznerDevice {
 
     public static double[][] testValueTable =
             {
-                    {8, 200, 0, 0, 0, 0, 0, 0},
-                    {200, 250, 0.082, 16.4, 20.5, 0.036, 7.2, 9.0},
-                    {250, 300, 0.081, 20.3, 24.3, 0.0355, 8.9, 10.7},
-                    {300, 350, 0.08, 24.0, 28.0, 0.035, 10.5, 12.3},
-                    {350, 380, 0.079, 27.7, 30.0, 0.0345, 12.1, 13.1},
-                    {380, 450, 0.079, 30.0, 35.6, 0.034, 12.9, 15.3},
-                    {450, 500, 0.078, 35.1, 39.0, 0.0335, 15.1, 16.8},
-                    {500, 550, 0.077, 38.5, 42.4, 0.033, 16.5, 18.2},
-                    {550, 600, 0.0765, 42.1, 45.9, 0.0325, 17.9, 19.5},
-                    {600, 650, 0.076, 45.6, 49.4, 0.032, 19.2, 20.8},
-                    {650, 700, 0.0755, 49.1, 52.9, 0.0315, 20.5, 22.1},
-                    {700, 750, 0.075, 52.5, 56.3, 0.031, 21.7, 23.3},
-                    {750, 800, 0.0745, 55.9, 59.6, 0.0305, 22.9, 24.4},
-                    {800, 850, 0.074, 59.2, 62.9, 0.03, 24.0, 25.5},
-                    {850, 900, 0.0735, 62.5, 66.2, 0.0295, 25.1, 26.6},
-                    {900, 1023, 0.073, 65.7, 74.7, 0.029, 26.1, 29.7},
+                    {8, 220, 0, 0, 0, 0, 0, 0},
+                    {220,300,0.093,20 ,28 ,0.042,9 ,13},
+                    {300,350,0.092,28 ,32 ,0.041,12 ,14},
+                    {350,400,0.09,32 ,36 ,0.04,14 ,16},
+                    {400,450,0.089,36 ,40 ,0.039,16 ,18},
+                    {450,500,0.088,40 ,44 ,0.038,17 ,19},
+                    {500,600,0.087,44 ,52 ,0.037,19 ,22},
+                    {600,700,0.086,52 ,60 ,0.036,22 ,25},
+                    {700,800,0.085,60 ,68 ,0.035,25 ,28},
+                    {800,1023,0.084,67 ,86 ,0.034,27 ,35}
+                    
+//                    {8, 200, 0, 0, 0, 0, 0, 0},
+//                    {200, 250, 0.082, 16.4, 20.5, 0.036, 7.2, 9.0},
+//                    {250, 300, 0.081, 20.3, 24.3, 0.0355, 8.9, 10.7},
+//                    {300, 350, 0.08, 24.0, 28.0, 0.035, 10.5, 12.3},
+//                    {350, 380, 0.079, 27.7, 30.0, 0.0345, 12.1, 13.1},
+//                    {380, 450, 0.079, 30.0, 35.6, 0.034, 12.9, 15.3},
+//                    {450, 500, 0.078, 35.1, 39.0, 0.0335, 15.1, 16.8},
+//                    {500, 550, 0.077, 38.5, 42.4, 0.033, 16.5, 18.2},
+//                    {550, 600, 0.0765, 42.1, 45.9, 0.0325, 17.9, 19.5},
+//                    {600, 650, 0.076, 45.6, 49.4, 0.032, 19.2, 20.8},
+//                    {650, 700, 0.0755, 49.1, 52.9, 0.0315, 20.5, 22.1},
+//                    {700, 750, 0.075, 52.5, 56.3, 0.031, 21.7, 23.3},
+//                    {750, 800, 0.0745, 55.9, 59.6, 0.0305, 22.9, 24.4},
+//                    {800, 850, 0.074, 59.2, 62.9, 0.03, 24.0, 25.5},
+//                    {850, 900, 0.0735, 62.5, 66.2, 0.0295, 25.1, 26.6},
+//                    {900, 1023, 0.073, 65.7, 74.7, 0.029, 26.1, 29.7},
             };
 
     public class Status {
@@ -264,7 +288,7 @@ public class WaterReplenishmentMeter extends OznerDevice {
         @Override
         public String toString() {
             return String.format("Power:%b Battery:%f Testing:%b %s", power(), battery(), isTesting(), testValue().toString());
-        }
+    }
 
 
     }
@@ -307,6 +331,20 @@ public class WaterReplenishmentMeter extends OznerDevice {
         }
 
         private Handler testHandler = new Handler(Looper.getMainLooper());
+
+        public boolean sendSetting()
+        {
+            WaterReplenishmentSetting setting =(WaterReplenishmentSetting)Setting();
+            if (setting == null)
+                return false;
+
+            byte[] data = new byte[4];
+            data[0]=(byte)setting.atomization();
+            data[1]=0;
+            data[2]=(byte)setting.massage();
+            data[3]=0;
+            return this.send(opCode_SendSetting, data,null);
+        }
 
         @Override
         public void onIORecv(byte[] bytes) {
