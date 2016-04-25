@@ -187,6 +187,10 @@ public class AirPurifier_MXChip extends AirPurifier {
             io.setOnTransmissionsCallback(airPurifierImp);
             io.registerStatusCallback(airPurifierImp);
             io.setOnInitCallback(airPurifierImp);
+        }else
+        {
+            airPurifierImp.stop();
+            setOffline(true);
         }
     }
 
@@ -478,8 +482,6 @@ public class AirPurifier_MXChip extends AirPurifier {
 
         @Override
         public void onDisconnected(BaseDeviceIO io) {
-            stop();
-            mIsOffline=true;
         }
 
         private void setNowTime() {

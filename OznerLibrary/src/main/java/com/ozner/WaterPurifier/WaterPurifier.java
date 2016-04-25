@@ -216,6 +216,10 @@ public class WaterPurifier extends OznerDevice {
             io.setOnTransmissionsCallback(waterPurifierImp);
             io.registerStatusCallback(waterPurifierImp);
             io.setOnInitCallback(waterPurifierImp);
+        }else
+        {
+            waterPurifierImp.cancelTimer();
+            setOffline(true);
         }
     }
 
@@ -290,8 +294,7 @@ public class WaterPurifier extends OznerDevice {
 
         @Override
         public void onDisconnected(BaseDeviceIO io) {
-            cancelTimer();
-            isOffline = true;
+
         }
 
         @Override
@@ -322,7 +325,7 @@ public class WaterPurifier extends OznerDevice {
 
         @Override
         public void onIORecv(byte[] bytes) {
-            reqeustCount=0;
+
             if ((bytes != null) && (bytes.length > 10)) {
                 byte group = bytes[0];
                 byte opCode = bytes[3];
@@ -331,6 +334,8 @@ public class WaterPurifier extends OznerDevice {
                         switch (opCode)
                         {
                             case Opcode_RespondStatus:
+                                reqeustCount=0;
+
                                 statusPacket.fromBytes(bytes);
                                 Intent intent = new Intent(ACTION_WATER_PURIFIER_STATUS_CHANGE);
                                 intent.putExtra(Extra_Address, Address());
