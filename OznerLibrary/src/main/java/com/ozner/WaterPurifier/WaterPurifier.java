@@ -253,17 +253,29 @@ public class WaterPurifier extends OznerDevice {
 
     }
 
+    int reqeustCount=0;
 
     private void updateStatus(OperateCallback<Void> cb) {
             if (IO() == null) {
                 if (cb != null)
                     cb.onFailure(null);
             } else {
+                reqeustCount++;
+                if (reqeustCount>=3)
+                {
+                    setOffline(true);
+                }
                 IO().send(MakeWoodyBytes(GroupCode_AppToDevice, Opcode_RequestStatus, Address(), null), cb);
             }
     }
 
-
+    private void setOffline(boolean isOffline)
+    {
+        if (isOffline!=this.isOffline) {
+            this.isOffline = isOffline;
+            doUpdate();
+        }
+    }
 
 
     class WaterPurifierImp implements
@@ -310,6 +322,7 @@ public class WaterPurifier extends OznerDevice {
 
         @Override
         public void onIORecv(byte[] bytes) {
+            reqeustCount=0;
             if ((bytes != null) && (bytes.length > 10)) {
                 byte group = bytes[0];
                 byte opCode = bytes[3];
