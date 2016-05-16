@@ -26,7 +26,6 @@ import com.ozner.cup.Cup;
 import com.ozner.device.OznerDevice;
 import com.ozner.device.OznerDeviceManager;
 import com.ozner.tap.Tap;
-import com.ozner.ui.library.RoundDrawable;
 
 public class MainActivity extends ActionBarActivity implements View.OnClickListener, AdapterView.OnItemClickListener {
     private static final int WifiActivityRequestCode = 0x100;
