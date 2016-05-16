@@ -26,7 +26,17 @@ class WaterPurifierStatusPacket {
 
     public int TDS1 = WaterPurifierError;
     public int TDS2 = WaterPurifierError;
+    public WaterPurifierStatusPacket()
+    {
 
+    }
+    public WaterPurifierStatusPacket(WaterPurifierStatusPacket status)
+    {
+        this.Hot=status.Hot;
+        this.Cool=status.Cool;
+        this.Power=status.Power;
+        this.Sterilization=status.Sterilization;
+    }
 
 
     public void fromBytes(byte[] bytes) {

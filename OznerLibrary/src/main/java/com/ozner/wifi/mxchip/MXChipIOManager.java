@@ -164,7 +164,7 @@ public class MXChipIOManager extends IOManager {
 
 
     @Override
-    public void Start() {
+    public void Start(String user,String token) {
         proxy.start();
     }
 

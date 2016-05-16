@@ -25,7 +25,7 @@ public class BluetoothIOMgr extends IOManager {
 
 
     @Override
-    public void Start() {
+    public void Start(String user,String token) {
         bluetoothScan.StartScan();
     }
 

@@ -435,7 +435,6 @@ public class AirPurifier_Bluetooth extends AirPurifier {
             if (getRunningMode() == RunningMode.Foreground) {
                 start(100);
             }
-
         }
 
         @Override

@@ -7,7 +7,8 @@ public class OznerApplication extends OznerBaseApplication {
 
     @Override
     protected void onBindService() {
-        getService().getDeviceManager().setOwner("teestaadfadfsdfsd");
+        getService().getDeviceManager().setOwner("18001919461","eyJ1dWlkIjoiZTJiNmE0MzUtODExZi00ODY5LWI3MGUtNWI4NWM4ZGQyYTZkIiwic2Vzc2lvbmlkIjoiMmYzdXF5bWFjNG90aTFtMDNyMXdseHFpIiwidHlwZSI6ImFjY2Vzc190b2tlbiJ9");
+
         this.sendBroadcast(new Intent(ACTION_ServiceInit));
     }
 

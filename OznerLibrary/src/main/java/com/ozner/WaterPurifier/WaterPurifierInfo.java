@@ -40,4 +40,5 @@ public class WaterPurifierInfo {
         this.Error=ByteUtil.getInt(bytes,124);
     }
 
+
 }

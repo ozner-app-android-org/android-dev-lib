@@ -13,7 +13,8 @@ import java.util.HashMap;
  * IO管理基类
  */
 public abstract class IOManager extends XObject {
-
+    private String user="";
+    private String token="";
     /**
      * 当前设备列表
      */
@@ -91,7 +92,7 @@ public abstract class IOManager extends XObject {
     /**
      * 开始使用接口
      */
-    public abstract void Start();
+    public abstract void Start(String user,String token);
 
     /**
      * 停用接口
@@ -110,6 +111,8 @@ public abstract class IOManager extends XObject {
             io.close();
         }
     }
+
+
 
     public interface IOManagerCallback {
         /**

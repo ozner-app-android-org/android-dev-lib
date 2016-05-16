@@ -21,7 +21,6 @@ import com.ozner.device.NotSupportDeviceException;
 import com.ozner.device.OznerDevice;
 import com.ozner.device.OznerDeviceManager;
 import com.ozner.wifi.mxchip.MXChipIOManager;
-import com.ozner.wifi.mxchip.MXChipPair;
 import com.ozner.wifi.mxchip.Pair.Helper;
 
 import java.text.SimpleDateFormat;

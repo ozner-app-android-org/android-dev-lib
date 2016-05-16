@@ -9,7 +9,19 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/Android_AylaLibrary_Public-release" />
             <option value="$PROJECT_DIR$/OznerLibrary" />
+            <option value="$PROJECT_DIR$/librarise/Android_AylaLibrary_Public" />
+            <option value="$PROJECT_DIR$/test_app" />
+            <option value="$PROJECT_DIR$/xzy_ui_lib" />
+          </set>
+        </option>
+        <option name="myModules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/Android_AylaLibrary_Public-release" />
+            <option value="$PROJECT_DIR$/OznerLibrary" />
+            <option value="$PROJECT_DIR$/librarise/Android_AylaLibrary_Public" />
             <option value="$PROJECT_DIR$/test_app" />
             <option value="$PROJECT_DIR$/xzy_ui_lib" />
           </set>

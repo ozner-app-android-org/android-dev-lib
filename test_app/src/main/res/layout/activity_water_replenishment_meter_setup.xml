@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="14dp"
+    android:paddingRight="14dp"
+    android:paddingTop="@dimen/activity_vertical_margin">
+
+    <EditText
+        android:id="@+id/WRM_Name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:checked="true"
+        android:text="补水仪"
+        android:textColor="@color/text_gray"
+        android:textSize="15sp" />
+    <RelativeLayout
+        android:id="@+id/Tap_AddressPanel"
+        android:layout_width="match_parent"
+        android:layout_height="35dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:text="MAC"
+                android:textColor="@color/text_blue"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/Tap_Address"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:checked="true"
+                android:text="OznerCup"
+                android:textColor="@color/text_gray"
+                android:textSize="15sp" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_alignParentBottom="true"
+            android:background="@android:color/darker_gray"></RelativeLayout>
+    </RelativeLayout>
+
+
+    <RelativeLayout
+        android:id="@+id/Tap_DetectTime1Panel"
+        android:layout_width="match_parent"
+        android:layout_height="35dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true">
+
+            <CheckBox
+                android:id="@+id/Tap_DetectTime1_Check"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:text="监测时间1"
+                android:textColor="@color/text_blue"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/Tap_DetectTime1_Text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:checked="true"
+                android:text="OznerCup"
+                android:textColor="@color/text_gray"
+                android:textSize="15sp" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_alignParentBottom="true"
+            android:background="@android:color/darker_gray"></RelativeLayout>
+    </RelativeLayout>
+
+
+    <RelativeLayout
+        android:id="@+id/Tap_DetectTime2Panel"
+        android:layout_width="match_parent"
+        android:layout_height="35dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true">
+
+            <CheckBox
+                android:id="@+id/Tap_DetectTime2_Check"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:text="监测时间2"
+                android:textColor="@color/text_blue"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/Tap_DetectTime2_Text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:checked="true"
+                android:text="OznerCup"
+                android:textColor="@color/text_gray"
+                android:textSize="15sp" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_alignParentBottom="true"
+            android:background="@android:color/darker_gray"></RelativeLayout>
+    </RelativeLayout>
+
+
+    <RelativeLayout
+        android:id="@+id/Tap_DetectTime3Panel"
+        android:layout_width="match_parent"
+        android:layout_height="35dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true">
+
+            <CheckBox
+                android:id="@+id/Tap_DetectTime3_Check"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:text="监测时间3"
+                android:textColor="@color/text_blue"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/Tap_DetectTime3_Text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:checked="true"
+                android:text="OznerCup"
+                android:textColor="@color/text_gray"
+                android:textSize="15sp" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_alignParentBottom="true"
+            android:background="@android:color/darker_gray"></RelativeLayout>
+    </RelativeLayout>
+
+
+    <RelativeLayout
+        android:id="@+id/Tap_DetectTime4Panel"
+        android:layout_width="match_parent"
+        android:layout_height="35dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true">
+
+            <CheckBox
+                android:id="@+id/Tap_DetectTime4_Check"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:text="监测时间4"
+                android:textColor="@color/text_blue"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/Tap_DetectTime4_Text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:checked="true"
+                android:text="OznerCup"
+                android:textColor="@color/text_gray"
+                android:textSize="15sp" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_alignParentBottom="true"
+            android:background="@android:color/darker_gray"></RelativeLayout>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:background="@drawable/button"
+            android:layout_marginTop="15dp"
+            android:id="@+id/Submit"
+            android:layout_width="160dp"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="提交" />
+    </RelativeLayout>
+
+</LinearLayout>

@@ -38,7 +38,7 @@ public class OznerDeviceManager extends XObject {
 
     SQLiteDB sqLiteDB;
     String owner = "";
-
+    String token = "";
     IOManagerList ioManagerList;
 
     public OznerDeviceManager(Context context) throws InstantiationException {
@@ -53,6 +53,7 @@ public class OznerDeviceManager extends XObject {
         importOldDB();
         ioManagerList = new IOManagerList(context);
         ioManagerList.setIoManagerCallback(ioManagerCallbackImp);
+
     }
 
     public static OznerDeviceManager Instance() {
@@ -141,7 +142,7 @@ public class OznerDeviceManager extends XObject {
      *
      * @param owner 用户ID
      */
-    public void setOwner(String owner) {
+    public void setOwner(String owner, String token) {
         if (owner != null)
             owner = owner.trim();
         if (Helper.StringIsNullOrEmpty(owner)) return;
@@ -149,13 +150,16 @@ public class OznerDeviceManager extends XObject {
             if (this.owner.equals(owner)) return;
         }
         this.owner = owner;
+        this.token = token;
         synchronized (this) {
             devices.clear();
         }
+
+
         if (Helper.StringIsNullOrEmpty(owner))
             ioManagerList().Stop();
 
-        ioManagerList().Start();
+        ioManagerList().Start(owner,token);
         CloseAll();
         LoadDevices();
 
@@ -163,6 +167,7 @@ public class OznerDeviceManager extends XObject {
         sqLiteDB.execSQLNonQuery(Sql, new String[]{});
         dbg.i("Set Owner:%s", owner);
         context().sendBroadcast(new Intent(ACTION_OZNER_MANAGER_OWNER_CHANGE));
+
     }
 
     protected void CloseAll() {
@@ -200,13 +205,12 @@ public class OznerDeviceManager extends XObject {
 
     /**
      * 判断一个设备是否配对过
+     *
      * @param address 设备MAC
      * @return True配对过
      */
-    public boolean hashDevice(String address)
-    {
-        synchronized (devices)
-        {
+    public boolean hashDevice(String address) {
+        synchronized (devices) {
             return devices.containsKey(address);
         }
     }
@@ -286,10 +290,8 @@ public class OznerDeviceManager extends XObject {
      * @return 返回NULL无对应的设备
      */
     public OznerDevice getDevice(BaseDeviceIO io) throws NotSupportDeviceException {
-        synchronized (devices)
-        {
-            if (devices.containsKey(io.getAddress()))
-            {
+        synchronized (devices) {
+            if (devices.containsKey(io.getAddress())) {
                 return devices.get(io.getAddress());
             }
         }
@@ -337,12 +339,11 @@ public class OznerDeviceManager extends XObject {
 
         return null;
     }
-    
+
     /**
      * 判断设备是否处于可配对状态
      */
-    public boolean checkisBindMode(BaseDeviceIO io)
-    {
+    public boolean checkisBindMode(BaseDeviceIO io) {
         for (BaseDeviceManager mgr : mManagers) {
             if (mgr.isMyDevice(io.getType())) {
                 return mgr.checkIsBindMode(io);

@@ -25,8 +25,9 @@ import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.NotSupportDeviceException;
 import com.ozner.device.OznerDevice;
 import com.ozner.device.OznerDeviceManager;
+import com.ozner.wifi.WifiPair;
+import com.ozner.wifi.ayla.AylaIOManager;
 import com.ozner.wifi.mxchip.MXChipIO;
-import com.ozner.wifi.mxchip.MXChipPair;
 
 import java.util.Date;
 
@@ -35,7 +36,7 @@ import java.util.Date;
  * A placeholder fragment containing a simple view.
  */
 public class WifiConfigurationActivity extends Activity {
-    final MXChipPairImp mxChipPairImp = new MXChipPairImp();
+    final WifiPairImp wifiPairImp = new WifiPairImp();
     EditText wifi_ssid;
     EditText wifi_passwd;
     CircularProgressButton nextButton;
@@ -47,7 +48,7 @@ public class WifiConfigurationActivity extends Activity {
     Date time;
     BaseDeviceIO bindIO = null;
     asyHandle handle = new asyHandle();
-
+    WifiPair wifiPair;
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -89,8 +90,13 @@ public class WifiConfigurationActivity extends Activity {
         });
 
         loadWifi();
+        try {
+            wifiPair=new WifiPair(this,wifiPairImp);
+        } catch (WifiPair.NullSSIDException e) {
+            e.printStackTrace();
+        }
 //        MXChipIO io = OznerDeviceManager.Instance().ioManagerList().mxChipIOManager().
-//                createMXChipDevice("C8:93:46:4F:84:03", "FOG_HAOZE_AIR");
+//                createMXChipDevice("C8:93:46:C6:1D:DD", "FOG_HAOZE_AIR");
 //        io.name="Air";
 //        try {
 //            OznerDeviceManager.Instance().save(OznerDeviceManager.Instance().getDevice(io));
@@ -105,6 +111,7 @@ public class WifiConfigurationActivity extends Activity {
         if (wifiInfo != null) {
             if (wifiInfo.getSupplicantState() == SupplicantState.COMPLETED) {
                 String ssid = wifiInfo.getSSID().replace("\"", "");
+                if (AylaIOManager.isAylaSSID(ssid)) return;
                 wifi_ssid.setText(ssid);
                 String pwd = wifiPreferences.getString("password." + ssid, "");
                 wifi_passwd.setText(pwd);
@@ -116,7 +123,7 @@ public class WifiConfigurationActivity extends Activity {
         }
     }
 
-    private void loadDevice(MXChipIO io) {
+    private void loadDevice(BaseDeviceIO io) {
         if (io == null) {
             findViewById(R.id.deviceInfoPanel).setVisibility(View.INVISIBLE);
         } else {
@@ -164,8 +171,8 @@ public class WifiConfigurationActivity extends Activity {
                     editor.commit();
                 }
                 time = new Date();
-                MXChipPair.Pair(this, wifi_ssid.getText().toString().trim(),
-                        wifi_passwd.getText().toString(), mxChipPairImp);
+                wifiPair.pair(wifi_ssid.getText().toString().trim(),
+                        wifi_passwd.getText().toString());
                 nextButton.setProgress(0);
 
                 nextButton.setProgress(10);
@@ -199,18 +206,18 @@ public class WifiConfigurationActivity extends Activity {
                     status_text.setText(msg.obj.toString());
                     break;
                 case 1:
-                    loadDevice((MXChipIO) msg.obj);
+                    loadDevice((BaseDeviceIO) msg.obj);
                     break;
             }
             super.handleMessage(msg);
         }
     }
 
-    class MXChipPairImp implements MXChipPair.MXChipPairCallback {
+    class WifiPairImp implements WifiPair.WifiPairCallback {
 
         @Override
-        public void onSendConfiguration() {
-            setStatusText("正在发送配置信息");
+        public void onStartPairAyla() {
+            setStatusText("正在查找Ayla信息");
             handle.post(new Runnable() {
                 @Override
                 public void run() {
@@ -219,10 +226,43 @@ public class WifiConfigurationActivity extends Activity {
             });
         }
 
+        @Override
+        public void onStartPariMxChip() {
+            setStatusText("正在查找MxChip信息");
+            handle.post(new Runnable() {
+                @Override
+                public void run() {
+                    nextButton.setProgress(50);
+                }
+            });
+        }
+
+        @Override
+        public void onSendConfiguration() {
+            setStatusText("正在配置设备");
+            handle.post(new Runnable() {
+                @Override
+                public void run() {
+                    nextButton.setProgress(50);
+                }
+            });
+        }
+
+        @Override
+        public void onActivateDevice() {
+            setStatusText("正在激活设备");
+            handle.post(new Runnable() {
+                @Override
+                public void run() {
+                    nextButton.setProgress(70);
+                }
+            });
+        }
+
 
         @Override
         public void onWaitConnectWifi() {
-            setStatusText("等待设备重启");
+            setStatusText("等待设备连接WIFI");
             handle.post(new Runnable() {
                 @Override
                 public void run() {
@@ -232,20 +272,9 @@ public class WifiConfigurationActivity extends Activity {
 
         }
 
-        @Override
-        public void onActivate() {
-            setStatusText("等待设备激活");
-            handle.post(new Runnable() {
-                @Override
-                public void run() {
-                    nextButton.setProgress(80);
-                }
-            });
-
-        }
 
         @Override
-        public void onPairComplete(MXChipIO io) {
+        public void onPairComplete(BaseDeviceIO io) {
 
             Message msg = new Message();
             msg.what = 1;

@@ -52,6 +52,12 @@ public class WaterPurifierActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onDestroy() {
+        this.unregisterReceiver(monitor);
+        super.onDestroy();
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         loadStatus();

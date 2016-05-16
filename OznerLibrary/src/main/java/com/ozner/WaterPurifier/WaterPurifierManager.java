@@ -18,7 +18,17 @@ public class WaterPurifierManager extends BaseDeviceManager {
 
     public static boolean IsWaterPurifier(String Model) {
         if (Model == null) return false;
-        return Model.trim().equals("MXCHIP_HAOZE_Water");
+        if (Model.trim().equals("MXCHIP_HAOZE_Water"))
+        {
+            return true;
+        }
+        if (Model.trim().equals("AY001MAB1"))
+        {
+            return true;
+        }
+
+        return false;
+
     }
 
     @Override
@@ -28,11 +38,16 @@ public class WaterPurifierManager extends BaseDeviceManager {
 
     @Override
     protected OznerDevice createDevice(String address, String type, String settings) {
-        if (isMyDevice(type))
+        if (type.trim().equals("MXCHIP_HAOZE_Water"))
         {
-            WaterPurifier waterPurifier = new WaterPurifier(context(), address, type, settings);
+            WaterPurifier waterPurifier = new WaterPurifier_MXChip(context(), address, type, settings);
             OznerDeviceManager.Instance().ioManagerList().mxChipIOManager()
-                    .createMXChipDevice(waterPurifier.Address(), waterPurifier.Type());
+                        .createMXChipDevice(waterPurifier.Address(), waterPurifier.Type());
+            return waterPurifier;
+        }
+        if (type.trim().equals("AY001MAB1"))
+        {
+            WaterPurifier waterPurifier = new WaterPurifier_Ayla(context(), address, type, settings);
             return waterPurifier;
         }else
             return null;
