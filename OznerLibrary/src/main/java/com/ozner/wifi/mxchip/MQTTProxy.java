@@ -89,11 +89,31 @@ public class MQTTProxy extends XObject {
     }
 
     public void start() {
-        connection.connect(null);
+        connection.connect(new Callback<Void>() {
+            @Override
+            public void onSuccess(Void value) {
+
+            }
+
+            @Override
+            public void onFailure(Throwable value) {
+
+            }
+        });
     }
 
     public void stop() {
-        connection.disconnect(null);
+        connection.disconnect(new Callback<Void>() {
+            @Override
+            public void onSuccess(Void value) {
+
+            }
+
+            @Override
+            public void onFailure(Throwable value) {
+
+            }
+        });
     }
 
     public boolean subscribe(String topic, Callback<byte[]> callback) {
