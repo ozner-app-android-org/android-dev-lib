@@ -495,16 +495,6 @@ public class WifiPair {
 
     public void pair(String ssid,String password) throws PairRunningException
     {
-        AylaIO io=(AylaIO)OznerDeviceManager.Instance().ioManagerList().aylaIOManager().getAvailableDevice("D0:BA:E4:00:E9:3F");
-
-        try {
-            OznerDevice device= OznerDeviceManager.Instance().getDevice(io);
-            OznerDeviceManager.Instance().save(device);
-        } catch (NotSupportDeviceException e) {
-            e.printStackTrace();
-        }
-
-
         this.ssid=ssid;
         this.password=password;
         if (runHandler!=null)
