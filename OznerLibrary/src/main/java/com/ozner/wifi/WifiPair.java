@@ -510,7 +510,7 @@ public class WifiPair {
 
         Date now = new Date();
         if ((now.getTime() - startRunTime.getTime()) > 2*60*1000) {
-            stop();
+            doPairFailure(new TimeoutException());
             return;
         }
         if ((runPairCount % 2)==0)
