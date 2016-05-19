@@ -3,6 +3,7 @@ package com.ozner.WaterReplenishmentMeter;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Message;
 
 import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.device.AutoUpdateClass;
@@ -12,6 +13,8 @@ import com.ozner.device.OperateCallback;
 import com.ozner.device.OznerDevice;
 import com.ozner.oznerlibrary.R;
 import com.ozner.util.ByteUtil;
+
+import java.util.Date;
 
 /**
  * Created by zhiyongxu on 15/12/21.
@@ -198,7 +201,7 @@ public class WaterReplenishmentMeter extends OznerDevice {
 
     public static double[][] testValueTable =
             {
-                    {8, 220, 0, 0, 0, 0, 0, 0},
+                    {8, 220, -1, -1, -1, -1, 0, 0},
                     {220,300,0.093,20 ,28 ,0.042,9 ,13},
                     {300,350,0.092,28 ,32 ,0.041,12 ,14},
                     {350,400,0.09,32 ,36 ,0.04,14 ,16},
@@ -231,6 +234,7 @@ public class WaterReplenishmentMeter extends OznerDevice {
         boolean power = false;
         boolean testing = false;
         int adc = 0;
+        long testTime=0;
         float battery;
 
 
@@ -330,7 +334,24 @@ public class WaterReplenishmentMeter extends OznerDevice {
 
         }
 
-        private Handler testHandler = new Handler(Looper.getMainLooper());
+        private Handler testHandler = new Handler(Looper.getMainLooper())
+        {
+            @Override
+            public void handleMessage(Message msg) {
+                if (msg.what==1)
+                {
+                    Long time=(Long)msg.obj;
+                    if (time.equals(status.testTime))
+                    {
+                        if (status.testing) {
+                            status.testing = false;
+                            doUpdate();
+                        }
+                    }
+                }
+                super.handleMessage(msg);
+            }
+        };
 
         public boolean sendSetting()
         {
@@ -362,19 +383,17 @@ public class WaterReplenishmentMeter extends OznerDevice {
                 case opCode_Testing: {
                     status.testing = true;
                     status.adc=0;
+                    Date dt=new Date();
+                    status.testTime=dt.getTime();
                     doUpdate();
-                    testHandler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (status.testing) {
-                                status.testing = false;
-                                doUpdate();
-                            }
-                        }
-                    }, 6000);
+                    Message msg=new Message();
+                    msg.what=1;
+                    msg.obj=new Long(status.testTime);
+                    testHandler.sendMessageDelayed(msg,6000);
                     break;
                 }
                 case opCode_TestResp: {
+                    if (!status.testing) return;
                     status.adc=ByteUtil.getShort(bytes, 1);
                     status.testing = false;
                     doUpdate();

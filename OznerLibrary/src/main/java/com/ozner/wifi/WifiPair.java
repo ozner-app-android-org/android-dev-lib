@@ -465,8 +465,6 @@ public class WifiPair {
 
         @Override
         public void run() {
-
-
             callback.onStartPairAyla();
             AylaSetup.returnHostScanForNewDevices(new Handler()
             {

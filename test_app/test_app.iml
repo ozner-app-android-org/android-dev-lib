@@ -103,7 +103,6 @@
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/instant-run-support" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/jniLibs" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/manifests" />
-      <excludeFolder url="file://$MODULE_DIR$/build/intermediates/pre-dexed" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/reload-dex" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/res" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/restart-dex" />
@@ -119,8 +118,8 @@
     <orderEntry type="library" exported="" name="design-23.3.0" level="project" />
     <orderEntry type="library" exported="" name="support-vector-drawable-23.3.0" level="project" />
     <orderEntry type="library" exported="" name="mqtt-client-1.13" level="project" />
-    <orderEntry type="library" exported="" name="hawtdispatch-1.22" level="project" />
     <orderEntry type="library" exported="" name="hawtdispatch-transport-1.22" level="project" />
+    <orderEntry type="library" exported="" name="hawtdispatch-1.22" level="project" />
     <orderEntry type="library" exported="" name="hawtbuf-1.11" level="project" />
     <orderEntry type="library" exported="" name="support-v13-23.3.0" level="project" />
     <orderEntry type="library" exported="" name="support-annotations-23.3.0" level="project" />
@@ -132,5 +131,6 @@
     <orderEntry type="library" exported="" name="floatingactionbutton-1.10.1" level="project" />
     <orderEntry type="library" exported="" name="recyclerview-v7-23.3.0" level="project" />
     <orderEntry type="module" module-name="OznerLibrary" exported="" />
+    <orderEntry type="module" module-name="xzy_ui_lib" exported="" />
   </component>
 </module>

@@ -51,6 +51,13 @@
             fab:fab_colorPressed="@color/white_pressed"
             fab:fab_size="mini" />
 
+        <com.getbase.floatingactionbutton.FloatingActionButton
+            android:id="@+id/addUIButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            fab:fab_colorNormal="#ff1fa1ee"
+            fab:fab_colorPressed="@color/white_pressed"
+            fab:fab_size="mini" />
     </com.getbase.floatingactionbutton.FloatingActionsMenu>
 
 

@@ -23,7 +23,7 @@ public class UIXVolumeChartView extends UIXChartView {
 
     public UIXVolumeChartView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        setAdapter(adapter);
+        setAdapter(testAdapter);
         this.setMinimumHeight(Screen.dip2px(getContext(), 30));
     }
 
@@ -51,7 +51,7 @@ public class UIXVolumeChartView extends UIXChartView {
 
         @Override
         public int getMax() {
-            return 400;
+            return 2000;
         }
 
         @Override
@@ -63,9 +63,11 @@ public class UIXVolumeChartView extends UIXChartView {
     @Override
     protected void init() {
         super.init();
-        valueTag.put(50, "50");
-        valueTag.put(200, "200");
-        valueTag.put(400, "400\nml");
+        valueTag.put(500, "500\n" +
+                "ml");
+        valueTag.put(1000, "1000");
+        valueTag.put(1500, "1500");
+        valueTag.put(2000, "2000");
     }
 
     @Override

@@ -102,8 +102,8 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="mqtt-client-1.13" level="project" />
     <orderEntry type="library" exported="" name="micomdns_out" level="project" />
-    <orderEntry type="library" exported="" name="hawtdispatch-1.22" level="project" />
     <orderEntry type="library" exported="" name="hawtdispatch-transport-1.22" level="project" />
+    <orderEntry type="library" exported="" name="hawtdispatch-1.22" level="project" />
     <orderEntry type="library" exported="" name="pushservice-4.4.1.88" level="project" />
     <orderEntry type="library" exported="" name="hawtbuf-1.11" level="project" />
     <orderEntry type="library" exported="" name="fastjson-1.2.11" level="project" />

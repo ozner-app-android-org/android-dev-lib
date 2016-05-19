@@ -26,6 +26,7 @@ import com.ozner.cup.Cup;
 import com.ozner.device.OznerDevice;
 import com.ozner.device.OznerDeviceManager;
 import com.ozner.tap.Tap;
+import com.ozner.ui.library.RoundDrawable;
 
 public class MainActivity extends ActionBarActivity implements View.OnClickListener, AdapterView.OnItemClickListener {
     private static final int WifiActivityRequestCode = 0x100;
@@ -131,6 +132,9 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         FloatingActionButton blue = (FloatingActionButton) findViewById(R.id.addBluetoothButton);
         blue.setIcon(R.drawable.ic_settings_bluetooth);
         blue.setOnClickListener(this);
+        FloatingActionButton ui = (FloatingActionButton) findViewById(R.id.addUIButton);
+        ui.setIcon(R.drawable.ic_close_press);
+        ui.setOnClickListener(this);
 
 
         IntentFilter intentFilter = new IntentFilter();
@@ -188,6 +192,11 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
             }
             case R.id.addBluetoothButton: {
                 Intent intent = new Intent(this, AddDeviceActivity.class);
+                startActivityForResult(intent, 0);
+                break;
+            }
+            case R.id.addUIButton: {
+                Intent intent = new Intent(this, UIActivity.class);
                 startActivityForResult(intent, 0);
                 break;
             }

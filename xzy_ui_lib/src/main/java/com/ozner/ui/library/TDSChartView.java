@@ -47,7 +47,7 @@ public class TDSChartView extends UIXChartView {
     }
 
 
-    ChartAdapter testAdapter=new ChartAdapter() {
+    final ChartAdapter testAdapter=new ChartAdapter() {
         int[] data;
         @Override
         protected void init() {
@@ -137,13 +137,13 @@ public class TDSChartView extends UIXChartView {
         return 1;
     }
 
-//    @Override
-//    public boolean onTouchEvent(MotionEvent event) {
-//        if (event.getAction() == MotionEvent.ACTION_DOWN) {
-//            this.startAnimation();
-//        }
-//        return super.onTouchEvent(event);
-//    }
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            this.startAnimation();
+        }
+        return super.onTouchEvent(event);
+    }
 
     private Shader getLineShare() {
         return new LinearGradient(0, valueRect.bottom, 0, valueRect.top,
