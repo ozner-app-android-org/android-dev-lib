@@ -162,6 +162,7 @@ public class WifiPair {
         String deviceMAC = "";
 
 
+
         ConfigurationDevice device = null;
 
 
@@ -270,7 +271,7 @@ public class WifiPair {
 
                 //Thread.sleep(2000);
                 mdnsApi.startMdnsService("_easylink._tcp.local.", this);
-                wait(MDNSTimeout);
+                WifiPair.this.wait(MDNSTimeout);
                 mdnsApi.stopMdnsService();
 
                 if (Helper.StringIsNullOrEmpty(deviceMAC)) {
