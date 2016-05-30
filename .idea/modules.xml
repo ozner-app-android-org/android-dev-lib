@@ -6,7 +6,6 @@
       <module fileurl="file://$PROJECT_DIR$/OznerLibrary/OznerLibrary.iml" filepath="$PROJECT_DIR$/OznerLibrary/OznerLibrary.iml" />
       <module fileurl="file://$PROJECT_DIR$/android-dev-lib.iml" filepath="$PROJECT_DIR$/android-dev-lib.iml" />
       <module fileurl="file://$PROJECT_DIR$/librarise/Android_AylaLibrary_Public/librarise_Android_AylaLibrary_Public.iml" filepath="$PROJECT_DIR$/librarise/Android_AylaLibrary_Public/librarise_Android_AylaLibrary_Public.iml" />
-      <module fileurl="file://$PROJECT_DIR$/librarise/Android_AylaLibrary_Public/librarise_Android_AylaLibrary_Public.iml" filepath="$PROJECT_DIR$/librarise/Android_AylaLibrary_Public/librarise_Android_AylaLibrary_Public.iml" />
       <module fileurl="file://$PROJECT_DIR$/test_app/test_app.iml" filepath="$PROJECT_DIR$/test_app/test_app.iml" />
       <module fileurl="file://$PROJECT_DIR$/xzy_ui_lib/xzy_ui_lib.iml" filepath="$PROJECT_DIR$/xzy_ui_lib/xzy_ui_lib.iml" />
     </modules>

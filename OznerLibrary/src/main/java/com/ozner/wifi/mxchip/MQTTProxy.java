@@ -1,15 +1,18 @@
 package com.ozner.wifi.mxchip;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.ozner.XObject;
 import com.ozner.device.OperateCallback;
 import com.ozner.util.Helper;
+import com.ozner.util.dbg;
 
 import org.fusesource.hawtbuf.Buffer;
 import org.fusesource.hawtbuf.UTF8Buffer;
 import org.fusesource.mqtt.client.Callback;
 import org.fusesource.mqtt.client.CallbackConnection;
+import org.fusesource.mqtt.client.ExtendedListener;
 import org.fusesource.mqtt.client.Listener;
 import org.fusesource.mqtt.client.MQTT;
 import org.fusesource.mqtt.client.QoS;
@@ -36,14 +39,14 @@ public class MQTTProxy extends XObject {
             mqtt.setClientId(clientId); //用于设置客户端会话的ID。在setCleanSession(false);被调用时，MQTT服务器利用该ID获得相应的会话。此ID应少于23个字符，默认根据本机地址、端口和时间自动生成
             mqtt.setCleanSession(false); //若设为false，MQTT服务器将持久化客户端会话的主体订阅和ACK位置，默认为true
             mqtt.setKeepAlive((short) 30);//定义客户端传来消息的最大时间间隔秒数，服务器可以据此判断与客户端的连接是否已经断开，从而避免TCP/IP超时的长时间等待
-            mqtt.setUserName("admin"+ Helper.rndString(12));//服务器认证用户名
-            mqtt.setPassword("admin");//服务器认证密码
+            //mqtt.setUserName("admin"+ Helper.rndString(12));//服务器认证用户名
+            //mqtt.setPassword("admin");//服务器认证密码
 //        mqtt.setWillTopic("willTopic");//设置“遗嘱”消息的话题，若客户端与服务器之间的连接意外中断，服务器将发布客户端的“遗嘱”消息
 //        mqtt.setWillMessage("willMessage");//设置“遗嘱”消息的内容，默认是长度为零的消息
 //        mqtt.setWillQos(QoS.AT_LEAST_ONCE);//设置“遗嘱”消息的QoS，默认为QoS.ATMOSTONCE
 //        mqtt.setWillRetain(true);//若想要在发布“遗嘱”消息时拥有retain选项，则为true
             mqtt.setVersion("3.1.1");
-//        mqtt.setConnectAttemptsMax(10L);//客户端首次连接到服务器时，连接的最大重试次数，超出该次数客户端将返回错误。-1意为无重试上限，默认为-1
+            mqtt.setConnectAttemptsMax(10L);//客户端首次连接到服务器时，连接的最大重试次数，超出该次数客户端将返回错误。-1意为无重试上限，默认为-1
             mqtt.setReconnectAttemptsMax(-1);//客户端已经连接到服务器，但因某种原因连接断开时的最大重试次数，超出该次数客户端将返回错误。-1意为无重试上限，默认为-1
             mqtt.setReconnectDelay(100L);//首次重连接间隔毫秒数，默认为10ms
             mqtt.setReconnectDelayMax(30000L);//重连接间隔毫秒数，默认为30000ms
@@ -57,7 +60,6 @@ public class MQTTProxy extends XObject {
             //带宽限制设置说明
             mqtt.setMaxReadRate(0);//设置连接的最大接收速率，单位为bytes/s。默认为0，即无限制
             mqtt.setMaxWriteRate(0);//设置连接的最大发送速率，单位为bytes/s。默认为0，即无限制
-
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
@@ -92,12 +94,13 @@ public class MQTTProxy extends XObject {
         connection.connect(new Callback<Void>() {
             @Override
             public void onSuccess(Void value) {
-
+                dbg.d("MQTT Connected");
             }
 
             @Override
             public void onFailure(Throwable value) {
-
+                dbg.d("MQTT ConnectFailure");
+                value.printStackTrace();
             }
         });
     }
@@ -132,7 +135,17 @@ public class MQTTProxy extends XObject {
             if (!connected) {
                 return false;
             } else {
-                connection.unsubscribe(new UTF8Buffer[]{new UTF8Buffer(topic)}, null);
+                connection.unsubscribe(new UTF8Buffer[]{new UTF8Buffer(topic)}, new Callback<Void>() {
+                    @Override
+                    public void onSuccess(Void value) {
+
+                    }
+
+                    @Override
+                    public void onFailure(Throwable value) {
+
+                    }
+                });
                 return true;
             }
     }
@@ -169,7 +182,7 @@ public class MQTTProxy extends XObject {
         }
     }
 
-    class MQTTImp implements Listener {
+    class MQTTImp implements ExtendedListener {
 
         @Override
         public void onConnected() {
@@ -198,7 +211,35 @@ public class MQTTProxy extends XObject {
         }
 
         @Override
-        public void onPublish(UTF8Buffer utf8Buffer, Buffer buffer, Runnable runnable) {
+        public void onPublish(UTF8Buffer topic, Buffer body, Runnable ack) {
+//            ArrayList<MQTTListener> list = new ArrayList<>();
+//            synchronized (listeners) {
+//                list.addAll(listeners);
+//            }
+//
+//            for (MQTTListener listener : list) {
+//                try {
+//                    listener.onPublish(MQTTProxy.this, topic.toString(), body.toByteArray());
+//                }catch (Exception e)
+//                {
+//                    e.printStackTrace();
+//                    continue;
+//                }
+//
+//            }
+        }
+
+
+        @Override
+        public void onFailure(Throwable throwable) {
+            dbg.e("MQTT onFailure");
+            throwable.printStackTrace();
+
+        }
+
+
+        @Override
+        public void onPublish(UTF8Buffer topic, Buffer body, Callback<Callback<Void>> ack) {
             ArrayList<MQTTListener> list = new ArrayList<>();
             synchronized (listeners) {
                 list.addAll(listeners);
@@ -206,7 +247,7 @@ public class MQTTProxy extends XObject {
 
             for (MQTTListener listener : list) {
                 try {
-                    listener.onPublish(MQTTProxy.this, utf8Buffer.toString(), buffer.toByteArray());
+                    listener.onPublish(MQTTProxy.this, topic.toString(), body.toByteArray());
                 }catch (Exception e)
                 {
                     e.printStackTrace();
@@ -214,11 +255,6 @@ public class MQTTProxy extends XObject {
                 }
 
             }
-        }
-
-        @Override
-        public void onFailure(Throwable throwable) {
-
         }
     }
 }

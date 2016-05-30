@@ -137,7 +137,8 @@ public class MXChipIOManager extends IOManager {
                             String type = listenDeviceList.get(address);
                             if (OznerDeviceManager.Instance().hashDevice(address)) {
                                 MXChipIO io = createMXChipDevice(address,type);
-                                doAvailable(io);
+                                if (io!=null)
+                                    doAvailable(io);
                             }
                         }
                     }

@@ -13,6 +13,8 @@ import com.ozner.util.ByteUtil;
 import com.ozner.util.Helper;
 import com.ozner.util.dbg;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 
 /**
@@ -134,23 +136,29 @@ public class AirPurifier_Bluetooth extends AirPurifier {
 //        filterStatus.stopTime = calendar.getTime();
 //        filterStatus.maxWorkTime = 60 * 1000;
 
-        Time time = new Time();
-        time.setToNow();
+        Date time = new Date();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(time);
+        //time.setToNow();
 
         byte[] data = new byte[16];
-        data[0] = (byte) (time.year - 2000);
-        data[1] = (byte) (time.month + 1);
-        data[2] = (byte) time.monthDay;
-        data[3] = (byte) time.hour;
-        data[4] = (byte) time.minute;
-        data[5] = (byte) time.second;
+        data[0] = (byte) (calendar.get(Calendar.YEAR) - 2000);
+        data[1] = (byte) (calendar.get(Calendar.MONTH) );
+        data[2] = (byte) calendar.get(Calendar.DAY_OF_MONTH);
+        data[3] = (byte) calendar.get(Calendar.HOUR);
+        data[4] = (byte) calendar.get(Calendar.MINUTE);
+        data[5] = (byte) calendar.get(Calendar.SECOND);
 
-        data[6] = (byte) (time.year - 2000+1);
-        data[7] = (byte) (time.month + 1);
-        data[8] = (byte) time.monthDay;
-        data[9] = (byte) time.hour;
-        data[10] = (byte) time.minute;
-        data[11] = (byte) time.second;
+
+        calendar.add(Calendar.MONTH,3);
+
+        data[6] = (byte) (calendar.get(Calendar.YEAR) - 2000);
+        data[7] = (byte) (calendar.get(Calendar.MONTH) );
+        data[8] = (byte) calendar.get(Calendar.DAY_OF_MONTH);
+        data[9] = (byte) calendar.get(Calendar.HOUR);
+        data[10] = (byte) calendar.get(Calendar.MINUTE);
+        data[11] = (byte) calendar.get(Calendar.SECOND);
+
         ByteUtil.putInt(data,60*1000,12);
         airPurifierIMP.send(opCode_ResetFilter, data, cb);
         airPurifierIMP.requestFilter();

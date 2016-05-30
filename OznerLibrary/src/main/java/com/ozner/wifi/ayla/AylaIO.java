@@ -20,6 +20,7 @@ import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.DeviceNotReadyException;
 import com.ozner.device.OperateCallback;
 import com.ozner.device.OznerDeviceManager;
+import com.ozner.util.dbg;
 import com.ozner.wifi.ThreadHandler;
 import com.ozner.wifi.mxchip.MXChipIO;
 
@@ -52,7 +53,7 @@ public class AylaIO extends BaseDeviceIO {
                 mac.substring(6, 8) + ":" +
                 mac.substring(8, 10) + ":" +
                 mac.substring(10, 12);
-
+        dbg.d("create alyaIO:"+address);
         aylaDevice=device;
         device.getProperties(new ThreadHandler() {
             @Override

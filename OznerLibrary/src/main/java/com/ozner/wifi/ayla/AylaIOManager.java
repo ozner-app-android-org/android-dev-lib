@@ -74,7 +74,8 @@ public class AylaIOManager extends IOManager {
                                 AylaDevice[] devices = AylaSystemUtils.gson.fromJson(jsonResults,  AylaDevice[].class);
                                 for (AylaDevice device : devices)
                                 {
-                                    AylaIO io=createAylaIO(device);
+                                    dbg.i("load:"+device.toString());
+                                    createAylaIO(device);
 
                                 }
                             }
