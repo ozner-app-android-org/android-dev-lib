@@ -143,7 +143,7 @@ public class AirPurifier_Bluetooth extends AirPurifier {
 
         byte[] data = new byte[16];
         data[0] = (byte) (calendar.get(Calendar.YEAR) - 2000);
-        data[1] = (byte) (calendar.get(Calendar.MONTH) );
+        data[1] = (byte) (calendar.get(Calendar.MONTH)+1);
         data[2] = (byte) calendar.get(Calendar.DAY_OF_MONTH);
         data[3] = (byte) calendar.get(Calendar.HOUR);
         data[4] = (byte) calendar.get(Calendar.MINUTE);
@@ -153,7 +153,7 @@ public class AirPurifier_Bluetooth extends AirPurifier {
         calendar.add(Calendar.MONTH,3);
 
         data[6] = (byte) (calendar.get(Calendar.YEAR) - 2000);
-        data[7] = (byte) (calendar.get(Calendar.MONTH) );
+        data[7] = (byte) (calendar.get(Calendar.MONTH) +1);
         data[8] = (byte) calendar.get(Calendar.DAY_OF_MONTH);
         data[9] = (byte) calendar.get(Calendar.HOUR);
         data[10] = (byte) calendar.get(Calendar.MINUTE);
