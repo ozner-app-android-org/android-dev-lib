@@ -67,6 +67,11 @@ public class BluetoothIO extends BaseDeviceIO {
     public long getFirmware() {
         return Firmware;
     }
+    public void setInfo(String platform,long firmware)
+    {
+        this.Platform=platform;
+        this.Firmware=firmware;
+    }
 
     public String getPlatform() {
         return Platform;

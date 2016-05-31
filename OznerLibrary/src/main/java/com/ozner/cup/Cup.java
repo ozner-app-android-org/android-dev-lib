@@ -13,10 +13,14 @@ import com.ozner.oznerlibrary.R;
 import com.ozner.util.ByteUtil;
 import com.ozner.util.dbg;
 
+import java.nio.charset.Charset;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Locale;
 
 /**
  * 水杯对象
@@ -47,6 +51,9 @@ public class Cup extends OznerDevice {
     static final byte opCode_ReadRecordRet = (byte) 0xA4;
     static final byte opCode_UpdateTime = (byte) 0xF0;
     static final byte opCode_FrontMode = (byte) 0x21;
+    static final byte opCode_ReadInfo =(byte)0x82;
+    static final byte opCode_ReadInfoRet=(byte)0x82;
+
     final CupSensor mSensor = new CupSensor();
     final CupFirmwareTools firmwareTools = new CupFirmwareTools();
     final CupImp cupIMP = new CupImp(defaultAutoUpdatePeriod);
@@ -192,6 +199,11 @@ public class Cup extends OznerDevice {
         public CupImp(long period) {
             super(period);
         }
+        private boolean sendReadInfo()
+        {
+            dbg.i("获取设备信息:%s", IO().getAddress());
+            return send(opCode_ReadInfo, null);
+        }
 
         private boolean sendTime() {
             dbg.i("开始设置时间:%s", IO().getAddress());
@@ -286,6 +298,28 @@ public class Cup extends OznerDevice {
                 data = Arrays.copyOfRange(bytes, 1, bytes.length);
 
             switch (opCode) {
+                case opCode_ReadInfoRet:
+                {
+                    dbg.i("获取信息返回");
+
+                    String platform = new String(bytes, 1, 3, Charset.forName("US-ASCII"));
+                    String month = new String(bytes, 4, 3, Charset.forName("US-ASCII"));
+                    String day=new String(bytes, 7, 2, Charset.forName("US-ASCII"));
+                    String year = new String(bytes, 9, 4, Charset.forName("US-ASCII"));
+                    String hour=new String(bytes, 13, 2, Charset.forName("US-ASCII"));
+                    String min=new String(bytes, 15, 2, Charset.forName("US-ASCII"));
+                    String sec=new String(bytes, 17, 2, Charset.forName("US-ASCII"));
+
+                    SimpleDateFormat df = new SimpleDateFormat("MMM dd yyyy HH:mm:ss", Locale.US);
+                    try {
+                        Date date = df.parse(String.format("%s %s %s %s:%s:%s",month,day,year,hour,min,sec));
+                        ((BluetoothIO) IO()).setInfo(platform,date.getTime());
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+
+                    //((BluetoothIO) IO()).setFirmware();
+                }
                 case opCode_ReadSensorRet: {
                     dbg.i("读传感器完成");
                     synchronized (this) {
@@ -345,7 +379,12 @@ public class Cup extends OznerDevice {
         @Override
         public boolean onIOInit() {
             try {
+
                 if (!sendTime())
+                    return false;
+                Thread.sleep(100);
+
+                if (!sendReadInfo())
                     return false;
                 Thread.sleep(100);
 
