@@ -18,6 +18,7 @@ import com.aylanetworks.aaml.AylaRestService;
 import com.aylanetworks.aaml.AylaSetup;
 import com.aylanetworks.aaml.AylaSystemUtils;
 import com.aylanetworks.aaml.AylaUser;
+import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.IOManager;
 import com.ozner.util.HttpUtil;
 import com.ozner.util.dbg;
@@ -47,6 +48,26 @@ public class AylaIOManager extends IOManager {
         AylaSystemUtils.slowConnection=AylaNetworks.YES;
 
         AylaSystemUtils.saveCurrentSettings();
+    }
+
+
+    @Override
+    public void removeDevice(BaseDeviceIO io) {
+        final AylaIO aylaIO=(AylaIO)io;
+        aylaIO.aylaDevice.unregisterDevice(new Handler()
+        {
+            @Override
+            public void handleMessage(Message msg) {
+                if (msg.what==AylaNetworks.AML_ERROR_OK)
+                {
+                    dbg.i("Ayla unregisterDevice complete");
+                }else
+                {
+                    dbg.i("Ayla unregisterDevice Error:"+msg.toString());
+                }
+                super.handleMessage(msg);
+            }
+        });
     }
 
     public static boolean isAylaSSID(String ssid)

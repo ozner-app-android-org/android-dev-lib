@@ -65,6 +65,25 @@ public class IOManagerList extends IOManager {
     }
 
     @Override
+    public void removeDevice(BaseDeviceIO io) {
+        if (bluetoothIOMgr.isMyIO(io))
+        {
+            bluetoothIOMgr.removeDevice(io);
+        }else
+        if (mxChipIOManager.isMyIO(io))
+        {
+            mxChipIOManager.removeDevice(io);
+        }
+        else
+        if (aylaIOManager().isMyIO(io))
+        {
+            aylaIOManager.removeDevice(io);
+        }
+
+        super.removeDevice(io);
+    }
+
+    @Override
     public BaseDeviceIO getAvailableDevice(String address) {
         BaseDeviceIO io = null;
         if ((io = bluetoothIOMgr.getAvailableDevice(address)) != null) {

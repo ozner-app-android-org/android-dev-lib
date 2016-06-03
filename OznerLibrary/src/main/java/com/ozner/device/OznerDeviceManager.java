@@ -231,10 +231,15 @@ public class OznerDeviceManager extends XObject {
         Intent intent = new Intent(ACTION_OZNER_MANAGER_DEVICE_REMOVE);
         intent.putExtra("Address", address);
         context().sendBroadcast(intent);
+        if (device.IO()!=null)
+        {
+            ioManagerList.removeDevice(device.IO());
+        }
 
 //        if (device.IO() != null) {
 //            device.IO().close();
 //        }
+
         try {
             device.Bind(null);
         } catch (DeviceNotReadyException e) {
