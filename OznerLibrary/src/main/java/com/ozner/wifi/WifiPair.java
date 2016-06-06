@@ -337,6 +337,7 @@ public class WifiPair {
         private void doRegister(AylaDevice device)
         {
             //callback.onActivateDevice();
+            device.registrationType=AylaNetworks.AML_REGISTRATION_TYPE_AP_MODE;
             dbg.d("start registerNewDevice");
             device.registerNewDevice(new Handler()
             {

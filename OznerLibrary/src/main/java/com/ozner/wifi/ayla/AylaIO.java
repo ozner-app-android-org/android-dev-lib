@@ -46,6 +46,7 @@ public class AylaIO extends BaseDeviceIO {
 
     public AylaIO(Context context, final AylaDevice device) {
         super(context, device.model);
+
         String mac = device.mac.toUpperCase();
         address = mac.substring(0, 2) + ":" +
                 mac.substring(2, 4) + ":" +
