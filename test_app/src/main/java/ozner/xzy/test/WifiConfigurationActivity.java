@@ -95,14 +95,14 @@ public class WifiConfigurationActivity extends Activity {
         } catch (WifiPair.NullSSIDException e) {
             e.printStackTrace();
         }
-        MXChipIO io = OznerDeviceManager.Instance().ioManagerList().mxChipIOManager().
-                createMXChipDevice("C8:93:46:43:D2:DC", "FOG_HAOZE_AIR");
-        io.name="Water";
-        try {
-            OznerDeviceManager.Instance().save(OznerDeviceManager.Instance().getDevice(io));
-        } catch (NotSupportDeviceException e) {
-            e.printStackTrace();
-        }
+//        MXChipIO io = OznerDeviceManager.Instance().ioManagerList().mxChipIOManager().
+//                createMXChipDevice("C8:93:46:43:D2:DC", "FOG_HAOZE_AIR");
+//        io.name="Water";
+//        try {
+//            OznerDeviceManager.Instance().save(OznerDeviceManager.Instance().getDevice(io));
+//        } catch (NotSupportDeviceException e) {
+//            e.printStackTrace();
+//        }
 
     }
 

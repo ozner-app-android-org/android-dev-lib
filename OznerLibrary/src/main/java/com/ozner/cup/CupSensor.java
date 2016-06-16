@@ -40,7 +40,7 @@ public class CupSensor {
      */
     public float getPower() {
         if (BatteryFix >= 3000) {
-            float ret = BatteryFix - 3000f / (4200f - 3000f);
+            float ret = (BatteryFix - 3000f) / (4200f - 3000f);
             if (ret > 100)
                 ret = 100;
             return ret;

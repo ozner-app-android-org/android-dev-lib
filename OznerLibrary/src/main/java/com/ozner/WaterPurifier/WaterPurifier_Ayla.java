@@ -54,10 +54,15 @@ public class WaterPurifier_Ayla extends WaterPurifier {
             newIO.setOnTransmissionsCallback(waterPurifierImp);
             newIO.registerStatusCallback(waterPurifierImp);
             newIO.setOnInitCallback(waterPurifierImp);
+            if (newIO.isReady())
+            {
+                waterPurifierImp.onReady(newIO);
+            }
         }else
         {
             cancelTimer();
         }
+
         super.doSetDeviceIO(oldIO, newIO);
     }
     private String getProperty(String name)
