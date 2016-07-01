@@ -109,7 +109,13 @@ public class WifiPair {
     /**
      *   其它用户拥有这个设备
      */
-    public static class AylaOtherUserException extends Exception {}
+    public static class AylaOtherUserException extends Exception {
+        AylaOtherUserException(String message)
+        {
+            super(message);
+        }
+
+    }
     public static class AylaException extends Exception{
         public AylaException(String message)
         {
@@ -352,7 +358,7 @@ public class WifiPair {
                         doComplete(io);
                     }else
                     {
-                        doPairFailure(new AylaOtherUserException());
+                        doPairFailure(new AylaOtherUserException(msg.toString()));
                     }
                     super.handleMessage(msg);
                 }

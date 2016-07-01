@@ -16,6 +16,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 
@@ -183,22 +184,29 @@ public class MXChipIOManager extends IOManager {
 
         @Override
         public void onConnected(MQTTProxy proxy) {
+            ArrayList<String> list;
             synchronized (listenDeviceList) {
-                for (String address:listenDeviceList.keySet()) {
-                    MXChipIO io=new MXChipIO(context(),proxy,address,listenDeviceList.get(address));
-                    doAvailable(io);
-                }
+                list = new ArrayList<>(listenDeviceList.keySet());
             }
+
+            for (String address:list) {
+                MXChipIO io=new MXChipIO(context(),proxy,address,listenDeviceList.get(address));
+                doAvailable(io);
+            }
+
         }
 
         @Override
         public void onDisconnected(MQTTProxy proxy) {
+            ArrayList<String> list;
             synchronized (listenDeviceList) {
-                for (String address:listenDeviceList.keySet()) {
-                    BaseDeviceIO io=getAvailableDevice(address);
-                    if (io!=null)
-                        doUnavailable(io);
-                }
+                list = new ArrayList<>(listenDeviceList.keySet());
+            }
+
+            for (String address:list) {
+                MXChipIO io=new MXChipIO(context(),proxy,address,listenDeviceList.get(address));
+                if (io!=null)
+                doUnavailable(io);
             }
         }
 
