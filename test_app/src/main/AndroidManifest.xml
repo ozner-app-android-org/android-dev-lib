@@ -11,6 +11,10 @@
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature android:name="android.hardware.camera.autofocus" />
 
     <application
         android:name=".OznerApplication"
@@ -98,9 +102,13 @@
         <!-- <meta-data android:name="api_key" android:value="CfvxzUbG1cvy07v9rn7gGSoF" /> -->
         <!-- <meta-data android:name="api_key" android:value="UWZclXF9LYTiQEQIvVuDMmi1" /> -->
 
-        <service android:name="com.aylanetworks.aaml.AylaExecuteRequest"></service>
+        <service android:name="com.aylanetworks.aaml.AylaExecuteRequest" />
 
-        <activity android:name=".UIActivity"></activity>
+        <activity android:name=".UIActivity" />
+
+        <activity android:name=".qcode.QCodeActivity"
+            android:screenOrientation="portrait"
+            ></activity>
     </application>
 
 </manifest>

@@ -64,7 +64,7 @@ public class OznerDeviceManager extends XObject {
         return ioManagerList;
     }
 
-
+    public DeviceManagerList deviceManagers() {return mManagers;}
     /**
      * 获取用户对应的表名
      */

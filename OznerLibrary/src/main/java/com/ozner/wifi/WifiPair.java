@@ -155,6 +155,7 @@ public class WifiPair {
 
     private void doPairFailure(Exception ex)
     {
+
         callback.onPairFailure(ex);
         stop();
     }

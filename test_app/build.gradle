@@ -13,7 +13,7 @@ android {
     buildToolsVersion '23.0.2'
     defaultConfig {
         applicationId "ozner.xzy.test"
-        minSdkVersion 18
+        minSdkVersion 19
         targetSdkVersion 22
         versionCode 1
         versionName "1.0"
@@ -27,6 +27,8 @@ android {
             signingConfig signingConfigs.config
         }
     }
+    productFlavors {
+    }
 }
 
 dependencies {
@@ -38,4 +40,5 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.3.0'
     compile 'com.getbase:floatingactionbutton:1.10.1'
     compile project(':xzy_ui_lib')
+    compile project(':com.google.zxing')
 }

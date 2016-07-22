@@ -28,6 +28,8 @@ import com.ozner.device.OznerDeviceManager;
 import com.ozner.tap.Tap;
 import com.ozner.ui.library.RoundDrawable;
 
+import ozner.xzy.test.qcode.QCodeActivity;
+
 public class MainActivity extends ActionBarActivity implements View.OnClickListener, AdapterView.OnItemClickListener {
     private static final int WifiActivityRequestCode = 0x100;
     final Monitor mMonitor = new Monitor();
@@ -172,6 +174,9 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         load();
+
+
+
     }
 
     @Override
@@ -196,9 +201,13 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
                 break;
             }
             case R.id.addUIButton: {
-                Intent intent = new Intent(this, UIActivity.class);
-                startActivityForResult(intent, 0);
+                Intent intent = new Intent(this, QCodeActivity.class);
+                startActivityForResult(intent, 999);
+                //intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
                 break;
+                //Intent intent = new Intent(this, UIActivity.class);
+                //startActivityForResult(intent, 0);
+                //break;
             }
         }
     }

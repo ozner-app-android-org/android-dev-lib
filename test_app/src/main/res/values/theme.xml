@@ -11,10 +11,10 @@
 
     <style name="BaseTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowBackground">@color/backgoundColor</item>
-        <item name="android:textColorPrimary">@color/textColor</item>
+        <!--<item name="android:textColorPrimary">@color/textColor</item>-->
     </style>
 
-    <style name="ActionBar" parent="Widget.AppCompat.ActionBar">
+    <style name="ActionBar" parent="Widget.AppCompat.Light.ActionBar">
         <item name="android:background">@color/ActionBarColor</item>
         <item name="android:height">56dp</item>
         <item name="android:minHeight">56dp</item>

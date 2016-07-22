@@ -107,6 +107,7 @@ public class AylaIOManager extends IOManager {
                 }else
                 {
                     if (msg.obj!=null) {
+
                         dbg.e("AylaError:%d Msg:%s",msg.what,msg.obj.toString());
                     }
                 }
