@@ -43,6 +43,10 @@ public class AylaIO extends BaseDeviceIO {
             super.handleMessage(msg);
         }
     };
+    public String DSN()
+    {
+        return aylaDevice.dsn;
+    }
 
     public AylaIO(Context context, final AylaDevice device) {
         super(context, device.model);
