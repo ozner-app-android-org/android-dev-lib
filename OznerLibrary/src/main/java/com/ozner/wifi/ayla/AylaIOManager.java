@@ -8,6 +8,7 @@ import android.os.Looper;
 import android.os.Message;
 
 import com.alibaba.fastjson.JSONObject;
+import com.aylanetworks.aaml.AylaCache;
 import com.aylanetworks.aaml.AylaDevice;
 import com.aylanetworks.aaml.AylaDeviceManager;
 import com.aylanetworks.aaml.AylaHost;
@@ -76,6 +77,7 @@ public class AylaIOManager extends IOManager {
     }
     @Override
     public void Start(String user,String token) {
+        AylaCache.clearAll();
         AylaUser.ssoLogin(new Handler(){
             @Override
             public void handleMessage(Message msg) {
@@ -83,7 +85,7 @@ public class AylaIOManager extends IOManager {
                 {
                     String jsonResults=msg.obj.toString();
                     AylaUser aylaUser = AylaSystemUtils.gson.fromJson(jsonResults,  AylaUser.class);
-                    aylaUser = AylaUser.setCurrent(aylaUser);
+                    AylaUser.setCurrent(aylaUser);
                     dbg.i("AylaSSO Complete");
                     AylaDevice.getDevices(new Handler()
                     {
