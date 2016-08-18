@@ -54,10 +54,6 @@ public class WaterPurifier_Ayla extends WaterPurifier {
             newIO.setOnTransmissionsCallback(waterPurifierImp);
             newIO.registerStatusCallback(waterPurifierImp);
             newIO.setOnInitCallback(waterPurifierImp);
-            if (newIO.isReady())
-            {
-                waterPurifierImp.onReady(newIO);
-            }
         }else
         {
             cancelTimer();
@@ -242,6 +238,9 @@ public class WaterPurifier_Ayla extends WaterPurifier {
         @Override
         public void onReady(BaseDeviceIO io) {
             setOffline(false);
+            info.MainBoard=getProperty("version");
+            loadAylaStatus(getProperty("Status"));
+
             if (getRunningMode() == XObject.RunningMode.Foreground)
             {
                 startTimer();

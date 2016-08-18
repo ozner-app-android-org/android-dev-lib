@@ -71,6 +71,7 @@ public abstract class BaseDeviceIO extends XObject {
                 return null;
         }
     }
+
     /**
      * 异步方法
      *
@@ -145,6 +146,10 @@ public abstract class BaseDeviceIO extends XObject {
                 e.printStackTrace();
             }
         }
+    }
+    public void reCallDoReadly()
+    {
+        doReady();
     }
 
     public void registerStatusCallback(StatusCallback callback) {
