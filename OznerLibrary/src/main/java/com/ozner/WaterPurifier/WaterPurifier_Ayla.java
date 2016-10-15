@@ -54,9 +54,6 @@ public class WaterPurifier_Ayla extends WaterPurifier {
             newIO.setOnTransmissionsCallback(waterPurifierImp);
             newIO.registerStatusCallback(waterPurifierImp);
             newIO.setOnInitCallback(waterPurifierImp);
-        }else
-        {
-            cancelTimer();
         }
 
         super.doSetDeviceIO(oldIO, newIO);
@@ -162,7 +159,8 @@ public class WaterPurifier_Ayla extends WaterPurifier {
 
     int requestCount =0;
 
-    private void updateStatus(OperateCallback<Void> cb) {
+    @Override
+    protected void updateStatus(OperateCallback<Void> cb) {
         if (IO() == null) {
             if (cb != null)
                 cb.onFailure(null);
@@ -176,11 +174,6 @@ public class WaterPurifier_Ayla extends WaterPurifier {
         }
     }
 
-    @Override
-    protected void doTime() {
-        updateStatus(null);
-        super.doTime();
-    }
     private void loadAylaStatus(String value)
     {
         try {
@@ -201,24 +194,7 @@ public class WaterPurifier_Ayla extends WaterPurifier {
             e.printStackTrace();
         }
     }
-    @Override
-    protected void doChangeRunningMode() {
-        if (getRunningMode() == XObject.RunningMode.Foreground) {
-            updateStatus(null);
-            if (IO()!=null)
-            {
-                if (IO().connectStatus()== BaseDeviceIO.ConnectStatus.Connected)
-                {
-                    startTimer();
-                }
-            }
-        }else
-        {
-            cancelTimer();
-        }
 
-        super.doChangeRunningMode();
-    }
 
     class WaterPurifierImp implements
             BaseDeviceIO.OnTransmissionsCallback,
@@ -240,11 +216,6 @@ public class WaterPurifier_Ayla extends WaterPurifier {
             setOffline(false);
             info.MainBoard=getProperty("version");
             loadAylaStatus(getProperty("Status"));
-
-            if (getRunningMode() == XObject.RunningMode.Foreground)
-            {
-                startTimer();
-            }
         }
 
 

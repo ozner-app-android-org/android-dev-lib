@@ -6,7 +6,6 @@ import android.os.Handler;
 import android.os.Looper;
 
 import com.ozner.bluetooth.BluetoothIO;
-import com.ozner.device.AutoUpdateClass;
 import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.OperateCallback;
 import com.ozner.device.OznerDevice;
@@ -52,7 +51,7 @@ public class MusicCap extends OznerDevice {
 
     public enum TestParts {Face,Hand,Eye,Other}
 
-    final MusicCapIMP musicCapIMP = new MusicCapIMP(defaultAutoUpdatePeriod);
+    final MusicCapIMP musicCapIMP = new MusicCapIMP();
     SportRecordList mRecordList;
     final Status status = new Status();
     MusicCapFirmwareTools firmwareTools = new MusicCapFirmwareTools();
@@ -98,7 +97,6 @@ public class MusicCap extends OznerDevice {
             oldIO.setCheckTransmissionsCompleteCallback(null);
             firmwareTools.bind(null);
         }
-        musicCapIMP.stop();
         if (newIO != null) {
             newIO.setOnTransmissionsCallback(musicCapIMP);
             newIO.setOnInitCallback(musicCapIMP);
@@ -187,6 +185,12 @@ public class MusicCap extends OznerDevice {
 
 
     }
+
+    @Override
+    protected void doTimer() {
+        musicCapIMP.doTime();
+    }
+
     public boolean autoTest(boolean auto)
     {
         return true;
@@ -208,7 +212,7 @@ public class MusicCap extends OznerDevice {
 ////        }
 //        return false;
 //    }
-    private class MusicCapIMP extends AutoUpdateClass implements
+    private class MusicCapIMP  implements
             BaseDeviceIO.StatusCallback,
             BaseDeviceIO.OnInitCallback,
             BaseDeviceIO.OnTransmissionsCallback,
@@ -220,12 +224,9 @@ public class MusicCap extends OznerDevice {
         final ArrayList<RawRecord> mRawRecords = new ArrayList<>();
 
 
-        public MusicCapIMP(long period) {
-            super(period);
-        }
 
-        @Override
-        protected void doTime() {
+
+        public void doTime() {
             if (IO() == null) return;
             if (mLastDataTime != null) {
                 //如果上几次接收饮水记录的时间小于2秒,不进入定时循环,等待下条饮水记录
@@ -387,16 +388,12 @@ public class MusicCap extends OznerDevice {
         @Override
         public void onDisconnected(BaseDeviceIO io) {
             status.reset();
-            stop();
         }
 
         @Override
         public void onReady(BaseDeviceIO io) {
             status.reset();
             requestStatus();
-            if (getRunningMode() == RunningMode.Foreground) {
-                start(100);
-            }
 
         }
 

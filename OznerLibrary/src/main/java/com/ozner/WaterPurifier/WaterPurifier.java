@@ -22,11 +22,12 @@ import java.util.TimerTask;
  */
 public abstract class WaterPurifier extends OznerDevice {
     public static final String ACTION_WATER_PURIFIER_STATUS_CHANGE = "com.ozner.water.purifier.statusPacket.change";
+    private static final int defaultAutoUpdatePeriod=5000;
+
     final Sensor sensor=new Sensor();
     final Status status=new Status();
     protected final WaterPurifierInfo info=new WaterPurifierInfo();
     boolean isOffline = true;
-    Timer autoUpdateTimer = null;
 
 
     public WaterPurifier(Context context, String Address, String Type, String Setting) {
@@ -139,6 +140,8 @@ public abstract class WaterPurifier extends OznerDevice {
     }
     public WaterPurifierInfo info() {return info;}
 
+    protected abstract void updateStatus(OperateCallback<Void> cb) ;
+
 
     @Override
     public String toString() {
@@ -148,6 +151,11 @@ public abstract class WaterPurifier extends OznerDevice {
         }else {
             return String.format("Status:%s\nSensor:%s",status.toString(),sensor.toString());
         }
+    }
+
+    @Override
+    public int getTimerDelay() {
+        return defaultAutoUpdatePeriod;
     }
 
     @Override
@@ -177,45 +185,56 @@ public abstract class WaterPurifier extends OznerDevice {
             doUpdate();
         }
     }
-    protected void doTime()
-    {
 
+    @Override
+    protected void doTimer() {
+        updateStatus(null);
     }
 
-    protected void startTimer()
-    {
-        if (autoUpdateTimer != null)
-            cancelTimer();
-        autoUpdateTimer = new Timer();
-        autoUpdateTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                doTime();
-            }
-        }, 100, 5000);
-    }
 
-    protected void cancelTimer() {
-        if (autoUpdateTimer != null) {
-            autoUpdateTimer.cancel();
-            autoUpdateTimer.purge();
-            autoUpdateTimer = null;
-        }
-    }
 
     protected abstract int getTDS1();
     protected abstract int getTDS2();
 
-    protected abstract boolean getPower();
-    protected abstract void setPower(boolean Power, OperateCallback<Void> cb);
+    protected boolean getPower()
+    {
+        return true;
+    }
 
-    protected abstract boolean getHot();
-    protected abstract void setHot(boolean Hot, OperateCallback<Void> cb);
+    protected void setPower(boolean Power, OperateCallback<Void> cb)
+    {
+        cb.onFailure(new UnsupportedOperationException());
+    }
 
-    protected abstract boolean getCool();
-    protected abstract void setCool(boolean Cool, OperateCallback<Void> cb);
 
-    protected abstract boolean getSterilization();
-    protected abstract void setSterilization(boolean Sterilization, OperateCallback<Void> cb);
+    protected boolean getHot(){
+        return false;
+    }
+    protected void setHot(boolean Hot, OperateCallback<Void> cb)
+    {
+        cb.onFailure(new UnsupportedOperationException());
+    }
+
+
+    protected boolean getCool()
+    {
+        return false;
+    }
+
+    protected void setCool(boolean Cool, OperateCallback<Void> cb)
+    {
+        cb.onFailure(new UnsupportedOperationException());
+    }
+
+
+    protected boolean getSterilization()
+    {
+        return false;
+    }
+
+    protected void setSterilization(boolean Sterilization, OperateCallback<Void> cb)
+    {
+        cb.onFailure(new UnsupportedOperationException());
+    }
 
 }

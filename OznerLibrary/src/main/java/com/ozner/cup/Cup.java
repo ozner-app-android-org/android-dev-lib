@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.text.format.Time;
 
 import com.ozner.bluetooth.BluetoothIO;
-import com.ozner.device.AutoUpdateClass;
 import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.DeviceSetting;
 import com.ozner.device.OznerDevice;
@@ -56,7 +55,7 @@ public class Cup extends OznerDevice {
 
     final CupSensor mSensor = new CupSensor();
     final CupFirmwareTools firmwareTools = new CupFirmwareTools();
-    final CupImp cupIMP = new CupImp(defaultAutoUpdatePeriod);
+    final CupImp cupIMP = new CupImp();
     CupRecordList mCupRecordList;
 
 
@@ -64,6 +63,11 @@ public class Cup extends OznerDevice {
         super(context, Address, Type, Setting);
         initSetting(Setting);
         mCupRecordList = new CupRecordList(context, Address);
+    }
+
+    @Override
+    public int getTimerDelay() {
+        return defaultAutoUpdatePeriod;
     }
 
     @Override
@@ -112,7 +116,6 @@ public class Cup extends OznerDevice {
             oldIO.setCheckTransmissionsCompleteCallback(null);
             firmwareTools.bind(null);
         }
-        cupIMP.stop();
         if (newIO != null) {
             newIO.setOnTransmissionsCallback(cupIMP);
             newIO.setOnInitCallback(cupIMP);
@@ -185,8 +188,12 @@ public class Cup extends OznerDevice {
 
     }
 
+    @Override
+    protected void doTimer() {
+        cupIMP.doTime();
+    }
 
-    class CupImp extends AutoUpdateClass implements
+    class CupImp implements
             BluetoothIO.OnInitCallback,
             BluetoothIO.OnTransmissionsCallback,
             BluetoothIO.StatusCallback,
@@ -196,9 +203,6 @@ public class Cup extends OznerDevice {
         HashSet<String> dataHash = new HashSet<>();
         final ArrayList<RawRecord> mRawRecords = new ArrayList<>();
 
-        public CupImp(long period) {
-            super(period);
-        }
         private boolean sendReadInfo()
         {
             dbg.i("获取设备信息:%s", IO().getAddress());
@@ -269,17 +273,12 @@ public class Cup extends OznerDevice {
 
         @Override
         public void onDisconnected(BaseDeviceIO io) {
-            stop();
             Sensor().reset();
         }
 
         @Override
         public void onReady(BaseDeviceIO io) {
-            if (getRunningMode() == RunningMode.Foreground) {
-                start(100);
-            } else {
-                requestRecord();
-            }
+            requestRecord();
         }
 
 
@@ -410,8 +409,7 @@ public class Cup extends OznerDevice {
                 return true;
         }
 
-        @Override
-        protected void doTime() {
+        public void doTime() {
             if (IO() == null) return;
             if (mLastDataTime != null) {
                 //如果上几次接收饮水记录的时间小于2秒,不进入定时循环,等待下条饮水记录

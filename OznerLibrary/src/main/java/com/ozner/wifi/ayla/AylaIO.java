@@ -48,6 +48,21 @@ public class AylaIO extends BaseDeviceIO {
         return aylaDevice.dsn;
     }
 
+    public void testOwner(Handler mHandle)
+    {
+        aylaDevice.getProperties(mHandle);
+ /*
+        new Handler() {
+            @Override
+            public void handleMessage(Message msg){
+            if ((msg.what != AylaNetworks.AML_ERROR_OK) && (msg.arg1==404))
+                //处理代码
+            }
+        }
+         */
+    }
+
+
     public AylaIO(Context context, final AylaDevice device) {
         super(context, device.model);
         //device.registrationType=AylaNetworks.AML_REGISTRATION_TYPE_AP_MODE;
@@ -227,6 +242,8 @@ public class AylaIO extends BaseDeviceIO {
         }else
             return null;
     }
+
+
     @Override
     public void close() {
 

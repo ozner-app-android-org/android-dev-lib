@@ -23,6 +23,7 @@ public abstract class BaseDeviceIO extends XObject {
      * 设备连接并初始化完成事件
      */
     public final static String ACTION_DEVICE_CONNECTED = "com.ozner.device.connected";
+
     /**
      * 设备连接断开事件
      */

@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.text.format.Time;
 
 import com.ozner.bluetooth.BluetoothIO;
-import com.ozner.device.AutoUpdateClass;
 import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.DeviceSetting;
 import com.ozner.device.OznerDevice;
@@ -61,7 +60,7 @@ public class Tap extends OznerDevice {
     final TapRecordList mTapRecordList;
 
 
-    final TapIMP tapIMP = new TapIMP(defaultAutoUpdatePeriod);
+    final TapIMP tapIMP = new TapIMP();
 
     TapFirmwareTools firmwareTools = new TapFirmwareTools();
 
@@ -70,6 +69,11 @@ public class Tap extends OznerDevice {
         super(context, Address, Type, Setting);
         initSetting(Setting);
         mTapRecordList = new TapRecordList(context, Address());
+    }
+
+    @Override
+    public int getTimerDelay() {
+        return defaultAutoUpdatePeriod;
     }
 
     /**
@@ -164,7 +168,6 @@ public class Tap extends OznerDevice {
             oldIO.setCheckTransmissionsCompleteCallback(null);
             firmwareTools.bind(null);
         }
-        tapIMP.stop();
         if (newIO != null) {
             newIO.setOnTransmissionsCallback(tapIMP);
             newIO.setOnInitCallback(tapIMP);
@@ -174,7 +177,10 @@ public class Tap extends OznerDevice {
         }
     }
 
-
+    @Override
+    protected void doTimer() {
+        tapIMP.doTime();
+    }
 
     @Override
     public String toString() {
@@ -186,7 +192,7 @@ public class Tap extends OznerDevice {
             return connectStatus().toString();
         }
     }
-    class TapIMP extends AutoUpdateClass implements
+    class TapIMP  implements
             BluetoothIO.OnInitCallback,
             BluetoothIO.OnTransmissionsCallback,
             BluetoothIO.StatusCallback,
@@ -284,9 +290,6 @@ public class Tap extends OznerDevice {
         }
 
 
-        public TapIMP(long period) {
-            super(period);
-        }
 
         @Override
         public void onConnected(BaseDeviceIO io) {
@@ -295,12 +298,11 @@ public class Tap extends OznerDevice {
 
         @Override
         public void onDisconnected(BaseDeviceIO io) {
-            stop();
+
         }
 
         @Override
         public void onReady(BaseDeviceIO io) {
-            start(100);
         }
 
         @Override
@@ -403,8 +405,8 @@ public class Tap extends OznerDevice {
         }
 
 
-        @Override
-        protected void doTime() {
+
+        public void doTime() {
             if (mLastDataTime != null) {
                 //如果上几次接收饮水记录的时间小于1秒,不进入定时循环,等待下条饮水记录
                 Date dt = new Date();

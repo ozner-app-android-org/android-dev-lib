@@ -29,5 +29,5 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.alibaba:fastjson:1.2.11'
     compile 'org.fusesource.mqtt-client:mqtt-client:1.13'
-    compile project(':Android_AylaLibrary_Public-release')
+    compile project(':aylaLibrary')
 }

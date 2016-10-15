@@ -2,31 +2,40 @@ package com.ozner.bluetooth;
 
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothAdapter.LeScanCallback;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanRecord;
+import android.bluetooth.le.ScanResult;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.ParcelUuid;
+import android.util.SparseArray;
 
 import com.ozner.XObject;
+import com.ozner.util.ByteUtil;
 import com.ozner.util.Helper;
 import com.ozner.util.dbg;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
 
 @SuppressLint("NewApi")
-public class BluetoothScan extends XObject implements LeScanCallback, Runnable {
-    public static final String Extra_Address = "Address";
-    public static final String Extra_Model = "getType";
-    public static final String Extra_Firmware = "getFirmware";
-    public static final String Extra_Platform = "Platform";
-    public static final String Extra_ScanResponseType = "CustomType";
-    public static final String Extra_ScanResponseData = "ScanResponseData";
+public class BluetoothScan extends XObject {
+
+    final short Service_UUID = (short)0xFFF0;
+
+    public static final String Extra_Service_Data="ble_service_data";
+    public static final String Extra_Manufacturer_Specific ="ble_manufacturer_specific";
     public static final String Extra_RSSI = "RSSI";
-    //public static final String Extra_DataAvailable = "DataAvailable";
+    public static final String Extra_Address = "Address";
+    final static byte GAP_ADTYPE_MANUFACTURER_SPECIFIC = (byte) 0xff;
+    final static byte GAP_ADTYPE_SERVICE_DATA = 0x16;
 
     /**
      * 扫描开始广播,无附加数据
@@ -43,87 +52,33 @@ public class BluetoothScan extends XObject implements LeScanCallback, Runnable {
      */
     public final static String ACTION_SCANNER_FOUND = "com.ozner.bluetooth.scanner.found";
 
-
-    //
-    final static byte AD_CustomType_Gravity = 0x1;
-    final static byte GAP_ADTYPE_MANUFACTURER_SPECIFIC = (byte) 0xff;
-    final static byte GAP_ADTYPE_SERVICE_DATA = 0x16;
     final static int FrontPeriod = 500;
     final static int BackgroundPeriod = 5000;
-    BluetoothScanCallback scanCallback = null;
+
     Context mContext;
     BluetoothMonitor mMonitor;
     boolean isScanning = false;
     int scanPeriod = FrontPeriod;
-    HashMap<String, FoundDevice> mFoundDevice = new HashMap<>();
+    final HashMap<String, FoundDevice> mFoundDevice = new HashMap<>();
     private Thread scanThread;
-    private boolean isBackground = false;
 
+    ScanRunnableIMP scanRunnableIMP =new ScanRunnableIMP();
     public BluetoothScan(Context context) {
         super(context);
         mContext = context;
         mMonitor = new BluetoothMonitor();
         IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
         mContext.registerReceiver(mMonitor, filter);
+
     }
-
-    public BluetoothScanCallback getScanCallback() {
-        return scanCallback;
-    }
-
-    public void setScanCallback(BluetoothScanCallback scanCallback) {
-        this.scanCallback = scanCallback;
-    }
-
-    public void run() {
-        BluetoothManager bluetoothManager = (BluetoothManager) mContext
-                .getSystemService(Context.BLUETOOTH_SERVICE);
-        BluetoothAdapter adapter = bluetoothManager.getAdapter();
-        if (adapter == null) return;
-        try {
-
-            while (isScanning) {
-                if (adapter.isEnabled()) {
-                    synchronized (BluetoothSynchronizedObject.getLockObject()) {
-                        synchronized (mFoundDevice) {
-                            mFoundDevice.clear();
-                        }
-                        if (adapter.getState() == BluetoothAdapter.STATE_OFF) {
-                            Thread.sleep(1000);
-                            continue;
-                        }
-                        adapter.startLeScan(this);
-                        Thread.sleep(scanPeriod);
-                        adapter.stopLeScan(this);
-                        //dbg.i("扫描结束");
-                    }
-                }
-                Thread.sleep(scanPeriod);
-                synchronized (mFoundDevice) {
-                    if (mFoundDevice.size() > 0) {
-                        for (FoundDevice found : mFoundDevice.values()) {
-                            //if (BluetoothSynchronizedObject.hashBluetoothBusy())
-                            //    break;
-                            onFound(found.device, found.rssi, found.scanRecord);
-                        }
-                    }
-                }
-            }
-        } catch (InterruptedException ex) {
-            ex.printStackTrace();
-        } finally {
-            adapter.stopLeScan(this);
-        }
-    }
-
     public void StartScan() {
-        if (isRuning())
+        if (isRunning())
             return;
 
         if (scanThread != null) {
             scanThread.interrupt();
         }
-        scanThread = new Thread(this);
+        scanThread = new Thread(scanRunnableIMP);
         scanThread.setName(this.getClass().getName());
         isScanning = true;
         scanThread.start();
@@ -135,10 +90,121 @@ public class BluetoothScan extends XObject implements LeScanCallback, Runnable {
             scanThread.interrupt();
             scanThread = null;
         }
+    }
+    private class ScanRunnableIMP implements Runnable,BluetoothAdapter.LeScanCallback
+    {
+        @Override
+        public void run() {
+            BluetoothManager bluetoothManager = (BluetoothManager) mContext
+                    .getSystemService(Context.BLUETOOTH_SERVICE);
+            BluetoothAdapter adapter = bluetoothManager.getAdapter();
+            if (adapter == null) return;
+            try {
 
+                while (isScanning) {
+                    if (adapter.isEnabled()) {
+                        synchronized (BluetoothSynchronizedObject.getLockObject()) {
+                            synchronized (mFoundDevice) {
+                                mFoundDevice.clear();
+                            }
+                            if (adapter.getState() == BluetoothAdapter.STATE_OFF) {
+                                Thread.sleep(1000);
+                                continue;
+                            }
+                            adapter.startLeScan(this);
+                            Thread.sleep(scanPeriod);
+                            adapter.stopLeScan(this);
+                            //dbg.i("扫描结束");
+                        }
+                    }
+                    Thread.sleep(scanPeriod);
+                    synchronized (mFoundDevice) {
+                        if (mFoundDevice.size() > 0) {
+                            for (FoundDevice found : mFoundDevice.values()) {
+                                doFoundDevice(found);
+                            }
+                        }
+                    }
+                }
+            } catch (InterruptedException ex) {
+                ex.printStackTrace();
+            } finally {
+                adapter.stopLeScan(this);
+            }
+        }
+
+        @Override
+        public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
+            synchronized (mFoundDevice) {
+                if (mFoundDevice.containsKey(device.getAddress())) {
+                    mFoundDevice.remove(device.getAddress());
+                }
+                FoundDevice found = new FoundDevice();
+                found.device = device;
+                found.rssi = rssi;
+                found.scanRecord = scanRecord;
+                mFoundDevice.put(device.getAddress(), found);
+            }
+        }
     }
 
-    public boolean isRuning() {
+
+    private void doFoundDevice(FoundDevice found)
+    {
+        if (Helper.StringIsNullOrEmpty(found.device.getName())) return;
+        if (found.scanRecord == null) return;
+        String address = found.device.getAddress();
+        byte[] manufacturer_specific=null;
+        byte[] service_data=null;
+        byte[] scanRecord=found.scanRecord;
+        int pos=0;
+        while (pos<scanRecord.length) {
+            try {
+                int len = scanRecord[pos++];
+                if (len > 0) {
+                    byte flag = scanRecord[pos];
+                    if (len > 1) {
+                        switch (flag)
+                        {
+                            case GAP_ADTYPE_MANUFACTURER_SPECIFIC:
+                                manufacturer_specific = Arrays.copyOfRange(scanRecord,
+                                        pos+1 , pos + len-1);
+                                break;
+                            case GAP_ADTYPE_SERVICE_DATA:
+                            {
+                                int uuid= (short)(scanRecord[pos+2]<<16)+scanRecord[pos+1];
+                                if (uuid==Service_UUID)
+                                {
+                                    service_data = Arrays.copyOfRange(scanRecord, pos + 3, pos + len-1);
+                                }
+                            }
+                            break;
+                        }
+
+                    }
+                }
+                pos += len;
+                if (pos >= scanRecord.length)
+                    break;
+            } catch (Exception e) {
+                dbg.e(e.toString());
+                return;
+            }
+        }
+
+
+        Intent intent = new Intent(ACTION_SCANNER_FOUND);
+        intent.putExtra(Extra_Address, address);
+        intent.putExtra(Extra_RSSI, found.rssi);
+        intent.putExtra(Extra_Manufacturer_Specific,manufacturer_specific);
+        intent.putExtra(Extra_Service_Data,service_data);
+        mContext.sendBroadcast(intent);
+    }
+
+
+
+
+    public boolean isRunning() {
         return scanThread != null && scanThread.isAlive();
     }
 
@@ -152,71 +218,6 @@ public class BluetoothScan extends XObject implements LeScanCallback, Runnable {
         }
     }
 
-    private void onFound(BluetoothDevice device, int rssi, byte[] scanRecord) {
-        String address = device.getAddress();
-        BluetoothScanRep rep = new BluetoothScanRep();
-        if (scanRecord == null) return;
-        if (Helper.StringIsNullOrEmpty(device.getName())) return;
-        int pos = 0;
-        while (true) {
-            try {
-                int len = scanRecord[pos];
-                pos++;
-                if (len > 0) {
-                    byte flag = scanRecord[pos];
-                    if (len > 1) {
-                        if (flag == GAP_ADTYPE_MANUFACTURER_SPECIFIC) {
-                            //dbg.d("send GAP_ADTYPE_MANUFACTURER_SPECIFIC:%s",
-                            //		device.getAddress());
-                            // 老固件水杯兼容
-                            byte[] data = null;
-                            try {
-                                data = Arrays.copyOfRange(scanRecord,
-                                        pos + 1, pos + len);
-                            } catch (Exception e) {
-                                dbg.e(e.toString());
-                            }
-                            if (device.getName().equals("Ozner Cup")) {
-                                rep.Model = "CP001";
-                                rep.Platform = "C01";
-                                rep.ScanResponseData = data;
-                                //rep.Available = true;
-                                rep.ScanResponseType = AD_CustomType_Gravity;
-                            }
-                        }
-
-                        if (flag == GAP_ADTYPE_SERVICE_DATA) {
-                            byte[] data = Arrays.copyOfRange(scanRecord, pos + 1, pos + len);
-                            //BluetoothScanRep rep = new BluetoothScanRep();
-                            rep.FromBytes(data);
-                        }
-                    }
-                }
-                pos += len;
-                if (pos >= scanRecord.length)
-                    break;
-            } catch (Exception e) {
-                dbg.e(e.toString());
-                return;
-            }
-        }
-        if (scanCallback != null) {
-            scanCallback.onFoundDevice(device, rep);
-        }
-
-        Intent intent = new Intent(ACTION_SCANNER_FOUND);
-        intent.putExtra(Extra_Address, address);
-        intent.putExtra(Extra_Model, rep.Model);
-        intent.putExtra(Extra_Platform, rep.Platform);
-        intent.putExtra(Extra_RSSI, rssi);
-        if (rep.Firmware != null)
-            intent.putExtra(Extra_Firmware, rep.Firmware.getTime());
-        intent.putExtra(Extra_ScanResponseType, rep.ScanResponseType);
-        intent.putExtra(Extra_ScanResponseData, rep.ScanResponseData);
-
-        //intent.putExtra(Extra_DataAvailable, rep.Available);
-        mContext.sendBroadcast(intent);
-    }
 
     public BluetoothDevice getDevice(String address) {
         BluetoothManager bluetoothManager = (BluetoothManager) mContext
@@ -225,31 +226,12 @@ public class BluetoothScan extends XObject implements LeScanCallback, Runnable {
         return adapter.getRemoteDevice(address);
     }
 
-    @Override
-    public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-        synchronized (mFoundDevice) {
-            if (mFoundDevice.containsKey(device.getAddress())) {
-                mFoundDevice.remove(device.getAddress());
-            }
-            FoundDevice found = new FoundDevice();
-            found.device = device;
-            found.rssi = rssi;
-            found.scanRecord = scanRecord;
-            mFoundDevice.put(device.getAddress(), found);
-        }
 
-
-    }
-
-    public interface BluetoothScanCallback {
-        void onFoundDevice(BluetoothDevice device, BluetoothScanRep scanRep);
-    }
 
     /**
      * 用来接收系统蓝牙开关信息,打开开启自动扫描,关闭就关掉
      */
     class BluetoothMonitor extends BroadcastReceiver {
-        @SuppressWarnings("deprecation")
         public void onReceive(Context context, Intent intent) {
             if (BluetoothAdapter.ACTION_STATE_CHANGED
                     .equals(intent.getAction())) {

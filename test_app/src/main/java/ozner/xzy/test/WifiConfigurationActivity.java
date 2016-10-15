@@ -55,6 +55,17 @@ public class WifiConfigurationActivity extends Activity {
     }
 
     @Override
+    protected void onStop() {
+        try {
+            this.unregisterReceiver(monitor);
+        }catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        super.onStop();
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_wifi_configuration);
@@ -111,7 +122,7 @@ public class WifiConfigurationActivity extends Activity {
         if (wifiInfo != null) {
             if (wifiInfo.getSupplicantState() == SupplicantState.COMPLETED) {
                 String ssid = wifiInfo.getSSID().replace("\"", "");
-                if (AylaIOManager.isAylaSSID(ssid)) return;
+                if (WifiPair.isAylaSSID(ssid)) return;
                 wifi_ssid.setText(ssid);
                 String pwd = wifiPreferences.getString("password." + ssid, "");
                 wifi_passwd.setText(pwd);

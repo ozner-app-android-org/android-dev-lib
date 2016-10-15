@@ -47,13 +47,19 @@ public class OznerDeviceManager extends XObject {
             throw new InstantiationException();
         }
         instance = this;
-        mManagers = new DeviceManagerList(context);
         sqLiteDB = new SQLiteDB(context);
         //导入老表
         importOldDB();
         ioManagerList = new IOManagerList(context);
-        ioManagerList.setIoManagerCallback(ioManagerCallbackImp);
 
+        ioManagerList.setIoManagerCallback(ioManagerCallbackImp);
+        mManagers = new DeviceManagerList(context);
+
+
+    }
+    public void stop()
+    {
+        ioManagerList().Stop();
     }
 
     public static OznerDeviceManager Instance() {

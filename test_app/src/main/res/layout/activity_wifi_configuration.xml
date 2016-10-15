@@ -125,24 +125,35 @@
         </RelativeLayout>
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/statusText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
         android:layout_alignParentBottom="true"
-        android:layout_marginBottom="15dp"
-        android:text=""
-        android:textSize="15sp" />
+        android:layout_height="150dp">
+        <TextView
+            android:id="@+id/statusText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="15dp"
+            android:text=""
+            android:textSize="15sp" />
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <com.dd.CircularProgressButton
+                android:id="@+id/NextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentRight="true"
+                android:layout_marginBottom="5dp"
+                android:layout_marginTop="10dp"
+                app:cpb_textComplete="下一步"
+                app:cpb_textError="重试"
+                app:cpb_textIdle="开始配网" />
+        </RelativeLayout>
 
-    <com.dd.CircularProgressButton
-        android:id="@+id/NextButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:layout_marginBottom="5dp"
-        android:layout_marginTop="10dp"
-        app:cpb_textComplete="下一步"
-        app:cpb_textError="重试"
-        app:cpb_textIdle="开始配网" />
+    </LinearLayout>
+
 </RelativeLayout>

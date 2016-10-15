@@ -6,7 +6,6 @@ import android.os.Looper;
 import android.os.Message;
 
 import com.ozner.bluetooth.BluetoothIO;
-import com.ozner.device.AutoUpdateClass;
 import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.DeviceSetting;
 import com.ozner.device.OperateCallback;
@@ -34,7 +33,7 @@ public class WaterReplenishmentMeter extends OznerDevice {
 
     public enum TestParts {Face, Hand, Eye, Other}
 
-    final WaterReplenishmentMeterIMP waterReplenishmentMeterIMP = new WaterReplenishmentMeterIMP(defaultAutoUpdatePeriod);
+    final WaterReplenishmentMeterIMP waterReplenishmentMeterIMP = new WaterReplenishmentMeterIMP();
 
     final Status status = new Status();
     WaterReplenishmentMeterFirmwareTools firmwareTools = new WaterReplenishmentMeterFirmwareTools();
@@ -57,6 +56,10 @@ public class WaterReplenishmentMeter extends OznerDevice {
         super(context, Address, Type, Setting);
     }
 
+    @Override
+    public int getTimerDelay() {
+        return defaultAutoUpdatePeriod;
+    }
 
     @Override
     protected String getDefaultName() {
@@ -77,7 +80,6 @@ public class WaterReplenishmentMeter extends OznerDevice {
             oldIO.setCheckTransmissionsCompleteCallback(null);
             firmwareTools.bind(null);
         }
-        waterReplenishmentMeterIMP.stop();
         if (newIO != null) {
             newIO.setOnTransmissionsCallback(waterReplenishmentMeterIMP);
             newIO.setOnInitCallback(waterReplenishmentMeterIMP);
@@ -297,19 +299,18 @@ public class WaterReplenishmentMeter extends OznerDevice {
 
     }
 
+    @Override
+    protected void doTimer() {
+        waterReplenishmentMeterIMP.doTime();
+    }
 
-    private class WaterReplenishmentMeterIMP extends AutoUpdateClass implements
+    private class WaterReplenishmentMeterIMP implements
             BaseDeviceIO.StatusCallback,
             BaseDeviceIO.OnInitCallback,
             BaseDeviceIO.OnTransmissionsCallback,
             BaseDeviceIO.CheckTransmissionsCompleteCallback {
 
-        public WaterReplenishmentMeterIMP(long period) {
-            super(period);
-        }
-
-        @Override
-        protected void doTime() {
+        public void doTime() {
             if (IO() == null) return;
             requestStatus();
         }
@@ -410,16 +411,13 @@ public class WaterReplenishmentMeter extends OznerDevice {
         @Override
         public void onDisconnected(BaseDeviceIO io) {
             status.reset();
-            stop();
         }
 
         @Override
         public void onReady(BaseDeviceIO io) {
             status.reset();
             requestStatus();
-            if (getRunningMode() == RunningMode.Foreground) {
-                start(100);
-            }
+
 
         }
 

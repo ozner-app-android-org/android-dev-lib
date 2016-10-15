@@ -77,31 +77,11 @@ public class WaterPurifier_MXChip extends WaterPurifier {
             io.setOnTransmissionsCallback(waterPurifierImp);
             io.registerStatusCallback(waterPurifierImp);
             io.setOnInitCallback(waterPurifierImp);
-        }else
-        {
-            cancelTimer();
         }
         super.doSetDeviceIO(oldIO,newIO);
     }
 
-    @Override
-    protected void doChangeRunningMode() {
-        if (getRunningMode() == XObject.RunningMode.Foreground) {
-            updateStatus(null);
-            if (IO()!=null)
-            {
-                if (IO().connectStatus()== BaseDeviceIO.ConnectStatus.Connected)
-                {
-                    startTimer();
-                }
-            }
-        }else
-        {
-            cancelTimer();
-        }
 
-        super.doChangeRunningMode();
-    }
 
 
 
@@ -131,7 +111,8 @@ public class WaterPurifier_MXChip extends WaterPurifier {
 
     int requestCount =0;
 
-    private void updateStatus(OperateCallback<Void> cb) {
+    @Override
+    protected void updateStatus(OperateCallback<Void> cb) {
         if (IO() == null) {
             if (cb != null)
                 cb.onFailure(null);
@@ -213,11 +194,7 @@ public class WaterPurifier_MXChip extends WaterPurifier {
         setStatusPacket(cb);
     }
 
-    @Override
-    protected void doTime() {
-        updateStatus(null);
-        super.doTime();
-    }
+
 
     class WaterPurifierImp implements
             BaseDeviceIO.OnTransmissionsCallback,
@@ -237,10 +214,6 @@ public class WaterPurifier_MXChip extends WaterPurifier {
         @Override
         public void onReady(BaseDeviceIO io) {
             updateStatus(null);
-            if (getRunningMode() == XObject.RunningMode.Foreground)
-            {
-                startTimer();
-            }
         }
 
 

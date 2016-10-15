@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import com.ozner.device.AutoUpdateClass;
 import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.DeviceSetting;
 import com.ozner.device.OperateCallback;
@@ -56,7 +55,10 @@ public class AirPurifier_MXChip extends AirPurifier {
     public static final int ErrorValue = 0xffff;
     private static final int Timeout=2000;
     private static String SecureCode = "580c2783";
-    final AirPurifierImp airPurifierImp = new AirPurifierImp(defaultAutoUpdatePeriod);
+    //private static String SecureCode = "16a21bd6";
+
+
+    final AirPurifierImp airPurifierImp = new AirPurifierImp();
     final HashMap<Byte, byte[]> property = new HashMap<>();
     final PowerTimer powerTimer = new PowerTimer();
     final FilterStatus filterStatus = new FilterStatus();
@@ -79,6 +81,12 @@ public class AirPurifier_MXChip extends AirPurifier {
         String json = Setting().get("powerTimer", "").toString();
         powerTimer.fromJSON(json);
     }
+
+    @Override
+    public int getTimerDelay() {
+        return defaultAutoUpdatePeriod;
+    }
+
     /**
      * 设备型号
      *
@@ -189,7 +197,6 @@ public class AirPurifier_MXChip extends AirPurifier {
             io.setOnInitCallback(airPurifierImp);
         }else
         {
-            airPurifierImp.stop();
             setOffline(true);
         }
     }
@@ -464,16 +471,17 @@ public class AirPurifier_MXChip extends AirPurifier {
         }
     }
 
-    class AirPurifierImp extends AutoUpdateClass implements
+    @Override
+    protected void doTimer() {
+        airPurifierImp.doTime();
+    }
+
+    class AirPurifierImp implements
             BaseDeviceIO.OnTransmissionsCallback,
             BaseDeviceIO.StatusCallback,
             BaseDeviceIO.OnInitCallback {
 
-        private boolean Respone=false;
 
-        public AirPurifierImp(long period) {
-            super(period);
-        }
 
         @Override
         public void onConnected(BaseDeviceIO io) {
@@ -482,6 +490,11 @@ public class AirPurifier_MXChip extends AirPurifier {
 
         @Override
         public void onDisconnected(BaseDeviceIO io) {
+        }
+
+        @Override
+        public void onReady(BaseDeviceIO io) {
+
         }
 
         private void setNowTime() {
@@ -546,15 +559,10 @@ public class AirPurifier_MXChip extends AirPurifier {
                 return false;
             }
         }
-        @Override
-        public void onReady(BaseDeviceIO io) {
-            if (getRunningMode() == RunningMode.Foreground) {
-                start(1000);
-            }
-        }
 
-        @Override
-        protected void doTime() {
+
+
+        public void doTime() {
             HashSet<Byte> list = new HashSet<>();
             list.add(PROPERTY_FILTER);
             list.add(PROPERTY_PM25);
@@ -568,7 +576,6 @@ public class AirPurifier_MXChip extends AirPurifier {
             list.add(PROPERTY_LOCK);
             list.add(PROPERTY_WIFI);
             list.add(PROPERTY_TOTAL_CLEAN);
-
             requestProperty(list, null);
         }
 
@@ -687,7 +694,6 @@ public class AirPurifier_MXChip extends AirPurifier {
 
                             }
                         }
-                        Respone = true;
                         setObject();
                         break;
                 }

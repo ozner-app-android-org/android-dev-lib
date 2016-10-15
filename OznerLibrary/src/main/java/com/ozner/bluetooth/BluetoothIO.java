@@ -171,9 +171,9 @@ public class BluetoothIO extends BaseDeviceIO {
         final static int MSG_SendData = 0x1000;
         final static int MSG_Runnable = 0x2000;
         private static final int ServiceId = 0xFFF0;
-        final UUID Characteristic_Input = GetUUID(0xFFF2);
-        final UUID Characteristic_Output = GetUUID(0xFFF1);
-        final UUID GATT_CLIENT_CHAR_CFG_UUID = GetUUID(0x2902);
+        final UUID Characteristic_Input = BluetoothHelper.GetUUID(0xFFF2);
+        final UUID Characteristic_Output = BluetoothHelper.GetUUID(0xFFF1);
+        final UUID GATT_CLIENT_CHAR_CFG_UUID = BluetoothHelper.GetUUID(0x2902);
 
         Thread thread = null;
         BluetoothGattCharacteristic mInput = null;
@@ -186,11 +186,6 @@ public class BluetoothIO extends BaseDeviceIO {
         private int connectionState = BluetoothGatt.STATE_DISCONNECTED;
         private int lastStatus = BluetoothGatt.GATT_FAILURE;
 
-        private UUID GetUUID(int id) {
-
-            return UUID.fromString(String.format(
-                    "%1$08x-0000-1000-8000-00805f9b34fb", id));
-        }
 
 
         private boolean checkStatus() {
@@ -220,7 +215,7 @@ public class BluetoothIO extends BaseDeviceIO {
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             super.onServicesDiscovered(gatt, status);
             lastStatus = status;
-            mService = gatt.getService(GetUUID(ServiceId));
+            mService = gatt.getService(BluetoothHelper.GetUUID(ServiceId));
             if (mService != null) {
                 mInput = mService.getCharacteristic(Characteristic_Input);
                 mOutput = mService.getCharacteristic(Characteristic_Output);

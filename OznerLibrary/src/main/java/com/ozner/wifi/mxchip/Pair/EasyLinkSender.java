@@ -3,6 +3,8 @@
  */
 package com.ozner.wifi.mxchip.Pair;
 
+import com.aylanetworks.aaml.AylaNetworks;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -174,6 +176,7 @@ public class EasyLinkSender {
             ssid = SSID.getBytes("UTF-8");
             user_info = new byte[5];
             user_info[0] = 0x23;
+
             String strIP = String.format("%08x", ipAddress);
             System.arraycopy(Helper.hexStringToBytes(strIP), 0, user_info, 1, 4);
             int broadcatIp = 0xFF000000 | ipAddress;
