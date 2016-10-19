@@ -60,7 +60,7 @@ public class WaterPurifierManager extends BaseDeviceManager {
 
     @Override
     protected OznerDevice createDevice(String address, String type, String settings) {
-        if (type.trim().equals("MXCHIP_HAOZE_Water1"))
+        if (type.trim().equals("MXCHIP_HAOZE_Water") || (type.trim().equals("16a21bd6")))
         {
             WaterPurifier waterPurifier = new WaterPurifier_MXChip(context(), address, type, settings);
             OznerDeviceManager.Instance().ioManagerList().mxChipIOManager()

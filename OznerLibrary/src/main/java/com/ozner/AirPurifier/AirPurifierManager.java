@@ -73,6 +73,10 @@ public class AirPurifierManager extends BaseDeviceManager {
         {
             return true;
         }else
+            if (Type.trim().equals("580c2783"))
+            {
+                return true;
+            }
             return false;
     }
 

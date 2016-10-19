@@ -278,6 +278,14 @@ public class WifiPair {
                                     tmp.substring(6, 8) + ":" +
                                     tmp.substring(8, 10) + ":" +
                                     tmp.substring(10, 12);
+
+                            String type=device.activeDeviceID.substring(0,p);
+                            if (Helper.StringIsNullOrEmpty(type))
+                            {
+                                doPairFailure(new UnknownException());
+                                return;
+                            }
+                            device.Type=type;
                             MXChipIO io = OznerDeviceManager.Instance().ioManagerList().mxChipIOManager().
                                     createMXChipDevice(mac, device.Type);
                             if (io != null) {
@@ -304,6 +312,21 @@ public class WifiPair {
                 String deviceId = ActiveDevice();
                 if (Helper.StringIsNullOrEmpty(deviceId)) {
                     doPairFailure(new UnknownException());
+                    return;
+                }
+                int p=deviceId.indexOf('/');
+                if (p<0)
+                {
+                    doPairFailure(new UnknownException());
+                }else
+                {
+                    String type=deviceId.substring(0,p);
+                    if (Helper.StringIsNullOrEmpty(type))
+                    {
+                        doPairFailure(new UnknownException());
+                        return;
+                    }
+                    device.Type=type;
                 }
                 //Authorize();
 //                if (Helper.StringIsNullOrEmpty(deviceId)) {
