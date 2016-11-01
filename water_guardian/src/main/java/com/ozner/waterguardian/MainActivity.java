@@ -373,12 +373,12 @@ public class MainActivity extends AppCompatActivity implements
             }
         }
 
-        private void writeFilter(int fl_check, int fl_time, int fl_max_time, int fl_max_vol) {
+        private void writeFilter(int index,int fl_check, int fl_time, int fl_max_time, int fl_max_vol) {
             SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             //判断是否要设置这个滤芯
             if (((CheckBox) findViewById(fl_check)).isChecked()) {
                 FilterInfo filterInfo = new FilterInfo();
-                filterInfo.index = 0;
+                filterInfo.index = (byte)index;
                 try {
                     Date time = fmt.parse(((Button) findViewById(fl_time)).getText().toString());
                     filterInfo.time = (int) (time.getTime() / 1000);
@@ -415,11 +415,11 @@ public class MainActivity extends AppCompatActivity implements
                 toast.show();
                 return;
             }
-            writeFilter(R.id.fl1_check, R.id.fl1_time, R.id.fl1_work_time, R.id.fl1_max_time);
-            writeFilter(R.id.fl2_check, R.id.fl2_time, R.id.fl2_work_time, R.id.fl2_max_time);
-            writeFilter(R.id.fl3_check, R.id.fl3_time, R.id.fl3_work_time, R.id.fl3_max_time);
-            writeFilter(R.id.fl4_check, R.id.fl4_time, R.id.fl4_work_time, R.id.fl4_max_time);
-            writeFilter(R.id.fl5_check, R.id.fl5_time, R.id.fl5_work_time, R.id.fl5_max_time);
+            writeFilter(0,R.id.fl1_check, R.id.fl1_time, R.id.fl1_max_time, R.id.fl1_max_vol);
+            writeFilter(1,R.id.fl2_check, R.id.fl2_time, R.id.fl2_max_time, R.id.fl2_max_vol);
+            writeFilter(2,R.id.fl3_check, R.id.fl3_time, R.id.fl3_max_time, R.id.fl3_max_vol);
+            writeFilter(3,R.id.fl4_check, R.id.fl4_time, R.id.fl4_max_time, R.id.fl4_max_vol);
+            writeFilter(4,R.id.fl5_check, R.id.fl5_time, R.id.fl5_max_time, R.id.fl5_max_vol);
         }
 
         private void readSensor() {

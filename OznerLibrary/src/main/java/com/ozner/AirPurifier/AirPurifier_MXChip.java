@@ -22,6 +22,7 @@ import java.util.HashSet;
  * Created by xzyxd on 2015/11/2.
  */
 public class AirPurifier_MXChip extends AirPurifier {
+    private static final String Tag="AirPurifier";
     private static final int defaultAutoUpdatePeriod=5000;
     public static final byte CMD_SET_PROPERTY=(byte)0x2;
     public static final byte CMD_REQUEST_PROPERTY=(byte)0x1;
@@ -219,7 +220,10 @@ public class AirPurifier_MXChip extends AirPurifier {
         for (Byte id : propertys) {
             bytes[p] = id;
             p++;
+            Log.i(Tag,String.format("request property:%02x",id));
         }
+
+
         airPurifierImp.send(bytes, cb);
     }
 
@@ -243,13 +247,13 @@ public class AirPurifier_MXChip extends AirPurifier {
         {
             @Override
             public void onSuccess(Void var1) {
-                try {
-                    Thread.sleep(200);
-
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                airPurifierImp.doTime();
+//                try {
+//                    Thread.sleep(200);
+//
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//                airPurifierImp.doTime();
                 super.onSuccess(var1);
             }
         });
@@ -339,6 +343,15 @@ public class AirPurifier_MXChip extends AirPurifier {
         filterStatus.stopTime = calendar.getTime();
         filterStatus.maxWorkTime = 129600; //60 * 1000;
         setProperty(PROPERTY_FILTER, filterStatus.toBytes(), cb);
+    }
+    private void dbgBytes(String text,byte[] bytes)
+    {
+        String hex=text;
+        for (byte b : bytes)
+        {
+            hex+=String.format("%02x ",b);
+        }
+        Log.i(Tag,hex);
     }
 
     public class AirStatus {
@@ -473,6 +486,7 @@ public class AirPurifier_MXChip extends AirPurifier {
 
     @Override
     protected void doTimer() {
+        Log.i(Tag,"doTime");
         airPurifierImp.doTime();
     }
 
@@ -549,6 +563,7 @@ public class AirPurifier_MXChip extends AirPurifier {
                     list.add(PROPERTY_VERSION);
                     requestProperty(list, null);
                     waitObject(Timeout);
+                    Log.i(Tag,"OnInit Complete");
 
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -563,6 +578,7 @@ public class AirPurifier_MXChip extends AirPurifier {
 
 
         public void doTime() {
+            Log.i(Tag,"doTime Begin");
             HashSet<Byte> list = new HashSet<>();
             list.add(PROPERTY_FILTER);
             list.add(PROPERTY_PM25);
@@ -577,10 +593,12 @@ public class AirPurifier_MXChip extends AirPurifier {
             list.add(PROPERTY_WIFI);
             list.add(PROPERTY_TOTAL_CLEAN);
             requestProperty(list, null);
+            Log.i(Tag,"doTime End");
         }
 
         @Override
         public void onIOSend(byte[] bytes) {
+            dbgBytes("send:",bytes);
 
         }
 
@@ -593,6 +611,8 @@ public class AirPurifier_MXChip extends AirPurifier {
                 {
                     setOffline(true);
                 }
+
+
                 //Respone=false;
                 return IO().send(data, cb);
             }else
@@ -604,6 +624,8 @@ public class AirPurifier_MXChip extends AirPurifier {
             if ((bytes == null) || (bytes.length <= 0)) {
                 return;
             }
+            dbgBytes("recv:",bytes);
+
             reqeustCount=0;
             setOffline(false);
             try {
@@ -614,9 +636,12 @@ public class AirPurifier_MXChip extends AirPurifier {
                 switch (cmd) {
                     case CMD_RECV_PROPERTY:
                         int count = bytes[12];
+                        Log.i(Tag,String.format("recv property count:%d",count));
+
                         int p = 13;
                         HashMap<Byte, byte[]> set = new HashMap<>();
                         for (int i = 0; i < count; i++) {
+                            if (p>=bytes.length) break;
                             byte id = bytes[p];
                             p++;
 
@@ -629,7 +654,10 @@ public class AirPurifier_MXChip extends AirPurifier {
                             if (p + size > bytes.length) return;
 
                             System.arraycopy(bytes, p, data, 0, size);
+
+                            dbgBytes(String.format("property id:%02x size:%d ",id,(byte)size),data);
                             p += size;
+
                             set.put(id, data);
                         }
                         synchronized (property) {

@@ -41,6 +41,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
@@ -309,7 +310,19 @@ public class WifiPair {
                 }
                 callback.onActivateDevice();
 
-                String deviceId = ActiveDevice();
+                String deviceId = "";
+                errorCount=0;
+                while(errorCount<3) {
+                    try {
+                        deviceId = ActiveDevice();
+                    } catch (FileNotFoundException fe) {
+                        Thread.sleep(1000);
+                        errorCount++;
+                        continue;
+                    }
+                    break;
+                }
+
                 if (Helper.StringIsNullOrEmpty(deviceId)) {
                     doPairFailure(new UnknownException());
                     return;
@@ -556,11 +569,11 @@ public class WifiPair {
 
         @Override
         public void run() {
-            /*if (AylaUser.getCurrent().getAccessToken()==null)
+            if (AylaUser.getCurrent().getAccessToken()==null)
             {
                 callback.onPairFailure(new AylaException("not login"));
                 return;
-            }*/
+            }
             callback.onStartPairAyla();
 
             AylaSetup.returnHostScanForNewDevices(new Handler()
@@ -613,13 +626,13 @@ public class WifiPair {
             doPairFailure(new TimeoutException());
             return;
         }
-//        if ((runPairCount % 3)==0)
-//        {
-//            runHandler.post(new MXChipPairImp());
-//        }else
-//        {
-//            runHandler.post(new AylaPairImp());
-//        }
+        /*if ((runPairCount % 3)==0)
+        {
+            runHandler.post(new MXChipPairImp());
+        }else
+        {
+            runHandler.post(new AylaPairImp());
+        }*/
         runHandler.post(new MXChipPairImp());
         runPairCount++;
 

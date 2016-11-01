@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merger version="3"><dataSet config="main"><source path="/Users/zhiyongxu/Desktop/android-dev-lib/aylaLibrary/src/main/shaders"/></dataSet><dataSet config="release"><source path="/Users/zhiyongxu/Desktop/android-dev-lib/aylaLibrary/src/release/shaders"/></dataSet></merger>

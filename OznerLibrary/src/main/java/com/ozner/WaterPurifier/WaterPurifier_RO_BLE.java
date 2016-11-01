@@ -27,6 +27,9 @@ public class WaterPurifier_RO_BLE extends WaterPurifier {
     private static final byte opCode_respone_setting=(byte)0x21;
     private static final byte opCode_respone_water=(byte)0x22;
     private static final byte opCode_respone_filter=(byte)0x23;
+    private static final byte opCode_respone_filterHis1=(byte)0x11;
+    private static final byte opCode_respone_filterHis2=(byte)0x12;
+
 
 
     private static final byte param_request_settinginfo=1;
@@ -291,6 +294,10 @@ public class WaterPurifier_RO_BLE extends WaterPurifier {
                 case opCode_respone_filter:
                     filterInfo.fromBytes(data);
                     break;
+                case opCode_respone_filterHis1:
+                    break;
+                case opCode_respone_filterHis2:
+                    break;
             }
             doUpdate();
         }
@@ -308,18 +315,36 @@ public class WaterPurifier_RO_BLE extends WaterPurifier {
         @Override
         public void onReady(BaseDeviceIO io) {
             requestSettingInfo();
+
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            requestFilterHisInfo();
+
         }
 
 
     }
 
+    /**
+     * 返回是否允许滤芯重置
+     * @return
+     */
+    public boolean isEnableFilterReset()
+    {
+        return true;
+    }
 
-
+    /**
+     * 重置滤芯时间
+     * @return
+     */
+    public boolean resetFilter()
+    {
+        return false;
+    }
 
     public static BluetoothScanResponse parseScanResp(String name,byte[] Service_Data)
     {
