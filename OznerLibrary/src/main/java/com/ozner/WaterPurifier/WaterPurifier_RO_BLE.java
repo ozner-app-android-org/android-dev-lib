@@ -83,7 +83,10 @@ public class WaterPurifier_RO_BLE extends WaterPurifier {
         public int TDS1_RAW;
         public int TDS2_RAW;
         public int TDS_Temperature;
-
+        /**
+         * 过滤水量
+         */
+        public int FilterVolume;
         public void fromBytes(byte[] bytes)
         {
             this.TDS1= ByteUtil.getShort(bytes,0);
@@ -91,11 +94,12 @@ public class WaterPurifier_RO_BLE extends WaterPurifier {
             this.TDS1_RAW= ByteUtil.getShort(bytes,4);
             this.TDS2_RAW= ByteUtil.getShort(bytes,6);
             this.TDS_Temperature= ByteUtil.getShort(bytes,8);
+            this.FilterVolume= ByteUtil.getInt(bytes,10);
         }
 
         @Override
         public String toString() {
-            return String.format("TDS1:%d(%d) TDS2:%d(%d) 温度:%d",TDS1,TDS1_RAW,TDS2,TDS2_RAW,TDS_Temperature);
+            return String.format("TDS1:%d(%d) TDS2:%d(%d) 温度:%d 过滤水量:",TDS1,TDS1_RAW,TDS2,TDS2_RAW,TDS_Temperature,FilterVolume);
         }
     }
 
