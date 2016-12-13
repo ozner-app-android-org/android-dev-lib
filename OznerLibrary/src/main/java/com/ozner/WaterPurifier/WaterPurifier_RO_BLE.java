@@ -1,6 +1,7 @@
 package com.ozner.WaterPurifier;
 
 import android.content.Context;
+import android.text.format.Time;
 
 import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.bluetooth.BluetoothScanResponse;
@@ -24,11 +25,15 @@ public class WaterPurifier_RO_BLE extends WaterPurifier {
     private static final int defaultAutoUpdatePeriod=1000;
     private static final byte opCode_request_info=(byte)0x20;
     private static final byte opCode_reset=(byte)0xa0;
+    private static final byte opCode_set_setting=(byte)0x40;
+
     private static final byte opCode_respone_setting=(byte)0x21;
     private static final byte opCode_respone_water=(byte)0x22;
     private static final byte opCode_respone_filter=(byte)0x23;
     private static final byte opCode_respone_filterHis1=(byte)0x11;
     private static final byte opCode_respone_filterHis2=(byte)0x12;
+
+
 
 
 
@@ -157,7 +162,6 @@ public class WaterPurifier_RO_BLE extends WaterPurifier {
     @Override
     protected void updateStatus(OperateCallback<Void> cb) {
 
-
             if ((requestCount%2)==0)
             {
                 waterPurifierIMP.requestFilterInfo();
@@ -204,18 +208,48 @@ public class WaterPurifier_RO_BLE extends WaterPurifier {
         {
             if (IO() != null) {
                 byte[] bytes=new byte[3];
-                bytes[0]=0x20;
+                bytes[0]=opCode_request_info;
                 bytes[1]=1;
                 bytes[2]=calcSum(bytes,2);
                 IO().send(bytes);
                 dbg.i("请求设置信息");
             }
         }
+        public boolean updateSetting(int Ozone_Interval,int Ozone_WorkTime,boolean resetFilter)
+        {
+            if (IO()!=null) {
+                byte[] bytes = new byte[11];
+                bytes[0] = opCode_set_setting;
+                Time time = new Time();
+                time.setToNow();
+
+                bytes[1] = (byte) (time.year - 2000);
+                bytes[2] = (byte) (time.month + 1);
+                bytes[3] = (byte) time.monthDay;
+                bytes[4] = (byte) time.hour;
+                bytes[5] = (byte) time.minute;
+                bytes[6] = (byte) time.second;
+
+                bytes[7] = (byte) Ozone_Interval;
+                bytes[8] = (byte) Ozone_WorkTime;
+                if (resetFilter)
+                    bytes[9] = 1;
+                else
+                    bytes[9] = 0;
+
+                bytes[10] = calcSum(bytes, 9);
+                dbg.i("发送设置信息");
+                return IO().send(bytes);
+            }else
+                return false;
+
+        }
+
         private void requestWaterInfo()
         {
             if (IO() != null) {
                 byte[] bytes=new byte[3];
-                bytes[0]=0x20;
+                bytes[0]=opCode_request_info;
                 bytes[1]=2;
                 bytes[2]=calcSum(bytes,2);
                 IO().send(bytes);
@@ -227,24 +261,28 @@ public class WaterPurifier_RO_BLE extends WaterPurifier {
         {
             if (IO() != null) {
                 byte[] bytes=new byte[3];
-                bytes[0]=0x20;
+                bytes[0]=opCode_request_info;
                 bytes[1]=3;
                 bytes[2]=calcSum(bytes,2);
                 IO().send(bytes);
                 dbg.i("请求滤芯信息");
             }
         }
+
+
         private void requestFilterHisInfo()
         {
             if (IO() != null) {
                 byte[] bytes=new byte[3];
-                bytes[0]=0x20;
+                bytes[0]=opCode_request_info;
                 bytes[1]=4;
                 bytes[2]=calcSum(bytes,2);
                 IO().send(bytes);
                 dbg.i("请求滤芯历史信息");
             }
         }
+
+
         private void reset()
         {
             if (IO() != null) {
@@ -343,7 +381,10 @@ public class WaterPurifier_RO_BLE extends WaterPurifier {
      */
     public boolean resetFilter()
     {
-        return false;
+        if (settingInfo.Ozone_Interval<=0) return false;
+        if (settingInfo.Ozone_WorkTime<=0) return false;
+        return waterPurifierIMP.updateSetting(settingInfo.Ozone_Interval,settingInfo.Ozone_WorkTime,
+                true);
     }
 
     public static BluetoothScanResponse parseScanResp(String name,byte[] Service_Data)

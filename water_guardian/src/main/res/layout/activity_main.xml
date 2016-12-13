@@ -56,37 +56,42 @@
 
             </RelativeLayout>
 
-            <RelativeLayout
+            <LinearLayout
                 android:paddingLeft="@dimen/activity_horizontal_margin"
                 android:paddingRight="@dimen/activity_horizontal_margin"
+                android:orientation="horizontal"
                 android:layout_width="match_parent"
                 android:layout_height="60dp">
                 <Button
-                    android:layout_centerVertical="true"
-                    android:layout_alignParentLeft="true"
+                    android:layout_weight="1"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/readSensor"
                     android:text="读传感器"
                     />
                 <Button
-                    android:layout_centerInParent="true"
+                    android:layout_weight="1"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/readFilter"
                     android:text="读滤芯"
                     />
-
                 <Button
-                    android:layout_centerVertical="true"
-                    android:layout_alignParentRight="true"
+                    android:layout_weight="1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/otaButton"
+                    android:text="OTA"
+                    />
+                <Button
+                    android:layout_weight="1"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/disconnect"
                     android:text="断开"
                     />
 
-            </RelativeLayout>
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"

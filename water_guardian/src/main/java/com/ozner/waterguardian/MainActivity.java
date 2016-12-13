@@ -10,11 +10,14 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputEditText;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -31,9 +34,18 @@ import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.lang.reflect.Array;
+import java.nio.Buffer;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Date;
 import java.util.UUID;
 
@@ -44,7 +56,105 @@ public class MainActivity extends AppCompatActivity implements
     BluetoothManager bluetoothManager;
     BluetoothDevice blueDevice;
     TextView statusView;
+    BluetoothCallbackIMP bluetoothCallback = new BluetoothCallbackIMP();
+    BluetoothGatt bluetoothGatt;
     boolean isConnected = false;
+    byte[] firmware_bytes=null;
+    int firmware_checksum=0;
+    int firmware_size=0;
+    int firmware_send=0;
+    private void updateFirmware() {
+        if (!isConnected) {
+            Toast toast = Toast.makeText(MainActivity.this, "设备没有连接", Toast.LENGTH_SHORT);
+            toast.show();
+            return;
+        }
+        int REQUEST_EXTERNAL_STORAGE = 1;
+        String[] PERMISSIONS_STORAGE = {
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+        };
+        int permission = ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            // We don't have permission so prompt the user
+            ActivityCompat.requestPermissions(
+                    MainActivity.this,
+                    PERMISSIONS_STORAGE,
+                    REQUEST_EXTERNAL_STORAGE
+            );
+        }
+
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("*/*");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+
+        try {
+            startActivityForResult(
+                    Intent.createChooser(intent, "Select a File to Upload"),
+                    1111);
+
+        } catch (android.content.ActivityNotFoundException ex) {
+            Toast.makeText(this, "Please install a File Manager.",
+                    Toast.LENGTH_SHORT).show();
+        }
+    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == 1111) {
+            if (data != null) {
+                String path = GetPathFromUri4kitkat.getPath(this, data.getData());
+                Toast.makeText(this, path, Toast.LENGTH_LONG).show();
+                load_firmware(path);
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+
+    private void load_firmware(String path)
+    {
+        try {
+            firmware_send=0;
+            File file = new File(path);
+            int Size = (int) file.length();
+            if (Size > 127 * 1024){
+                Toast toast=new Toast(this);
+                toast.setDuration(Toast.LENGTH_SHORT);
+                toast.setText("文件太大");
+                toast.show();
+            }
+
+            if ((Size % 256) != 0) {
+                Size = (Size / 256) * 256 + 256;
+            }
+            byte[] bytes = new byte[Size];
+            Arrays.fill(bytes,(byte)0xff);
+            int sum=0;
+            FileInputStream fs = new FileInputStream(path);
+            try {
+
+                fs.read(bytes, 0, (int) file.length());
+                long temp = 0;
+                int len = Size / 4;
+                for (int i = 0; i < len; i++) {
+                    temp += ByteUtil.getUInt(bytes, i * 4);
+                }
+                long TempMask = 0x1FFFFFFFFL;
+                TempMask -= 0x100000000L;
+                sum = (int) (temp & TempMask);
+            } finally {
+                fs.close();
+            }
+            firmware_bytes=bytes;
+            firmware_checksum=sum;
+            firmware_size=Size;
+            bluetoothCallback.eraseMCU();
+        }catch (IOException e)
+        {
+            return;
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +187,8 @@ public class MainActivity extends AppCompatActivity implements
         findViewById(R.id.writeButton).setOnClickListener(this);
         findViewById(R.id.readFilter).setOnClickListener(this);
         findViewById(R.id.readSensor).setOnClickListener(this);
+        findViewById(R.id.otaButton).setOnClickListener(this);
+
         findViewById(R.id.disconnect).setOnClickListener(this);
 
 
@@ -174,6 +286,12 @@ public class MainActivity extends AppCompatActivity implements
                 }
                 blueDevice = null;
             }
+            break;
+            case  R.id.otaButton:
+            {
+                updateFirmware();
+            }
+            break;
         }
     }
 
@@ -259,8 +377,7 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    BluetoothCallbackIMP bluetoothCallback = new BluetoothCallbackIMP();
-    BluetoothGatt bluetoothGatt;
+
 
     void connectDevice(BluetoothDevice device) {
 
@@ -457,6 +574,18 @@ public class MainActivity extends AppCompatActivity implements
             }
             bluetoothGatt.writeCharacteristic(mInput);
         }
+        private void eraseMCU()
+        {
+            if (bluetoothGatt == null) return;
+            if (!isConnected) {
+                Toast toast = Toast.makeText(MainActivity.this, "设备没有连接", Toast.LENGTH_SHORT);
+                toast.show();
+                return;
+            }
+            updateStatusText("擦除mcu");
+            mInput.setValue(new byte[]{(byte)0xC2, 0});
+            bluetoothGatt.writeCharacteristic(mInput);
+        }
 
         private void loadFilter() {
             SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -506,6 +635,77 @@ public class MainActivity extends AppCompatActivity implements
 
                     }
             }
+        }
+
+        private void sendFirmware()
+        {
+            byte[] bytes=new byte[20];
+            int pg=firmware_send/16;
+            int size=firmware_size-firmware_send;
+            size=(size>=16?16:size);
+
+            bytes[0]=(byte)0xC1;
+            ByteUtil.putShort(bytes,(short)pg,1);
+            bytes[3]=(byte)size;
+            System.arraycopy(firmware_bytes,firmware_send,bytes,4,size);
+            mInput.setValue(bytes);
+            updateStatusText(String.format("发送固件:%d/%d",firmware_send,firmware_size));
+            bluetoothGatt.writeCharacteristic(mInput);
+        }
+        private void sendUpdate()
+        {
+            byte[] bytes=new byte[9];
+            bytes[0]=(byte)0xc3;
+            ByteUtil.putInt(bytes,firmware_size,1);
+            ByteUtil.putInt(bytes,firmware_checksum,5);
+            mInput.setValue(bytes);
+            updateStatusText(String.format("固件大小:%d,checksum:H%X",firmware_send,firmware_checksum));
+            bluetoothGatt.writeCharacteristic(mInput);
+        }
+        Handler delayHandler=new Handler();
+        @Override
+        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            if (status==0)
+            {
+                byte[] bytes=characteristic.getValue();
+                if (bytes.length>0) {
+                    switch (bytes[0]) {
+                        case (byte)0xC2:
+                        {
+
+                            delayHandler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    sendFirmware();
+                                }
+                            },1000);//擦除mcu ，1秒以后开发发送固件
+                        }
+                        break;
+                        case (byte)0xC1:
+                        {
+                            firmware_send += bytes[3];
+                            if (firmware_send < firmware_size) {
+                                sendFirmware();
+                            }else
+                            {
+                                delayHandler.postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        sendUpdate();
+                                    }
+                                },1000);//固件发送完成 ，1秒以后开始升级
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+            super.onCharacteristicWrite(gatt, characteristic, status);
+        }
+
+        @Override
+        public void onReliableWriteCompleted(BluetoothGatt gatt, int status) {
+            super.onReliableWriteCompleted(gatt, status);
         }
 
         int lastReadFilterIndex = 0;

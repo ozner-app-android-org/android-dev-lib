@@ -210,7 +210,6 @@ public class BluetoothIO extends BaseDeviceIO {
                 e.printStackTrace();
             }
         }
-
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             super.onServicesDiscovered(gatt, status);
