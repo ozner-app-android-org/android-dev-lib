@@ -16,6 +16,7 @@ import android.widget.TextView;
 
 import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.bluetooth.BluetoothScan;
+import com.ozner.bluetooth.BluetoothScanResponse;
 import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.NotSupportDeviceException;
 import com.ozner.device.OznerDevice;
@@ -25,6 +26,9 @@ import com.ozner.wifi.mxchip.Pair.Helper;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -33,7 +37,7 @@ public class AddDeviceActivity extends Activity {
     ListView list;
     ListAdapter adapter;
     Monitor mMonitor = new Monitor();
-    Timer scanTimer;
+    //Timer scanTimer;
 
     @Override
     protected void onDestroy() {
@@ -56,21 +60,21 @@ public class AddDeviceActivity extends Activity {
         adapter = new ListAdapter(this);
         list = (ListView) findViewById(R.id.deviceList);
         list.setAdapter(adapter);
-        scanTimer=new Timer();
-        scanTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                synchronized (OznerDeviceManager.Instance().ioManagerList().mxChipIOManager()) {
-                    OznerDeviceManager.Instance().ioManagerList().mxChipIOManager().startScan();
-                    try {
-                        Thread.sleep(5000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    OznerDeviceManager.Instance().ioManagerList().mxChipIOManager().stopScan();
-                }
-            }
-        },0,5000);
+//        scanTimer=new Timer();
+//        scanTimer.schedule(new TimerTask() {
+//            @Override
+//            public void run() {
+//                synchronized (OznerDeviceManager.Instance().ioManagerList().mxChipIOManager()) {
+//                    OznerDeviceManager.Instance().ioManagerList().mxChipIOManager().startScan();
+//                    try {
+//                        Thread.sleep(5000);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+//                    OznerDeviceManager.Instance().ioManagerList().mxChipIOManager().stopScan();
+//                }
+//            }
+//        },0,5000);
     }
 
     class Monitor extends BroadcastReceiver {
@@ -81,21 +85,66 @@ public class AddDeviceActivity extends Activity {
     }
 
     class ListAdapter extends BaseAdapter implements View.OnClickListener {
-        ArrayList<BaseDeviceIO> list = new ArrayList<>();
+        ArrayList<BluetoothIO> list = new ArrayList<>();
         Context mContext;
         LayoutInflater mInflater;
 
         public ListAdapter(Context context) {
             mContext = context;
             mInflater = LayoutInflater.from(context);
+
+
             this.Reload();
         }
 
         private void Reload() {
+
             list.clear();
             for (BaseDeviceIO device : OznerDeviceManager.Instance().getNotBindDevices()) {
-                list.add(device);
+                if (device instanceof BluetoothIO) {
+                    BluetoothIO bluetoothIO=(BluetoothIO)device;
+
+                    if (OznerDeviceManager.Instance().deviceManagers().airPurifierManager().checkIsBindMode(device))
+                    {
+                        list.add(bluetoothIO);
+                        continue;
+                    }
+
+                    if (OznerDeviceManager.Instance().deviceManagers().cupManager().checkIsBindMode(device))
+                    {
+                        list.add(bluetoothIO);
+                        continue;
+                    }
+
+                    if (OznerDeviceManager.Instance().deviceManagers().tapManager().checkIsBindMode(device))
+                    {
+                        list.add(bluetoothIO);
+                        continue;
+                    }
+
+                    if (OznerDeviceManager.Instance().deviceManagers().waterReplenishmentMeterMgr().checkIsBindMode(device))
+                    {
+                        list.add(bluetoothIO);
+                        continue;
+                    }
+
+                    if (OznerDeviceManager.Instance().deviceManagers().waterPurifierManager().checkIsBindMode(device))
+                    {
+                        list.add(bluetoothIO);
+                        continue;
+                    }
+
+                }
             }
+            Collections.sort(list, new Comparator<BluetoothIO>() {
+                @Override
+                public int compare(BluetoothIO lhs, BluetoothIO rhs) {
+                    BluetoothScanResponse r1= lhs.getScanResponse();
+                    BluetoothScanResponse r2= rhs.getScanResponse();
+                    if ((r1==null) || (r2==null)) return 0;
+                    return r2.lastRSSI.compareTo(r1.lastRSSI);
+                }
+            });
             this.notifyDataSetInvalidated();
         }
 

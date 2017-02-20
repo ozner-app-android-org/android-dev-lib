@@ -722,6 +722,7 @@ public class AirPurifier_MXChip extends AirPurifier {
 
                             }
                         }
+
                         setObject();
                         break;
                 }

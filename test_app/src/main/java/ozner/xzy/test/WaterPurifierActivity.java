@@ -13,10 +13,14 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.ozner.WaterPurifier.WaterPurifier;
+import com.ozner.WaterPurifier.WaterPurifier_RO_BLE;
+import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.device.BaseDeviceIO;
 import com.ozner.device.OperateCallback;
 import com.ozner.device.OznerDevice;
 import com.ozner.device.OznerDeviceManager;
+
+import java.util.Date;
 
 public class WaterPurifierActivity extends AppCompatActivity {
 
@@ -37,7 +41,23 @@ public class WaterPurifierActivity extends AppCompatActivity {
         findViewById(R.id.remove).setOnClickListener(controlImp);
         findViewById(R.id.hot).setOnClickListener(controlImp);
         findViewById(R.id.cool).setOnClickListener(controlImp);
+        findViewById(R.id.resetFilter).setOnClickListener(controlImp);
 
+
+        if (waterPurifier instanceof WaterPurifier_RO_BLE)
+        {
+            findViewById(R.id.cool).setEnabled(false);
+            findViewById(R.id.hot).setEnabled(false);
+            findViewById(R.id.power).setEnabled(false);
+            findViewById(R.id.resetFilter).setEnabled(true);
+        }
+        else
+        {
+            findViewById(R.id.resetFilter).setEnabled(false);
+            findViewById(R.id.cool).setEnabled(true);
+            findViewById(R.id.hot).setEnabled(true);
+            findViewById(R.id.power).setEnabled(true);
+        }
         sendStatus = (TextView) findViewById(R.id.sendStatus);
         loadStatus();
 
@@ -84,7 +104,14 @@ public class WaterPurifierActivity extends AppCompatActivity {
 
         setText(R.id.Model, "型号:"+waterPurifier.info().Model);
         setText(R.id.Type, "机型:"+waterPurifier.info().Type);
-
+        if (waterPurifier instanceof WaterPurifier_RO_BLE) {
+            WaterPurifier_RO_BLE ro=(WaterPurifier_RO_BLE)waterPurifier;
+            if (ro.IO()!=null)
+            {
+                BluetoothIO bluetoothIO=(BluetoothIO)ro.IO();
+                setText(R.id.Type, "固件版本:" + new Date(bluetoothIO.getFirmware()));
+            }
+        }
         setText(R.id.status, "设备状态:" + (waterPurifier.isOffline() ? "离线" : "在线"));
         setText(R.id.tds1, "TDS1:" + getValue(waterPurifier.sensor().TDS1()));
         setText(R.id.tds2, "TDS2:" + getValue(waterPurifier.sensor().TDS2()));
@@ -131,20 +158,34 @@ public class WaterPurifierActivity extends AppCompatActivity {
         public void onClick(View view) {
             switch (view.getId()) {
                 case R.id.power:
+                    if (waterPurifier instanceof WaterPurifier_RO_BLE) return;
+
                     sendStatus.setText("发送状态:正在发送");
                     waterPurifier.status().setPower(!waterPurifier.status().Power(), this);
                     break;
 
                 case R.id.cool:
+                    if (waterPurifier instanceof WaterPurifier_RO_BLE) return;
+
                     sendStatus.setText("发送状态:正在发送");
                     waterPurifier.status().setCool(!waterPurifier.status().Cool(), this);
                     break;
 
                 case R.id.hot:
+                    if (waterPurifier instanceof WaterPurifier_RO_BLE) return;
+
                     sendStatus.setText("发送状态:正在发送");
                     waterPurifier.status().setHot(!waterPurifier.status().Hot(), this);
                     break;
-
+                case R.id.resetFilter:
+                    sendStatus.setText("发送状态:正在发送");
+                    if (waterPurifier instanceof WaterPurifier_RO_BLE)
+                    {
+                        WaterPurifier_RO_BLE ro=(WaterPurifier_RO_BLE)waterPurifier;
+                        ro.resetFilter(this);
+                    }
+                    //waterPurifier.status().setHot(!waterPurifier..status().(), this);
+                    break;
                 case R.id.remove: {
                     new android.app.AlertDialog.Builder(WaterPurifierActivity.this).setTitle("删除").setMessage("是否要删除设备")
                             .setPositiveButton("是", new AlertDialog.OnClickListener() {

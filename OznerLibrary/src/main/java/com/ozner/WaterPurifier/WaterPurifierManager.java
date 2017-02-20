@@ -85,10 +85,13 @@ public class WaterPurifierManager extends BaseDeviceManager {
 
     @Override
     public boolean checkIsBindMode(BaseDeviceIO io) {
+
         if (io instanceof BluetoothIO)
         {
-            //检查是否在配对模式
-            return WaterPurifier_RO_BLE.isBindMode((BluetoothIO)io);
+            if (io.getType().equals("Ozner RO")) {
+                //检查是否在配对模式
+                return WaterPurifier_RO_BLE.isBindMode((BluetoothIO) io);
+            }
         }
         return super.checkIsBindMode(io);
     }

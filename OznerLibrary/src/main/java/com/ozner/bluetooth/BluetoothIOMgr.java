@@ -56,7 +56,8 @@ public class BluetoothIOMgr extends IOManager {
                             bluetoothIO = new BluetoothIO(context(), device, rs.Model, rs.Platform, rs.Firmware == null ? 0 : rs.Firmware.getTime());
                             bluetoothIO.name = device.getName();
                         }
-                        bluetoothIO.updateScanResponse(rs.ScanResponseType, rs.ScanResponseData);
+                        rs.lastRSSI=intent.getIntExtra(BluetoothScan.Extra_RSSI,0);
+                        bluetoothIO.updateScanResponse(rs);
                         doAvailable(bluetoothIO);
                     }
                 }catch (Exception e)

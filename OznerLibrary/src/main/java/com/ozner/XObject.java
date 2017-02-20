@@ -20,7 +20,12 @@ public abstract class XObject {
 
     public XObject(Context context) {
         this.context = context;
-        context.registerReceiver(statusMonitor, new IntentFilter(ACTION_RUNNING_MODE_CHANGE));
+        try {
+            context.registerReceiver(statusMonitor, new IntentFilter(ACTION_RUNNING_MODE_CHANGE));
+        }catch (Exception e)
+        {
+            e.printStackTrace();
+        }
     }
 
     /**
