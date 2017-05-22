@@ -6,6 +6,7 @@
 
     tools:context=".qcode.QCodeActivity">
 
+
     <SurfaceView android:id="@+id/preview_view"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"/>

@@ -632,11 +632,12 @@ public class WifiPair {
             doPairFailure(new TimeoutException());
             return;
         }
-        if ((runPairCount % 3) == 0) {
+        runHandler.post(new MXChipPairImp());
+        /*if ((runPairCount % 3) == 0) {
             runHandler.post(new MXChipPairImp());
         } else {
             runHandler.post(new AylaPairImp());
-        }
+        }*/
         //runHandler.post(new MXChipPairImp());
         runPairCount++;
 

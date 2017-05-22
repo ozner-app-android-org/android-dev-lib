@@ -34,9 +34,6 @@ public class WaterPurifier_RO_BLE extends WaterPurifier {
     private static final byte opCode_respone_filterHis2=(byte)0x12;
 
 
-
-
-
     private static final byte param_request_settinginfo=1;
     private static final byte param_request_water_info=2;
     private static final byte param_request_filter_info=3;
@@ -408,12 +405,13 @@ public class WaterPurifier_RO_BLE extends WaterPurifier {
                 rep.Firmware = new Date(Service_Data[3] + 2000 - 1900, Service_Data[4] - 1,
                         Service_Data[5], Service_Data[6],
                         Service_Data[7], Service_Data[8]);
-
                 rep.Model="Ozner RO";
                 rep.MainbroadPlatform= new String(Service_Data, 9, 3);
+
                 rep.MainbroadFirmware = new Date(Service_Data[12] + 2000 - 1900, Service_Data[13] - 1,
                         Service_Data[14], Service_Data[15],
                         Service_Data[16], Service_Data[17]);
+
                 rep.Firmware=rep.MainbroadFirmware;
                 rep.CustomDataLength=8;
                 rep.ScanResponseType=WaterPurifier_RO_BLE.BLE_RO_ScanResponseType;
