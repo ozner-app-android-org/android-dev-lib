@@ -3,7 +3,6 @@ package com.ozner.device;
 import android.content.Context;
 
 import com.ozner.bluetooth.BluetoothIOMgr;
-import com.ozner.wifi.ayla.AylaIOManager;
 import com.ozner.wifi.mxchip.MXChipIOManager;
 
 import java.util.ArrayList;
@@ -15,12 +14,12 @@ import java.util.Collections;
 public class IOManagerList extends IOManager {
     BluetoothIOMgr bluetoothIOMgr;
     MXChipIOManager mxChipIOManager;
-    AylaIOManager aylaIOManager;
+//    AylaIOManager aylaIOManager;
     public IOManagerList(Context context) {
         super(context);
         bluetoothIOMgr = new BluetoothIOMgr(context);
         mxChipIOManager = new MXChipIOManager(context);
-        aylaIOManager = new AylaIOManager(context);
+//        aylaIOManager = new AylaIOManager(context);
     }
 
     public BluetoothIOMgr bluetoothIOMgr() {
@@ -30,24 +29,24 @@ public class IOManagerList extends IOManager {
     public MXChipIOManager mxChipIOManager() {
         return mxChipIOManager;
     }
-    public AylaIOManager aylaIOManager()
-    {
-        return aylaIOManager;
-    }
+//    public AylaIOManager aylaIOManager()
+//    {
+//        return aylaIOManager;
+//    }
 
 
     @Override
     public void Start(String user,String token) {
         bluetoothIOMgr.Start(user,token);
         mxChipIOManager.Start(user,token);
-        aylaIOManager.Start(user,token);
+//        aylaIOManager.Start(user,token);
     }
 
     @Override
     public void Stop() {
         bluetoothIOMgr.Stop();
         mxChipIOManager.Stop();
-        aylaIOManager.Stop();
+//        aylaIOManager.Stop();
     }
 
     @Override
@@ -60,7 +59,7 @@ public class IOManagerList extends IOManager {
     public void setIoManagerCallback(IOManagerCallback ioManagerCallback) {
         bluetoothIOMgr.setIoManagerCallback(ioManagerCallback);
         mxChipIOManager.setIoManagerCallback(ioManagerCallback);
-        aylaIOManager.setIoManagerCallback(ioManagerCallback);
+//        aylaIOManager.setIoManagerCallback(ioManagerCallback);
 
     }
 
@@ -74,11 +73,11 @@ public class IOManagerList extends IOManager {
         {
             mxChipIOManager.removeDevice(io);
         }
-        else
-        if (aylaIOManager().isMyIO(io))
-        {
-            aylaIOManager.removeDevice(io);
-        }
+//        else
+//        if (aylaIOManager().isMyIO(io))
+//        {
+//            aylaIOManager.removeDevice(io);
+//        }
 
         super.removeDevice(io);
     }
@@ -92,9 +91,9 @@ public class IOManagerList extends IOManager {
         if ((io = mxChipIOManager.getAvailableDevice(address)) != null) {
             return io;
         }
-        if ((io = aylaIOManager.getAvailableDevice(address)) != null) {
-            return io;
-        }
+//        if ((io = aylaIOManager.getAvailableDevice(address)) != null) {
+//            return io;
+//        }
 
         return io;
     }
@@ -105,7 +104,7 @@ public class IOManagerList extends IOManager {
 
         Collections.addAll(list, bluetoothIOMgr.getAvailableDevices());
         Collections.addAll(list, mxChipIOManager.getAvailableDevices());
-        Collections.addAll(list, aylaIOManager.getAvailableDevices());
+//        Collections.addAll(list, aylaIOManager.getAvailableDevices());
 
         return list.toArray(new BaseDeviceIO[list.size()]);
     }

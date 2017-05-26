@@ -146,12 +146,8 @@ public class Kettle extends OznerDevice {
             if (setting == null)
                 return false;
 
-            byte[] data = new byte[4];
-            data[0] = (byte) setting.atomization();
-            data[1] = 0;
-            data[2] = (byte) setting.massage();
-            data[3] = 0;
-            return this.send(opCode_SendSetting, data, null);
+
+            return false;//this.send(opCode_SendSetting, data, null);
         }
 
         @Override

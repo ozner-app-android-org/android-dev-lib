@@ -69,12 +69,12 @@ public class WaterPurifierManager extends BaseDeviceManager {
             OznerDeviceManager.Instance().ioManagerList().mxChipIOManager()
                         .createMXChipDevice(waterPurifier.Address(), waterPurifier.Type());
             return waterPurifier;
-        }
-        if (type.trim().equals("AY001MAB1"))
-        {
-            WaterPurifier waterPurifier = new WaterPurifier_Ayla(context(), address, type, settings);
-            return waterPurifier;
         }else
+//        if (type.trim().equals("AY001MAB1"))
+//        {
+//            WaterPurifier waterPurifier = new WaterPurifier_Ayla(context(), address, type, settings);
+//            return waterPurifier;
+//        }else
         if (type.trim().equals("Ozner RO"))
         {
             WaterPurifier waterPurifier = new WaterPurifier_RO_BLE(context(), address, type, settings);

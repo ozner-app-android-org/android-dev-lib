@@ -1,5 +1,6 @@
 package ozner.xzy.test;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -26,7 +27,7 @@ import com.ozner.device.NotSupportDeviceException;
 import com.ozner.device.OznerDevice;
 import com.ozner.device.OznerDeviceManager;
 import com.ozner.wifi.WifiPair;
-import com.ozner.wifi.ayla.AylaIOManager;
+//import com.ozner.wifi.ayla.AylaIOManager;
 import com.ozner.wifi.mxchip.MXChipIO;
 
 import java.util.Date;
@@ -65,6 +66,7 @@ public class WifiConfigurationActivity extends Activity {
         super.onStop();
     }
 
+    @SuppressLint("WifiManagerLeak")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -122,7 +124,7 @@ public class WifiConfigurationActivity extends Activity {
         if (wifiInfo != null) {
             if (wifiInfo.getSupplicantState() == SupplicantState.COMPLETED) {
                 String ssid = wifiInfo.getSSID().replace("\"", "");
-                if (WifiPair.isAylaSSID(ssid)) return;
+//                if (WifiPair.isAylaSSID(ssid)) return;
                 wifi_ssid.setText(ssid);
                 String pwd = wifiPreferences.getString("password." + ssid, "");
                 wifi_passwd.setText(pwd);

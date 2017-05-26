@@ -1,1 +1,1 @@
-include ':test_app', ':xzy_ui_lib', ':OznerLibrary', ':librarise/Android_AylaLibrary_Public', ':com.google.zxing', ':aylaLibrary', ':water_guardian', ':device_library'
+include ':test_app', ':xzy_ui_lib', ':OznerLibrary', ':librarise/Android_AylaLibrary_Public', ':com.google.zxing', ':water_guardian', ':device_library'

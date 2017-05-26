@@ -1,36 +1,17 @@
 package com.ozner.wifi;
 
 import android.content.Context;
-import android.content.Intent;
 import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.os.Handler;
-import android.os.Message;
-import android.os.SystemClock;
-import android.util.Log;
 
 import com.alibaba.fastjson.JSON;
-import com.aylanetworks.aaml.AylaCache;
-import com.aylanetworks.aaml.AylaDevice;
-import com.aylanetworks.aaml.AylaHostScanResults;
-import com.aylanetworks.aaml.AylaHttpServer;
-import com.aylanetworks.aaml.AylaLanMode;
-import com.aylanetworks.aaml.AylaNetworks;
-import com.aylanetworks.aaml.AylaSetup;
-import com.aylanetworks.aaml.AylaSystemUtils;
-import com.aylanetworks.aaml.AylaUser;
 import com.mxchip.jmdns.JmdnsAPI;
 import com.mxchip.jmdns.JmdnsListener;
 import com.ozner.device.BaseDeviceIO;
-import com.ozner.device.NotSupportDeviceException;
-import com.ozner.device.OznerDevice;
 import com.ozner.device.OznerDeviceManager;
 import com.ozner.util.Helper;
 import com.ozner.util.HttpUtil;
-import com.ozner.util.dbg;
-import com.ozner.wifi.ayla.AylaIO;
-import com.ozner.wifi.ayla.AylaIOManager;
 import com.ozner.wifi.mxchip.MXChipIO;
 import com.ozner.wifi.mxchip.Pair.ConfigurationDevice;
 import com.ozner.wifi.mxchip.Pair.EasyLinkSender;
@@ -44,8 +25,6 @@ import org.json.JSONObject;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by zhiyongxu on 16/5/12.
@@ -172,9 +151,9 @@ public class WifiPair {
         stop();
     }
 
-    public static boolean isAylaSSID(String ssid) {
-        return ssid.matches(AylaIOManager.gblAmlDeviceSsidRegex);
-    }
+//    public static boolean isAylaSSID(String ssid) {
+//        return ssid.matches(AylaIOManager.gblAmlDeviceSsidRegex);
+//    }
 
     class MXChipPairImp implements FTC_Listener, Runnable, JmdnsListener {
         /**
@@ -379,238 +358,238 @@ public class WifiPair {
         }
     }
 
-    class AylaPairImp implements Runnable {
-        private void doRegister(final AylaDevice device) {
-            //callback.onActivateDevice();
-            device.registrationType = AylaNetworks.AML_REGISTRATION_TYPE_AP_MODE;
-            dbg.d("start registerNewDevice");
-            AylaLanMode.enable(null, null);
-            device.registerNewDevice(new Handler() {
-                @Override
-                public void handleMessage(Message msg) {
-                    dbg.d("recv registerNewDevice:%s", msg.toString());
-                    if (msg.what == AylaNetworks.AML_ERROR_OK) {
-                        String jsonResults = (String) msg.obj;
-                        AylaDevice device = AylaSystemUtils.gson.fromJson(jsonResults, AylaDevice.class);
-                        AylaIO io = OznerDeviceManager.Instance().ioManagerList().aylaIOManager().createAylaIO(device);
-                        doComplete(io);
-
-                        aylaFinally();
-
-                    } else {
-                        if (errorCount < 5) {
-                            errorCount++;
-                            dbg.d("register error", msg.toString());
-                            doRegister(device);
-                            aylaFinally();
-
-                        } else {
-                            String error = "registerNewDevice:" + msg.toString();
-                            doPairFailure(new AylaOtherUserException(error));
-                            aylaFinally();
-
-                        }
-                    }
-                    super.handleMessage(msg);
-                }
-            });
-        }
-
-        private void confirmNewDeviceToService() {
-            //确认设备连接WIFI
-            callback.onWaitConnectWifi();
-            dbg.d("start confirmNewDeviceToServiceConnection");
-            AylaSetup.confirmNewDeviceToServiceConnection(new Handler() {
-                @Override
-                public void handleMessage(Message msg) {
-                    dbg.d("recv confirmNewDeviceToServiceConnection:%s", msg.toString());
-                    if (msg.what == AylaNetworks.AML_ERROR_OK) {
-                        String jsonResults = (String) msg.obj;
-                        AylaDevice device = AylaSystemUtils.gson.fromJson(jsonResults, AylaDevice.class);
-
-                        String json = null;
-                        try {
-                            json = HttpUtil.get(String.format("http://%s/status.json", device.lanIp));
-                            if (!Helper.StringIsNullOrEmpty(json)) {
-                                com.alibaba.fastjson.JSONObject object = JSON.parseObject(json);
-                                String mac = object.getString("mac").toUpperCase();
-                                dbg.d("设备JSON:%s", json);
-                                BaseDeviceIO io = OznerDeviceManager.Instance().ioManagerList().aylaIOManager().getAvailableDevice(mac);
-                                if (io == null) {
-                                    doRegister(device);
-                                } else {
-                                    device.mac = mac;
-                                    device.model = object.getString("Model");
-                                    doComplete(io);
-                                    set();
-                                }
-                            }
-                        } catch (IOException e) {
-                            set();
-                            e.printStackTrace();
-                        }
-                        errorCount = 0;
-                        doRegister(device);
-                    } else {
-                        if (errorCount < 5) {
-                            errorCount++;
-                            confirmNewDeviceToService();
-                        } else {
-                            String error = "confirmNewDeviceToServiceConnection:" + msg.toString();
-                            doPairFailure(new AylaException(error));
-                            set();
-                            aylaFinally();
-                        }
-
-                    }
-
-                    super.handleMessage(msg);
-                }
-            });
-        }
-
-        private void aylaFinally() {
-            //AylaSetup.exit();
-        }
-
-        private void connectNewDeviceToService() {
-            Map<String, Object> callParams = new HashMap<String, Object>();
-            callParams.put(AylaNetworks.AML_SETUP_LOCATION_LONGITUDE, 0.00d);
-            callParams.put(AylaNetworks.AML_SETUP_LOCATION_LATITUDE, 0.00d);
-            //AylaModule device = AylaSystemUtils.gson.fromJson(jsonResults, AylaModule.class);
-
-            AylaSetup.lanSsid = ssid;
-            AylaSetup.lanPassword = password;
-
-            callback.onSendConfiguration();
-            dbg.d("start connectNewDeviceToService");
-            //配置AYLA 设备的WIFI信息
-            AylaSetup.connectNewDeviceToService(new Handler() {
-                @Override
-                public void handleMessage(Message msg) {
-                    dbg.d("recv connectNewDeviceToService:%s", msg.toString());
-
-                    if (msg.what == AylaNetworks.AML_ERROR_OK) {
-                        confirmNewDeviceToService();
-                    } else {
-                        String error = "connectNewDeviceToService:" + msg.toString();
-
-                        doPairFailure(new AylaException(error));
-                        set();
-                        aylaFinally();
-                    }
-
-                    super.handleMessage(msg);
-                }
-
-            }, callParams);
-
-        }
-
-        boolean isConnectToNewDevice = false;
-
-        private void checkDeviceScanAPs() {
-            AylaSetup.getNewDeviceScanForAPs(new Handler() {
-                @Override
-                public void handleMessage(Message msg) {
-                    if (msg.what == AylaNetworks.AML_ERROR_OK) {
-                        String json = msg.obj.toString();
-                        if (!Helper.StringIsNullOrEmpty(json)) {
-
-                                com.alibaba.fastjson.JSONArray results = com.alibaba.fastjson.JSONArray.parseArray(json);
-                                if (results.size() > 0) {
-                                    for (int i=0;i<results.size();i++)
-                                    {
-                                        com.alibaba.fastjson.JSONObject ap=results.getJSONObject(i);
-                                        if (ap.getString("ssid").equalsIgnoreCase(ssid))
-                                        {
-                                            connectNewDeviceToService();
-                                            return;
-                                        }
-                                    }
-                                }
-
-                        }
-
-                        dbg.d(json);
-                        String error = "getNewDeviceScanForAPs:not found AP";
-                        doPairFailure(new AylaException(error));
-                        set();
-                        aylaFinally();
-                    } else
-                    {
-                        String error = "getNewDeviceScanForAPs:" + msg.toString();
-                        doPairFailure(new AylaException(error));
-                        set();
-                        aylaFinally();
-                    }
-                }
-            });
-        }
-
-        //开始连接AYLA AP
-        private void connectDevice(AylaHostScanResults result) {
-            AylaLanMode.disable();
-            isConnectToNewDevice = false;
-
-            AylaSetup.newDevice.hostScanResults = result;
-            //连接设备
-            dbg.d("start connectToNewDevice");
-            AylaSetup.connectToNewDevice(new Handler() {
-                @Override
-                public void handleMessage(Message msg) {
-                    dbg.e("----------------------------------------------------------------------");
-                    dbg.d("recv connectToNewDevice:%s", msg.toString());
-                    String jsonResults = (String) msg.obj;
-                    if (msg.what == AylaNetworks.AML_ERROR_OK) {
-                        if (!isConnectToNewDevice) {
-                            isConnectToNewDevice = true;
-                            checkDeviceScanAPs();
-                        }
-                    } else {
-
-                        String error = "connectToNewDevice:" + msg.toString();
-
-                        doPairFailure(new AylaException(error));
-                        set();
-                        aylaFinally();
-                    }
-                }
-            });
-        }
-
-
-        @Override
-        public void run() {
-            if (AylaUser.getCurrent().getAccessToken() == null) {
-                callback.onPairFailure(new AylaException("not login"));
-                return;
-            }
-            callback.onStartPairAyla();
-
-            AylaSetup.returnHostScanForNewDevices(new Handler() {
-                @Override
-                public void handleMessage(Message msg) {
-                    if (msg.what == AylaNetworks.AML_ERROR_OK) {
-                        String jsonResults = (String) msg.obj;
-                        AylaHostScanResults[] scanResults = AylaSystemUtils.gson.fromJson(jsonResults, AylaHostScanResults[].class);
-                        if (scanResults.length > 0) {
-                            connectDevice(scanResults[0]);
-
-                        } else {
-                            aylaFinally();
-                            runNext();
-                        }
-                    } else {
-                        aylaFinally();
-                        runNext();
-                    }
-
-                }
-            });
-        }
-
-    }
+//    class AylaPairImp implements Runnable {
+//        private void doRegister(final AylaDevice device) {
+//            //callback.onActivateDevice();
+//            device.registrationType = AylaNetworks.AML_REGISTRATION_TYPE_AP_MODE;
+//            dbg.d("start registerNewDevice");
+//            AylaLanMode.enable(null, null);
+//            device.registerNewDevice(new Handler() {
+//                @Override
+//                public void handleMessage(Message msg) {
+//                    dbg.d("recv registerNewDevice:%s", msg.toString());
+//                    if (msg.what == AylaNetworks.AML_ERROR_OK) {
+//                        String jsonResults = (String) msg.obj;
+//                        AylaDevice device = AylaSystemUtils.gson.fromJson(jsonResults, AylaDevice.class);
+//                        AylaIO io = OznerDeviceManager.Instance().ioManagerList().aylaIOManager().createAylaIO(device);
+//                        doComplete(io);
+//
+//                        aylaFinally();
+//
+//                    } else {
+//                        if (errorCount < 5) {
+//                            errorCount++;
+//                            dbg.d("register error", msg.toString());
+//                            doRegister(device);
+//                            aylaFinally();
+//
+//                        } else {
+//                            String error = "registerNewDevice:" + msg.toString();
+//                            doPairFailure(new AylaOtherUserException(error));
+//                            aylaFinally();
+//
+//                        }
+//                    }
+//                    super.handleMessage(msg);
+//                }
+//            });
+//        }
+//
+//        private void confirmNewDeviceToService() {
+//            //确认设备连接WIFI
+//            callback.onWaitConnectWifi();
+//            dbg.d("start confirmNewDeviceToServiceConnection");
+//            AylaSetup.confirmNewDeviceToServiceConnection(new Handler() {
+//                @Override
+//                public void handleMessage(Message msg) {
+//                    dbg.d("recv confirmNewDeviceToServiceConnection:%s", msg.toString());
+//                    if (msg.what == AylaNetworks.AML_ERROR_OK) {
+//                        String jsonResults = (String) msg.obj;
+//                        AylaDevice device = AylaSystemUtils.gson.fromJson(jsonResults, AylaDevice.class);
+//
+//                        String json = null;
+//                        try {
+//                            json = HttpUtil.get(String.format("http://%s/status.json", device.lanIp));
+//                            if (!Helper.StringIsNullOrEmpty(json)) {
+//                                com.alibaba.fastjson.JSONObject object = JSON.parseObject(json);
+//                                String mac = object.getString("mac").toUpperCase();
+//                                dbg.d("设备JSON:%s", json);
+//                                BaseDeviceIO io = OznerDeviceManager.Instance().ioManagerList().aylaIOManager().getAvailableDevice(mac);
+//                                if (io == null) {
+//                                    doRegister(device);
+//                                } else {
+//                                    device.mac = mac;
+//                                    device.model = object.getString("Model");
+//                                    doComplete(io);
+//                                    set();
+//                                }
+//                            }
+//                        } catch (IOException e) {
+//                            set();
+//                            e.printStackTrace();
+//                        }
+//                        errorCount = 0;
+//                        doRegister(device);
+//                    } else {
+//                        if (errorCount < 5) {
+//                            errorCount++;
+//                            confirmNewDeviceToService();
+//                        } else {
+//                            String error = "confirmNewDeviceToServiceConnection:" + msg.toString();
+//                            doPairFailure(new AylaException(error));
+//                            set();
+//                            aylaFinally();
+//                        }
+//
+//                    }
+//
+//                    super.handleMessage(msg);
+//                }
+//            });
+//        }
+//
+//        private void aylaFinally() {
+//            //AylaSetup.exit();
+//        }
+//
+//        private void connectNewDeviceToService() {
+//            Map<String, Object> callParams = new HashMap<String, Object>();
+//            callParams.put(AylaNetworks.AML_SETUP_LOCATION_LONGITUDE, 0.00d);
+//            callParams.put(AylaNetworks.AML_SETUP_LOCATION_LATITUDE, 0.00d);
+//            //AylaModule device = AylaSystemUtils.gson.fromJson(jsonResults, AylaModule.class);
+//
+//            AylaSetup.lanSsid = ssid;
+//            AylaSetup.lanPassword = password;
+//
+//            callback.onSendConfiguration();
+//            dbg.d("start connectNewDeviceToService");
+//            //配置AYLA 设备的WIFI信息
+//            AylaSetup.connectNewDeviceToService(new Handler() {
+//                @Override
+//                public void handleMessage(Message msg) {
+//                    dbg.d("recv connectNewDeviceToService:%s", msg.toString());
+//
+//                    if (msg.what == AylaNetworks.AML_ERROR_OK) {
+//                        confirmNewDeviceToService();
+//                    } else {
+//                        String error = "connectNewDeviceToService:" + msg.toString();
+//
+//                        doPairFailure(new AylaException(error));
+//                        set();
+//                        aylaFinally();
+//                    }
+//
+//                    super.handleMessage(msg);
+//                }
+//
+//            }, callParams);
+//
+//        }
+//
+//        boolean isConnectToNewDevice = false;
+//
+//        private void checkDeviceScanAPs() {
+//            AylaSetup.getNewDeviceScanForAPs(new Handler() {
+//                @Override
+//                public void handleMessage(Message msg) {
+//                    if (msg.what == AylaNetworks.AML_ERROR_OK) {
+//                        String json = msg.obj.toString();
+//                        if (!Helper.StringIsNullOrEmpty(json)) {
+//
+//                                com.alibaba.fastjson.JSONArray results = com.alibaba.fastjson.JSONArray.parseArray(json);
+//                                if (results.size() > 0) {
+//                                    for (int i=0;i<results.size();i++)
+//                                    {
+//                                        com.alibaba.fastjson.JSONObject ap=results.getJSONObject(i);
+//                                        if (ap.getString("ssid").equalsIgnoreCase(ssid))
+//                                        {
+//                                            connectNewDeviceToService();
+//                                            return;
+//                                        }
+//                                    }
+//                                }
+//
+//                        }
+//
+//                        dbg.d(json);
+//                        String error = "getNewDeviceScanForAPs:not found AP";
+//                        doPairFailure(new AylaException(error));
+//                        set();
+//                        aylaFinally();
+//                    } else
+//                    {
+//                        String error = "getNewDeviceScanForAPs:" + msg.toString();
+//                        doPairFailure(new AylaException(error));
+//                        set();
+//                        aylaFinally();
+//                    }
+//                }
+//            });
+//        }
+//
+//        //开始连接AYLA AP
+//        private void connectDevice(AylaHostScanResults result) {
+//            AylaLanMode.disable();
+//            isConnectToNewDevice = false;
+//
+//            AylaSetup.newDevice.hostScanResults = result;
+//            //连接设备
+//            dbg.d("start connectToNewDevice");
+//            AylaSetup.connectToNewDevice(new Handler() {
+//                @Override
+//                public void handleMessage(Message msg) {
+//                    dbg.e("----------------------------------------------------------------------");
+//                    dbg.d("recv connectToNewDevice:%s", msg.toString());
+//                    String jsonResults = (String) msg.obj;
+//                    if (msg.what == AylaNetworks.AML_ERROR_OK) {
+//                        if (!isConnectToNewDevice) {
+//                            isConnectToNewDevice = true;
+//                            checkDeviceScanAPs();
+//                        }
+//                    } else {
+//
+//                        String error = "connectToNewDevice:" + msg.toString();
+//
+//                        doPairFailure(new AylaException(error));
+//                        set();
+//                        aylaFinally();
+//                    }
+//                }
+//            });
+//        }
+//
+//
+//        @Override
+//        public void run() {
+//            if (AylaUser.getCurrent().getAccessToken() == null) {
+//                callback.onPairFailure(new AylaException("not login"));
+//                return;
+//            }
+//            callback.onStartPairAyla();
+//
+//            AylaSetup.returnHostScanForNewDevices(new Handler() {
+//                @Override
+//                public void handleMessage(Message msg) {
+//                    if (msg.what == AylaNetworks.AML_ERROR_OK) {
+//                        String jsonResults = (String) msg.obj;
+//                        AylaHostScanResults[] scanResults = AylaSystemUtils.gson.fromJson(jsonResults, AylaHostScanResults[].class);
+//                        if (scanResults.length > 0) {
+//                            connectDevice(scanResults[0]);
+//
+//                        } else {
+//                            aylaFinally();
+//                            runNext();
+//                        }
+//                    } else {
+//                        aylaFinally();
+//                        runNext();
+//                    }
+//
+//                }
+//            });
+//        }
+//
+//    }
 
     public void pair(String ssid, String password) throws PairRunningException {
         runPairCount = 1;
