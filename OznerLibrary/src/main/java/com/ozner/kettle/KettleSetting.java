@@ -46,7 +46,6 @@ public class KettleSetting extends DeviceSetting {
 
     /**
      * 保温温度
-     *
      * @return
      */
     public int preservationTemperature() {

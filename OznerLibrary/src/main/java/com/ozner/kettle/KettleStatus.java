@@ -117,5 +117,8 @@ public class KettleStatus {
      */
     public int error_code;
 
-
+    @Override
+    public String toString() {
+        return super.toString();
+    }
 }

@@ -25,6 +25,7 @@ import com.ozner.application.OznerBLEService;
 import com.ozner.cup.Cup;
 import com.ozner.device.OznerDevice;
 import com.ozner.device.OznerDeviceManager;
+import com.ozner.kettle.Kettle;
 import com.ozner.tap.Tap;
 import com.ozner.ui.library.RoundDrawable;
 
@@ -84,6 +85,13 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
             return;
         }
         if (device instanceof MusicCap)
+        {
+            Intent intent=new Intent(this,MusicCapActivity.class);
+            intent.putExtra("Address", device.Address());
+            startActivityForResult(intent,0);
+            return;
+        }
+        if (device instanceof Kettle)
         {
             Intent intent=new Intent(this,MusicCapActivity.class);
             intent.putExtra("Address", device.Address());

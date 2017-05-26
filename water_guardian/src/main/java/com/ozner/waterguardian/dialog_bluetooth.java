@@ -23,7 +23,7 @@ import java.util.Arrays;
 /**
  * Created by zhiyongxu on 2016/10/9.
  */
-public class Dialog_Bluetooth extends Dialog implements BluetoothAdapter.LeScanCallback, AdapterView.OnItemClickListener {
+class Dialog_Bluetooth extends Dialog implements BluetoothAdapter.LeScanCallback, AdapterView.OnItemClickListener {
     BluetoothAdapter bluetoothAdapter;
     BluetoothManager bluetoothManager;
     MyAdapter myAdapter;

@@ -8,18 +8,25 @@ import com.ozner.device.DeviceSetting;
 import com.ozner.device.OperateCallback;
 import com.ozner.device.OznerDevice;
 import com.ozner.oznerlibrary.R;
+import com.ozner.util.ByteUtil;
 
 /**
  * Created by zhiyongxu on 15/12/21.
  */
 public class Kettle extends OznerDevice {
+
+    /**
+     * 收到传感器数据
+     */
+    public final static String ACTION_BLUETOOTH_KETTLE_SENSOR = "com.ozner.kettle.bluetooth.sensor";
+
     private static final int defaultAutoUpdatePeriod = 5000;
 
     private static final byte opCode_RequestStatus = 0x20;
     private static final byte opCode_StatusResp = 0x21;
 
     private static final byte opCode_SendSetting = 0x33;
-    private static final byte opCode_StartHot = 0x34;
+    private static final byte opCode_SetWorkMode = 0x34;
 
 
     final KettleIMP kettleIMP = new KettleIMP();
@@ -104,6 +111,38 @@ public class Kettle extends OznerDevice {
     }
 
 
+    /**
+     * 设备进入待机模式
+     * @return true成功,false失败
+     */
+    public boolean idle()
+    {
+        byte bytes[]=new byte[2];
+        bytes[1]=0;
+        return kettleIMP.send(opCode_SetWorkMode, bytes, null);
+    }
+
+    /**
+     * 设备进入保温模式
+     * @return true成功,false失败
+     */
+    public boolean preservation()
+    {
+        byte bytes[]=new byte[2];
+        bytes[1]=2;
+        return kettleIMP.send(opCode_SetWorkMode, bytes, null);
+    }
+
+    /**
+     * 设备进入加热模式
+     * @return true成功,false失败
+     */
+    public boolean heating()
+    {
+        byte bytes[]=new byte[2];
+        bytes[1]=1;
+        return kettleIMP.send(opCode_SetWorkMode, bytes, null);
+    }
     @Override
     protected void doTimer() {
         kettleIMP.doTime();
@@ -145,10 +184,16 @@ public class Kettle extends OznerDevice {
             KettleSetting setting = (KettleSetting) Setting();
             if (setting == null)
                 return false;
-
-
-            return false;//this.send(opCode_SendSetting, data, null);
+            byte bytes[]=new byte[8];
+            bytes[0]=(byte)setting.preservationTemperature();
+            ByteUtil.putShort(bytes,(short)setting.preservationTime(),1);
+            bytes[3]=(byte)setting.boilingTemperature();
+            ByteUtil.putShort(bytes,(short)setting.preservationTime(),4);
+            bytes[5]=(byte)(setting.reservationTime()>0?1:0);
+            ByteUtil.putShort(bytes,(short)setting.reservationTime(),6);
+            return this.send(opCode_SendSetting, bytes, null);
         }
+
 
         @Override
         public void onIORecv(byte[] bytes) {

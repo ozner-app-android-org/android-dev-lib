@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="6dp"
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/Device_Name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ozner Cup"
+            android:textColor="@android:color/secondary_text_dark"
+            android:textAppearance="@android:style/TextAppearance.Medium" />
+        <TextView
+            android:id="@+id/Address"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="11:22:33:44:55:66"
+            android:textAppearance="@android:style/TextAppearance.Small" />
+
+        <TextView
+            android:id="@+id/Device_Model"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="型号:"
+            android:textAppearance="@android:style/TextAppearance.Small" />
+
+        <TextView
+            android:id="@+id/Device_Platform"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="平台:"
+            android:textAppearance="@android:style/TextAppearance.Small" />
+
+
+        <TextView
+            android:id="@+id/Device_Firmware"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="固件日期:"
+            android:textAppearance="@android:style/TextAppearance.Small" />
+
+        <TextView
+            android:id="@+id/Device_Message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sensor"
+            android:textAppearance="@android:style/TextAppearance.Small" />
+
+        <TextView
+            android:id="@+id/Update_Message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@android:style/TextAppearance.Small" />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:orientation="horizontal">
+
+        <Button
+            android:background="@drawable/button"
+            android:id="@+id/Kettle_Idle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:text="待机" />
+
+        <Button
+            android:background="@drawable/button"
+
+            android:id="@+id/Kettle_Heating"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:text="加热" />
+
+        <Button
+            android:background="@drawable/button"
+            android:id="@+id/Kettle_Preservation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:text="保温" />
+
+
+    </LinearLayout>
+    <LinearLayout
+        android:layout_marginTop="10dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:orientation="horizontal">
+
+        <Button
+            android:background="@drawable/button"
+            android:id="@+id/Device_Setup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:text="设置" />
+
+        <Button
+            android:background="@drawable/button"
+
+            android:id="@+id/Device_Sensor"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:text="更新传感器" />
+
+        <Button
+            android:background="@drawable/button"
+
+            android:id="@+id/UpdateFirmware"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:text="更新固件" />
+
+        <Button
+            android:id="@+id/Device_Remove"
+            android:background="@drawable/button"
+
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:text="解除" />
+    </LinearLayout>
+</LinearLayout>
