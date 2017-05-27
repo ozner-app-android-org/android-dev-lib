@@ -74,7 +74,7 @@ public class QCodeActivity extends AppCompatActivity implements SurfaceHolder.Ca
             new AlertDialog.Builder(this)
                     .setTitle("请选择")
                     .setIcon(android.R.drawable.ic_dialog_info)
-                    .setSingleChoiceItems(new String[]{"空净", "庆科水机", "智能杯", "水探头"}, 0,
+                    .setSingleChoiceItems(new String[]{"空净", "庆科水机", "智能杯", "水探头","电热壶"}, 0,
                             new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int which) {
                                     OznerDevice device = null;
@@ -109,6 +109,11 @@ public class QCodeActivity extends AppCompatActivity implements SurfaceHolder.Ca
                                         case 3:
                                         {
                                             device= OznerDeviceManager.Instance().deviceManagers().tapManager().loadDevice(macAddress,"SC001","");
+                                            break;
+                                        }
+                                        case 4:
+                                        {
+                                            device= OznerDeviceManager.Instance().deviceManagers().kettleMgr().loadDevice(macAddress,"DRH001","");
                                             break;
                                         }
                                     }

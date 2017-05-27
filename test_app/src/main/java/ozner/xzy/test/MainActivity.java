@@ -93,7 +93,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         }
         if (device instanceof Kettle)
         {
-            Intent intent=new Intent(this,MusicCapActivity.class);
+            Intent intent=new Intent(this,KettleActivity.class);
             intent.putExtra("Address", device.Address());
             startActivityForResult(intent,0);
             return;

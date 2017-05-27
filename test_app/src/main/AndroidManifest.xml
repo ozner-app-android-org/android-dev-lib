@@ -75,16 +75,19 @@
             android:name=".MusicCapActivity"
             android:label="@string/title_music_cap"
             android:theme="@style/AppTheme" />
-
+        <activity
+            android:name=".KettleActivity"
+            android:label="@string/title_kettle"
+            android:theme="@style/AppTheme" />
         <!-- Starting from Baidu_push SDK 4.0 add one more intent-filter action -->
-        <service
-            android:name="com.baidu.android.pushservice.PushService"
-            android:exported="true"
-            android:process=":bdservice_v1">
-            <intent-filter>
-                <action android:name="com.baidu.android.pushservice.action.PUSH_SERVICE" />
-            </intent-filter>
-        </service>
+        <!--<service-->
+            <!--android:name="com.baidu.android.pushservice.PushService"-->
+            <!--android:exported="true"-->
+            <!--android:process=":bdservice_v1">-->
+            <!--<intent-filter>-->
+                <!--<action android:name="com.baidu.android.pushservice.action.PUSH_SERVICE" />-->
+            <!--</intent-filter>-->
+        <!--</service>-->
 
         <!-- Starting from Baidu_push SDK 4.4 add one more commandService -->
         <service
@@ -101,7 +104,7 @@
         <!-- <meta-data android:name="api_key" android:value="CfvxzUbG1cvy07v9rn7gGSoF" /> -->
         <!-- <meta-data android:name="api_key" android:value="UWZclXF9LYTiQEQIvVuDMmi1" /> -->
 
-        <service android:name="com.aylanetworks.aaml.AylaExecuteRequest" />
+        <!--<service android:name="com.aylanetworks.aaml.AylaExecuteRequest" />-->
 
         <activity android:name=".UIActivity" />
 

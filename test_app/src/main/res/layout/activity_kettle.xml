@@ -112,7 +112,7 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="2dp"
             android:layout_marginRight="2dp"
-            android:text="设置" />
+            android:text="设置预约" />
 
         <Button
             android:background="@drawable/button"
@@ -122,11 +122,10 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="2dp"
             android:layout_marginRight="2dp"
-            android:text="更新传感器" />
+            android:text="更新状态" />
 
         <Button
             android:background="@drawable/button"
-
             android:id="@+id/UpdateFirmware"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

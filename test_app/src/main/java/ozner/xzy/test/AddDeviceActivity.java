@@ -133,7 +133,11 @@ public class AddDeviceActivity extends Activity {
                         list.add(bluetoothIO);
                         continue;
                     }
-
+                    if (OznerDeviceManager.Instance().deviceManagers().kettleMgr().checkIsBindMode(device))
+                    {
+                        list.add(bluetoothIO);
+                        continue;
+                    }
                 }
             }
             Collections.sort(list, new Comparator<BluetoothIO>() {
