@@ -59,7 +59,6 @@ public class KettleStatus {
     }
 
 
-
     /**
      * 加热模式
      */
@@ -119,6 +118,19 @@ public class KettleStatus {
 
     @Override
     public String toString() {
-        return super.toString();
+        if (isLoaded) {
+            StringBuilder stringBuilder = new StringBuilder();
+
+            stringBuilder.append(String.format("模式:%s Temp:%d TDS:%d \n", heatMode.toString(), temperature, TDS));
+            stringBuilder.append(String.format("预约:%s 预约时间:%d \n", reservation ? "开" : "关", reservationTime));
+            stringBuilder.append(String.format("煮沸模式:%s 保温温度:%d\n", preservationMode.toString(), preservationTemperature));
+            stringBuilder.append(String.format("保温时间:%d 剩余保温时间:%d\n", preservationTime, preservationTime));
+            stringBuilder.append(String.format("当前加热时间:%d\n", this.heatingTime));
+
+            return stringBuilder.toString();
+        } else {
+            return "";
+        }
+
     }
 }

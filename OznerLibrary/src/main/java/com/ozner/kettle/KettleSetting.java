@@ -6,7 +6,7 @@ import com.ozner.device.DeviceSetting;
  * Created by zhiyongxu on 16/3/28.
  */
 public class KettleSetting extends DeviceSetting {
-    int reservationTime = 0;
+    boolean reservationEnable = false;
 
     /**
      * 保温时间
@@ -32,7 +32,7 @@ public class KettleSetting extends DeviceSetting {
      * @return
      */
     public PreservationMode preservationMode() {
-        return PreservationMode.valueOf(get("preservationMode", 0).toString());
+        return PreservationMode.valueOf(get("preservationMode", PreservationMode.boiling.toString()).toString());
     }
 
     /**
@@ -41,7 +41,7 @@ public class KettleSetting extends DeviceSetting {
      * @param mode
      */
     public void preservationMode(PreservationMode mode) {
-        put("preservationTemperature", mode.toString());
+        put("preservationMode", mode.toString());
     }
 
     /**
@@ -79,11 +79,37 @@ public class KettleSetting extends DeviceSetting {
         put("boilingTemperature", temperature);
     }
 
+    /**
+     * 预约时间
+     * @param time 分钟单位
+     */
     public void reservationTime(int time) {
-        reservationTime = time;
+        put("reservationTime", time);
     }
 
+    /**
+     * 获取预约时间
+     * @return 分钟单位
+     */
     public int reservationTime() {
-        return reservationTime;
+        return (Integer) get("reservationTime", 0);
+    }
+
+    /**
+     * 预约使能
+     * @return
+     */
+    public boolean reservationEnable()
+    {
+        return reservationEnable;
+    }
+
+    /**
+     * 预约使能
+     * @param enable
+     */
+    public void reservationEnable(boolean enable)
+    {
+        reservationEnable=enable;
     }
 }

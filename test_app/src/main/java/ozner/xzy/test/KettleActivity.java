@@ -168,7 +168,7 @@ public class KettleActivity extends Activity implements View.OnClickListener, Fi
                         }).show();
                 break;
             case R.id.Device_Setup: {
-                Intent intent = new Intent(this, TapSetupActivity.class);
+                Intent intent = new Intent(this, KettleSetupActivity.class);
                 intent.putExtra("Address", kettle.Address());
                 startActivityForResult(intent,0);
             }

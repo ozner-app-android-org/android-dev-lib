@@ -79,6 +79,10 @@
             android:name=".KettleActivity"
             android:label="@string/title_kettle"
             android:theme="@style/AppTheme" />
+        <activity
+            android:name=".KettleSetupActivity"
+            android:label="@string/title_kettle"
+            android:theme="@style/AppTheme" />
         <!-- Starting from Baidu_push SDK 4.0 add one more intent-filter action -->
         <!--<service-->
             <!--android:name="com.baidu.android.pushservice.PushService"-->

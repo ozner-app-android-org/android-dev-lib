@@ -97,19 +97,16 @@ public class Kettle extends OznerDevice {
         return status().toString();
     }
 
-    private String getValue(int value) {
-        if (value == 0xFFFF) {
-            return "-";
-        } else
-            return String.valueOf(value);
-    }
 
     @Override
     public void updateSettings() {
         if ((IO() != null) && (IO().isReady()))
             kettleIMP.sendSetting();
     }
-
+    public KettleSetting getSetting()
+    {
+        return (KettleSetting)Setting();
+    }
 
     /**
      * 设备进入待机模式

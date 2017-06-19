@@ -40,7 +40,7 @@ public class CupManager extends BaseDeviceManager {
                 }
                 return rep;
             }else
-                return null;
+               return null;
         }
     };
 
