@@ -1,6 +1,5 @@
 package com.ozner.WaterPurifier;
 
-import com.ozner.bluetooth.BluetoothIO;
 import com.ozner.device.FirmwareTools;
 import com.ozner.util.ByteUtil;
 
@@ -31,9 +30,9 @@ public class RO_TFT_FirmwareTools extends FirmwareTools {
     protected void loadFile(String path) throws Exception {
         File file = new File(path);
         FileInputStream fs = new FileInputStream(path);
-        byte[] firmware = new byte[fs.available()];
+        byte[] firmware = new byte[(int) file.length()];
         try {
-            fs.read(firmware, 0, fs.available());
+            fs.read(firmware, 0, (int) file.length());
         } finally {
             fs.close();
         }
@@ -44,19 +43,6 @@ public class RO_TFT_FirmwareTools extends FirmwareTools {
             Size = (Size / 256) * 256 + 256;
         }
 
-
-        int myLoc1 = 0;
-        int myLoc2 = 0;
-
-        for (int i = 0; i < bytes.length - 6; i++) {
-            if ((bytes[i] == 0x12) && (bytes[i + 1] == 0x34) && (bytes[i + 2] == 0x56)
-                    && (bytes[i + 3] == 0x65) && (bytes[i + 4] == 0x43) && (bytes[i + 5] == 0x21)) {
-                if (myLoc1 == 0)
-                    myLoc1 = i;
-                else
-                    myLoc2 = i;
-            }
-        }
         boolean ver = false;
         for (int i = 0; i < bytes.length - findKey.length; i++) {
             ver = false;
@@ -76,7 +62,17 @@ public class RO_TFT_FirmwareTools extends FirmwareTools {
                 break;
             }
         }
-
+        int myLoc1 = 0;
+        int myLoc2 = 0;
+        for (int i = 0; i < bytes.length - 6; i++) {
+            if ((bytes[i] == 0x12) && (bytes[i + 1] == 0x34) && (bytes[i + 2] == 0x56)
+                    && (bytes[i + 3] == 0x65) && (bytes[i + 4] == 0x43) && (bytes[i + 5] == 0x21)) {
+                if (myLoc1 == 0)
+                    myLoc1 = i;
+                else
+                    myLoc2 = i;
+            }
+        }
         String Address = getAddress();
         if (myLoc1 != 0) {
             bytes[myLoc1 + 5] = (byte) Integer.parseInt(Address.substring(0, 2), 16);
@@ -107,7 +103,11 @@ public class RO_TFT_FirmwareTools extends FirmwareTools {
     }
 
     private boolean eraseBlock(int block) throws InterruptedException {
-        if (deviceIO.send(BluetoothIO.makePacket((byte) 0xc0, new byte[]{(byte) block}))) {
+        byte[] data = new byte[20];
+        data[0] = (byte) 0xc0;
+        data[1] = (byte) block;
+        data[2] = (byte) ((int)(data[0] & 0x0ff) + (int)(data[1] & 0x0ff) & 0xff);
+        if (deviceIO.send(data)) {
             Thread.sleep(1000);
             return true;
         } else
@@ -141,11 +141,17 @@ public class RO_TFT_FirmwareTools extends FirmwareTools {
             if (eraseMCU()) {
 
                 for (int i = 0; i < Size; i += 16) {
+
                     byte[] data = new byte[20];
                     data[0] = (byte) 0xc1;
                     short p = (short) (i / 16);
                     ByteUtil.putShort(data, p, 1);
                     System.arraycopy(bytes, i, data, 3, 16);
+                    int checksum = 0;
+                    for (int x = 0; x < 19; x++) {
+                        checksum += data[x] & 0x0ff;
+                    }
+                    data[19] = (byte) (checksum & 0xff);
                     if (!deviceIO.send(data)) {
                         onFirmwareFail();
                         return false;
@@ -159,12 +165,18 @@ public class RO_TFT_FirmwareTools extends FirmwareTools {
             }
             Thread.sleep(1000);
             byte[] data = new byte[19];
-            ByteUtil.putInt(data, Size, 0);
-            data[4] = 'T';
-            data[5] = 'F';
-            data[6] = 'T';
-            ByteUtil.putInt(data, Checksum, 7);
-            if (deviceIO.send(BluetoothIO.makePacket((byte) 0xc3, data))) {
+            data[0]=(byte)0xc3;
+            ByteUtil.putInt(data, Size, 1);
+            data[5] = 'T';
+            data[6] = 'F';
+            data[7] = 'T';
+            ByteUtil.putInt(data, Checksum, 8);
+            /*int checksum = 0;
+            for (int i = 0; i < 12; i++) {
+                checksum += data[i] & 0x0ff;
+            }
+            data[12] = (byte) (checksum & 0xff);*/
+            if (deviceIO.send(data)) {
                 onFirmwareComplete();
                 Thread.sleep(5000);
                 return true;

@@ -68,9 +68,12 @@ public class WaterPurifier_RO_BLE extends WaterPurifier {
         @Override
         public String toString() {
             if (rtc == null) return "";
+            StringBuilder stringBuilder=new StringBuilder();
             return String.format("设备时间:%s\n臭氧工作时间:%d 间隔:%d",
                     new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(rtc),
                     Ozone_WorkTime, Ozone_Interval);
+
+
         }
     }
 
@@ -418,7 +421,7 @@ public class WaterPurifier_RO_BLE extends WaterPurifier {
                         Service_Data[14], Service_Data[15],
                         Service_Data[16], Service_Data[17]);
 
-                rep.Firmware = rep.MainbroadFirmware;
+                //rep.Firmware = rep.MainbroadFirmware;
                 rep.CustomDataLength = 8;
                 rep.ScanResponseType = WaterPurifier_RO_BLE.BLE_RO_ScanResponseType;
                 rep.ScanResponseData = Arrays.copyOfRange(Service_Data, 18, 25);
@@ -439,7 +442,7 @@ public class WaterPurifier_RO_BLE extends WaterPurifier {
         //return true;
         byte[] data = io.getScanResponseData();
         if ((io.getScanResponseType() == BLE_RO_ScanResponseType) && (data != null)) {
-            return data[0] == 1;
+            return data[0] != 1;
         }
         return false;
     }

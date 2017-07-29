@@ -70,7 +70,7 @@ public class OznerBLEService extends Service implements ActivityLifecycleCallbac
             public void run() {
                 checkBackgroundMode(true);
             }
-        }, 10000);
+        }, 60000);
     }
 
     @Override

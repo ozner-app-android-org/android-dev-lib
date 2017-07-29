@@ -23,7 +23,7 @@ import com.ozner.device.OznerDevice;
 import com.ozner.device.OznerDeviceManager;
 import com.ozner.util.GetPathFromUri4kitkat;
 
-import java.util.Date;
+import java.text.SimpleDateFormat;
 
 public class WaterPurifierActivity extends AppCompatActivity implements FirmwareTools.FirmwareUpateInterface {
     final static int FIRMWARE_SELECT_BLE_CODE = 0x1111;
@@ -82,7 +82,6 @@ public class WaterPurifierActivity extends AppCompatActivity implements Firmware
     }
 
 
-
     private void setText(int id, String text) {
         TextView tv = (TextView) findViewById(id);
         if (tv != null) {
@@ -104,14 +103,24 @@ public class WaterPurifierActivity extends AppCompatActivity implements Firmware
 
         setText(R.id.Model, "型号:" + waterPurifier.info().Model);
         setText(R.id.Type, "机型:" + waterPurifier.info().Type);
+
         if (waterPurifier instanceof WaterPurifier_RO_BLE) {
             WaterPurifier_RO_BLE ro = (WaterPurifier_RO_BLE) waterPurifier;
             if (ro.IO() != null) {
+                SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+
                 BluetoothIO bluetoothIO = (BluetoothIO) ro.IO();
-                setText(R.id.Type, "固件版本:" + new Date(bluetoothIO.getFirmware()));
+                if (bluetoothIO.getScanResponse() != null) {
+                    setText(R.id.Type, "固件版本:" +
+                            String.format("ble:%s\nhost:%s",
+                                    sdf.format(bluetoothIO.getScanResponse().Firmware),
+                                    sdf.format(bluetoothIO.getScanResponse().MainbroadFirmware)));
+
+                }
             }
         }
-        setText(R.id.status, "设备状态:" + (waterPurifier.isOffline() ? "离线" : "在线"));
+
+
         setText(R.id.tds1, "TDS1:" + getValue(waterPurifier.sensor().TDS1()));
         setText(R.id.tds2, "TDS2:" + getValue(waterPurifier.sensor().TDS2()));
         setText(R.id.powerStatus, "电源:" + (waterPurifier.status().Power() ? "开" : "关"));
@@ -121,14 +130,22 @@ public class WaterPurifierActivity extends AppCompatActivity implements Firmware
 
         if (waterPurifier instanceof WaterPurifier_RO_BLE) {
             findViewById(R.id.ROFirmwarePanel).setVisibility(View.VISIBLE);
+            if (waterPurifier.IO() != null) {
+                BluetoothIO bluetoothIO = (BluetoothIO) waterPurifier.IO();
+                setText(R.id.status, "设备状态:" + (bluetoothIO.isReady() ?
+                        waterPurifier.toString() : "离线"));
+            } else {
+                setText(R.id.status, "设备状态:离线");
+            }
         } else {
             findViewById(R.id.ROFirmwarePanel).setVisibility(View.GONE);
+            setText(R.id.status, "设备状态:" + (waterPurifier.isOffline() ? "离线" : waterPurifier.toString()));
         }
     }
 
     private void updateFirmware(int typeCode) {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("*.bin/getFirmware");
+        intent.setType("*/*");
         intent.addCategory(Intent.CATEGORY_OPENABLE);
 
         try {
@@ -142,6 +159,7 @@ public class WaterPurifierActivity extends AppCompatActivity implements Firmware
         }
     }
 
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
@@ -152,6 +170,7 @@ public class WaterPurifierActivity extends AppCompatActivity implements Firmware
                     Toast.makeText(this, path, Toast.LENGTH_LONG).show();
                     if (waterPurifier.connectStatus() == BaseDeviceIO.ConnectStatus.Connected) {
                         WaterPurifier_RO_BLE ro = (WaterPurifier_RO_BLE) waterPurifier;
+                        ro.ble_firmwareTools().setFirmwareUpateInterface(this);
                         ro.ble_firmwareTools().udateFirmware(path);
                     }
                     break;
@@ -164,6 +183,7 @@ public class WaterPurifierActivity extends AppCompatActivity implements Firmware
                     Toast.makeText(this, path, Toast.LENGTH_LONG).show();
                     if (waterPurifier.connectStatus() == BaseDeviceIO.ConnectStatus.Connected) {
                         WaterPurifier_RO_BLE ro = (WaterPurifier_RO_BLE) waterPurifier;
+                        ro.host_firmwareTools().setFirmwareUpateInterface(this);
                         ro.host_firmwareTools().udateFirmware(path);
                     }
                     break;
@@ -176,6 +196,7 @@ public class WaterPurifierActivity extends AppCompatActivity implements Firmware
                     Toast.makeText(this, path, Toast.LENGTH_LONG).show();
                     if (waterPurifier.connectStatus() == BaseDeviceIO.ConnectStatus.Connected) {
                         WaterPurifier_RO_BLE ro = (WaterPurifier_RO_BLE) waterPurifier;
+                        ro.tft_firmwareTools().setFirmwareUpateInterface(this);
                         ro.tft_firmwareTools().udateFirmware(path);
                     }
                     break;
@@ -306,6 +327,7 @@ public class WaterPurifierActivity extends AppCompatActivity implements Firmware
                     break;
                 case R.id.ro_tft_firware:
                     if (waterPurifier instanceof WaterPurifier_RO_BLE) {
+
                         updateFirmware(FIRMWARE_SELECT_TFT_CODE);
                     }
                     break;

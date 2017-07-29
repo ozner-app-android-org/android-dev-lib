@@ -46,7 +46,12 @@
         android:layout_height="wrap_content"
         android:text="设备状态:离线"
         android:textAppearance="@android:style/TextAppearance.Small" />
-
+    <TextView
+        android:id="@+id/Update_Message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textAppearance="@android:style/TextAppearance.Small" />
     <GridLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

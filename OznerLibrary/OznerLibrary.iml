@@ -80,6 +80,7 @@
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/blame" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/bundles" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/classes" />
+      <excludeFolder url="file://$MODULE_DIR$/build/intermediates/dependency-cache" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/incremental" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/incremental-safeguard" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/jniLibs" />
@@ -102,7 +103,6 @@
     <orderEntry type="library" exported="" name="hawtdispatch-transport-1.22" level="project" />
     <orderEntry type="library" exported="" name="hawtdispatch-1.22" level="project" />
     <orderEntry type="library" exported="" name="pushservice-4.4.1.88" level="project" />
-    <orderEntry type="library" exported="" name="android-android-23" level="project" />
     <orderEntry type="library" exported="" name="org.apache.http.legacy-android-23" level="project" />
   </component>
 </module>
